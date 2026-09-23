@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fase Teen — moda infantil feminina para meninas que estão vivendo cada fase com estilo.">
+  <meta name="theme-color" content="#d94f86">
+  <title>Fase Teen | Moda Infantil Feminina</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="topbar">ENVIO PARA TODO O BRASIL • COMPRA SEGURA • ATENDIMENTO PELO WHATSAPP</div>
+
+  <header class="header">
+    <div class="header-inner">
+      <button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menu">☰</button>
+      <a class="logo" href="#inicio" aria-label="Fase Teen">
+        <span class="logo-main">Fase</span>
+        <span class="logo-sub">TEEN</span>
+      </a>
+
+      <nav class="nav" id="mainNav">
+        <a href="#inicio">Início</a>
+        <a href="#novidades">Novidades</a>
+        <a href="#colecao">Coleção</a>
+        <a href="#sobre">Sobre a Fase Teen</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="searchBtn" aria-label="Pesquisar">⌕</button>
+        <button class="icon-btn bag-btn" id="cartBtn" aria-label="Abrir carrinho">
+          🛍<span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+    <div class="search-bar-wrap" id="searchWrap">
+      <input id="searchInput" type="search" placeholder="Buscar por produto, cor ou categoria..." autocomplete="off">
+    </div>
+  </header>
+
+  <main id="inicio">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">NOVA COLEÇÃO • FASE TEEN</p>
+        <h1>Estilo para cada fase.</h1>
+        <p class="hero-text">Looks femininos, atuais e confortáveis para meninas que querem se vestir do seu jeitinho.</p>
+        <div class="hero-buttons">
+          <a class="btn btn-dark" href="#colecao">Comprar agora</a>
+          <a class="btn btn-light" href="#novidades">Ver novidades</a>
+        </div>
+      </div>
+      <div class="hero-art">
+        <div class="hero-pill">NEW</div>
+        <div class="hero-card card-back"></div>
+        <div class="hero-card card-front">
+          <span>FASE</span>
+          <strong>TEEN</strong>
+          <small>Moda infantil feminina</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="benefits" aria-label="Benefícios">
+      <div><span>🚚</span><div><strong>Envio para todo o Brasil</strong><small>Escolha a melhor opção de entrega no checkout.</small></div></div>
+      <div><span>🔒</span><div><strong>Compra segura</strong><small>Seus dados são tratados com cuidado.</small></div></div>
+      <div><span>💬</span><div><strong>Atendimento rápido</strong><small>Fale com a gente pelo WhatsApp.</small></div></div>
+      <div><span>✨</span><div><strong>Peças selecionadas</strong><small>Moda feminina pensada para cada fase.</small></div></div>
+    </section>
+
+    <section class="section" id="novidades">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">PARA COMEÇAR</p>
+          <h2>Novidades que chegaram</h2>
+        </div>
+        <a class="text-link" href="#colecao">Ver coleção →</a>
+      </div>
+      <div class="product-grid" id="featuredGrid"></div>
+    </section>
+
+    <section class="banner">
+      <div>
+        <p class="eyebrow">FASE TEEN</p>
+        <h2>Do básico ao look que chama atenção.</h2>
+        <p>Monte combinações para escola, passeios, festas e todos os momentos da adolescência.</p>
+        <a class="btn btn-dark" href="#colecao">Explorar produtos</a>
+      </div>
+      <div class="banner-stickers">
+        <span>casual</span><span>trend</span><span>cute</span><span>teen</span>
+      </div>
+    </section>
+
+    <section class="section collection-section" id="colecao">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">CATÁLOGO</p>
+          <h2>Encontre seu próximo look</h2>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="chips" id="categoryChips"></div>
+        <div class="sort-wrap">
+          <label for="sortSelect">Ordenar</label>
+          <select id="sortSelect">
+            <option value="featured">Destaques</option>
+            <option value="price-low">Menor preço</option>
+            <option value="price-high">Maior preço</option>
+            <option value="name">Nome</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="product-grid" id="productGrid"></div>
+      <div class="empty-state hidden" id="emptyState">
+        <div>🔎</div>
+        <h3>Nenhum produto encontrado</h3>
+        <p>Tente outra busca ou categoria.</p>
+      </div>
+    </section>
+
+    <section class="about" id="sobre">
+      <div class="about-mark">FT</div>
+      <div>
+        <p class="eyebrow">SOBRE A MARCA</p>
+        <h2>Fase Teen é vestir cada momento.</h2>
+        <p>
+          A Fase Teen nasceu para acompanhar meninas em uma fase cheia de descobertas.
+          Nossa proposta é unir estilo, conforto e peças que façam sentido para a rotina,
+          deixando espaço para cada uma construir seu próprio jeito de se expressar.
+        </p>
+        <a class="btn btn-outline" href="#colecao">Conhecer a coleção</a>
+      </div>
+    </section>
+
+    <section class="newsletter">
+      <div>
+        <p class="eyebrow">FIQUE POR DENTRO</p>
+        <h2>Receba novidades e ofertas.</h2>
+      </div>
+      <form id="newsletterForm">
+        <input id="newsletterEmail" type="email" placeholder="Seu melhor e-mail" required>
+        <button class="btn btn-dark" type="submit">Quero receber</button>
+      </form>
+      <p class="form-note" id="newsletterNote"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <a class="logo footer-logo" href="#inicio"><span class="logo-main">Fase</span><span class="logo-sub">TEEN</span></a>
+        <p>Moda infantil feminina para cada fase.</p>
+      </div>
+      <div>
+        <h4>Atendimento</h4>
+        <p>WhatsApp: <a id="footerWhatsapp" href="#" target="_blank" rel="noopener">fale com a gente</a></p>
+        <p>Instagram: <a id="footerInstagram" href="#" target="_blank" rel="noopener">@faseteen</a></p>
+      </div>
+      <div>
+        <h4>Informações</h4>
+        <a href="#sobre">Sobre</a>
+        <a href="#">Trocas e devoluções</a>
+        <a href="#">Política de privacidade</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© <span id="currentYear"></span> Fase Teen. Todos os direitos reservados.</div>
+  </footer>
+
+  <a class="floating-whatsapp" id="floatingWhatsapp" href="#" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">☏</a>
+
+  <div class="overlay hidden" id="overlay"></div>
+
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Carrinho">
+    <div class="drawer-head">
+      <h3>Seu carrinho</h3>
+      <button class="close-btn" id="closeCart">×</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-empty hidden" id="cartEmpty">
+      <div class="empty-icon">🛍</div>
+      <p>Seu carrinho está vazio.</p>
+      <button class="btn btn-dark" id="goShoppingBtn">Continuar comprando</button>
+    </div>
+    <div class="cart-footer">
+      <div class="shipping-box">
+        <div class="shipping-title-row">
+          <strong>Como você quer receber?</strong>
+          <span>Escolha uma opção</span>
+        </div>
+        <div class="shipping-choice-row">
+          <button class="shipping-choice active" id="deliveryChoice" type="button">Entrega</button>
+          <button class="shipping-choice" id="pickupChoice" type="button">Retirada na loja</button>
+        </div>
+        <div id="deliveryArea">
+          <div class="cep-row">
+            <input id="cepInput" type="text" inputmode="numeric" maxlength="9" placeholder="Digite seu CEP" autocomplete="postal-code">
+            <button class="btn btn-dark small-btn" id="calculateFreightBtn" type="button">Calcular</button>
+          </div>
+          <p class="shipping-status" id="shippingStatus"></p>
+          <div class="shipping-options" id="shippingOptions"></div>
+        </div>
+      </div>
+      <div class="totals-row"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
+      <div class="totals-row freight-total-row"><span>Frete</span><strong id="cartFreight">A calcular</strong></div>
+      <div class="totals-row grand-total-row"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
+      <p class="mini-note">O valor do frete é calculado conforme o CEP e a opção de envio escolhida.</p>
+      <button class="btn btn-dark full" id="checkoutBtn" type="button">Finalizar pedido</button>
+    </div>
+  </aside>
+
+  <div class="modal hidden" id="productModal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="modalClose">×</button>
+    <div id="modalContent"></div>
+  </div>
+
+  <div class="checkout-modal hidden" id="checkoutModal" role="dialog" aria-modal="true">
+    <div class="checkout-card">
+      <button class="modal-close" id="checkoutClose">×</button>
+      <p class="eyebrow">FINALIZAR PEDIDO</p>
+      <h2>Quase lá ✨</h2>
+      <p class="checkout-intro">Preencha seus dados. Ao continuar, o pedido será enviado para o WhatsApp da Fase Teen para confirmação de estoque, entrega e pagamento.</p>
+      <form id="checkoutForm">
+        <div class="checkout-section-title">Dados do cliente</div>
+        <div class="form-grid">
+          <label>Nome completo
+            <input name="name" required autocomplete="name" placeholder="Seu nome completo">
+          </label>
+          <label>WhatsApp
+            <input name="phone" required inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000">
+          </label>
+        </div>
+        <label>E-mail
+          <input name="email" type="email" required autocomplete="email" placeholder="seuemail@email.com">
+        </label>
+
+        <div class="checkout-section-title address-title">Endereço de entrega</div>
+        <p class="checkout-address-note">Digite o CEP para buscar automaticamente o logradouro, bairro, cidade e estado.</p>
+        <div class="form-grid cep-checkout-grid">
+          <label>CEP
+            <input id="checkoutCep" name="cep" required inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
+          </label>
+          <button class="btn btn-light cep-search-btn" id="checkoutCepBtn" type="button">Buscar CEP</button>
+        </div>
+        <p class="form-note" id="checkoutAddressNote"></p>
+
+        <label>Logradouro
+          <input id="checkoutAddress" name="address" required autocomplete="street-address" placeholder="Rua, Avenida, etc.">
+        </label>
+        <div class="form-grid form-grid-number">
+          <label>Número
+            <input id="checkoutNumber" name="number" required inputmode="text" autocomplete="address-line2" placeholder="123">
+          </label>
+          <label>Complemento <span class="optional-label">(opcional)</span>
+            <input id="checkoutComplement" name="complement" autocomplete="address-line2" placeholder="Apto, bloco, casa...">
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>Bairro
+            <input id="checkoutDistrict" name="district" required autocomplete="address-level3" placeholder="Bairro">
+          </label>
+          <label>Cidade
+            <input id="checkoutCity" name="city" required autocomplete="address-level2" placeholder="Cidade">
+          </label>
+        </div>
+        <label>Estado (UF)
+          <input id="checkoutState" name="state" required maxlength="2" autocomplete="address-level1" placeholder="MG">
+        </label>
+
+        <label>Observações
+          <textarea name="notes" rows="3" placeholder="Deixar na portaria, tocar a campainha, preferência de entrega"></textarea>
+        </label>
+        <button class="btn btn-dark full" type="submit">Enviar pedido pelo WhatsApp</button>
+        <p class="form-note" id="checkoutNote"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="products.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
