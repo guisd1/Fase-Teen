@@ -186,28 +186,8 @@
       <button class="btn btn-dark" id="goShoppingBtn">Continuar comprando</button>
     </div>
     <div class="cart-footer">
-      <div class="shipping-box">
-        <div class="shipping-title-row">
-          <strong>Entrega</strong>
-          <span>Calcule o frete pelo CEP</span>
-        </div>
-        <div class="shipping-choice-row">
-          <button type="button" class="shipping-choice" id="deliveryChoice">Receber em casa</button>
-          <button type="button" class="shipping-choice" id="pickupChoice">Retirar na loja</button>
-        </div>
-        <div id="deliveryArea">
-          <div class="cep-row">
-            <input id="cepInput" type="text" inputmode="numeric" placeholder="Seu CEP" maxlength="9">
-            <button type="button" class="btn btn-dark small-btn" id="calculateFreightBtn">Calcular</button>
-          </div>
-          <p class="shipping-status" id="shippingStatus"></p>
-          <div class="shipping-options" id="shippingOptions"></div>
-        </div>
-      </div>
-      <div class="totals-row"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
-      <div class="totals-row freight-total-row"><span>Frete</span><strong id="cartFreight">A calcular</strong></div>
-      <div class="totals-row grand-total-row"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
-      <p class="mini-note">Forma de pagamento é combinada no fechamento do pedido.</p>
+      <div class="totals-row"><span>Subtotal</span><strong id="cartTotal">R$ 0,00</strong></div>
+      <p class="mini-note">Frete e forma de pagamento são combinados no fechamento do pedido.</p>
       <button class="btn btn-dark full" id="checkoutBtn">Finalizar pedido</button>
     </div>
   </aside>
@@ -229,9 +209,6 @@
         </label>
         <label>WhatsApp
           <input name="phone" required placeholder="(00) 00000-0000">
-        </label>
-        <label>CEP
-          <input name="cep" id="checkoutCep" placeholder="00000-000">
         </label>
         <label>Cidade / Estado
           <input name="location" required placeholder="Ex.: Espinosa - MG">

@@ -1,39 +1,46 @@
-# Publicar a Fase Teen com frete Melhor Envio
+# Configuração Fase Teen + Melhor Envio (OAuth2)
 
-## O que foi implementado
-O navegador envia apenas CEP, IDs e quantidades para `/api/frete`.
-A função serverless lê o catálogo do `products.js`, monta peso/dimensões/valor dos produtos e consulta o Melhor Envio.
-O token fica somente em variável de ambiente da Vercel.
+## 1. Variáveis no Vercel
 
-## Configurar
-Na Vercel: Settings → Environment Variables.
+Já cadastradas:
+- `MELHOR_ENVIO_CLIENT_ID`
+- `MELHOR_ENVIO_CLIENT_SECRET`
 
-`MELHOR_ENVIO_TOKEN` = token do Melhor Envio gerado no painel.
-`STORE_ORIGIN_POSTAL_CODE` = CEP de origem da loja, somente números.
-`MELHOR_ENVIO_USER_AGENT` = nome da aplicação + e-mail de contato técnico.
+Ainda criar:
+- `MELHOR_ENVIO_USER_AGENT` → `Fase Teen (seuemail@exemplo.com)`
+- `STORE_ORIGIN_POSTAL_CODE` → CEP da loja, somente números
 
-O endpoint usado em produção é:
-`https://melhorenvio.com.br/api/v2/me/shipment/calculate`
+## 2. Upstash Redis
 
-## Publicação
-1. Suba esta pasta em um projeto Vercel.
-2. Configure as três variáveis.
-3. Faça o deploy.
-4. Teste um pedido real com seu próprio CEP.
-5. Teste no celular.
+A autorização OAuth precisa guardar `access_token` e `refresh_token` entre execuções serverless. O projeto usa Upstash Redis pela integração da Vercel.
 
-## Catálogo
-No `products.js`, cada produto tem:
+Na Vercel:
+1. Project → Integrations.
+2. Marketplace → Storage → Upstash for Redis.
+3. Conecte uma base ao projeto.
+4. A integração cria as variáveis do Redis.
 
-`shipping: { weight: 0.35, height: 6, width: 23, length: 30 }`
+O código aceita tanto `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` quanto `KV_REST_API_URL` / `KV_REST_API_TOKEN`.
 
-Peso em kg e dimensões em cm.
+## 3. Cadastro do aplicativo no Melhor Envio
 
-## Pagamento
-O site não processa pagamentos. Depois da cotação, o pedido e o frete escolhido são enviados ao WhatsApp para confirmação e cobrança.
+Callback exato:
+`https://fase-teen.vercel.app/api/melhor-envio/callback`
 
-## Retirada
-A cliente pode escolher “Retirar na loja”; nesse caso o frete fica R$ 0,00 e a informação segue para o WhatsApp.
+Permissão necessária para esta versão:
+`shipping-calculate`
 
-## Segurança
-Nunca coloque o token do Melhor Envio em `app.js` ou `products.js`.
+## 4. Primeira autorização
+
+Depois do deploy com Redis e variáveis configuradas, abra no navegador:
+`https://fase-teen.vercel.app/api/melhor-envio/authorize`
+
+Faça login/autorização no Melhor Envio. Ao concluir, o callback salva os tokens no Redis e volta ao site.
+
+## 5. Renovação
+
+O backend verifica a validade do access token e usa o refresh token para renová-lo. O Melhor Envio documenta access tokens de 30 dias e refresh tokens de 45 dias para OAuth2.
+
+## 6. Frete
+
+A rota `/api/frete` continua recebendo CEP + IDs/quantidades do carrinho e usa a API de cotação em produção. Os pesos e dimensões dos produtos ficam no `catalog.mjs`.

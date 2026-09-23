@@ -1,89 +1,33 @@
-# Fase Teen — Modelo de Loja Virtual
+# Fase Teen — Loja Virtual v3
 
-Este projeto é um modelo de e-commerce front-end para a marca Fase Teen.
+Loja estática responsiva com catálogo, carrinho, retirada na loja, cálculo de frete Melhor Envio e finalização do pedido pelo WhatsApp.
 
-## O que já vem pronto
-- Página inicial com identidade visual feminina/teen.
-- Catálogo de produtos.
-- Filtro por categoria.
-- Busca por nome/cor/categoria.
-- Ordenação por preço/nome/destaques.
-- Página modal de produto com tamanho e cor.
-- Carrinho com alteração de quantidade.
-- Carrinho salvo no navegador (localStorage).
-- Checkout que monta o pedido e abre o WhatsApp.
-- Layout responsivo para celular, tablet e computador.
-- Espaços prontos para trocar imagens, produtos, Instagram e WhatsApp.
+## Melhor Envio
 
-## 1) Trocar produtos
-Abra `products.js` e altere:
-- `name`
-- `category`
-- `price`
-- `oldPrice`
-- `sizes`
-- `colors`
-- `image`
-- `featured`
-- `badge`
-- `description`
+A integração agora usa OAuth2 e guarda tokens de forma persistente em Upstash Redis, adequado para as funções serverless da Vercel.
 
-Exemplo:
-image: "assets/products/minha-peca.jpg"
+Rotas:
+- `/api/melhor-envio/authorize` — inicia autorização
+- `/api/melhor-envio/callback` — recebe o code e salva tokens
+- `/api/frete` — calcula opções de frete
 
-Você pode colocar suas imagens na pasta:
-`assets/products/`
+O callback usado pela loja é:
+`https://fase-teen.vercel.app/api/melhor-envio/callback`
 
-## 2) Trocar o WhatsApp
-No final de `products.js`, edite:
-whatsapp: "5500000000000"
+## Segurança
 
-Coloque o número com código do Brasil + DDD, somente números.
-Exemplo de formato:
-5511999999999
+Client Secret, access token e refresh token nunca ficam no JavaScript do navegador.
 
-## 3) Trocar Instagram
-No mesmo `storeConfig`:
-instagram: "https://instagram.com/seuinstagram"
-instagramHandle: "@seuinstagram"
+## Catálogo
 
-## 4) Trocar identidade visual
-As cores principais estão no começo do arquivo `styles.css`, dentro de `:root`.
-Você pode alterar:
---pink
---pink-dark
---rose
---ink
---cream
+Edite `products.js` para o site e `catalog.mjs` para os dados usados no servidor. Ambos devem permanecer sincronizados para nome/preço e peso/dimensões de frete.
 
-## 5) Colocar o site no ar
-Este modelo é estático e pode ser hospedado em serviços como Vercel, Netlify, GitHub Pages ou hospedagem tradicional.
+## Deploy
 
-Basta enviar:
-- index.html
-- styles.css
-- app.js
-- products.js
-- pasta assets/
-
-## Importante sobre "vender pelo site"
-O modelo já faz o catálogo, carrinho e fechamento do pedido pelo WhatsApp.
-Para cobrar cartão/Pix diretamente dentro do site, será necessário integrar um gateway de pagamento e, em uma etapa mais completa, um backend/banco de dados para pedidos, estoque e pagamentos.
-
-## Estrutura
-fase-teen-site/
-├── index.html
-├── styles.css
-├── app.js
-├── products.js
-├── README.md
-└── assets/
-    └── products/
-        ├── produto-01.svg
-        ├── produto-02.svg
-        └── ...
-
-
-## Correção desta versão
-
-`products.js` voltou a ser um script JavaScript comum. Assim, o catálogo funciona também quando você abre `index.html` diretamente no navegador do computador. A função serverless continua usando o arquivo separado `catalog.mjs`, portanto o cálculo do frete no Melhor Envio permanece separado do código do cliente.
+1. Envie os arquivos para GitHub.
+2. Aguarde a Vercel publicar.
+3. Configure `MELHOR_ENVIO_CLIENT_ID` e `MELHOR_ENVIO_CLIENT_SECRET`.
+4. Configure `MELHOR_ENVIO_USER_AGENT` e `STORE_ORIGIN_POSTAL_CODE`.
+5. Instale Upstash Redis pelo Marketplace da Vercel.
+6. Faça um novo deploy.
+7. Abra `https://fase-teen.vercel.app/api/melhor-envio/authorize` uma vez para autorizar.

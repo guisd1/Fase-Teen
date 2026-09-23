@@ -1,4 +1,5 @@
 import { products } from "../catalog.mjs";
+import { getAccessToken, getUserAgent } from "./melhor-envio/_token-compat.js";
 
 const ME_URL = "https://melhorenvio.com.br";
 
@@ -24,6 +25,19 @@ function normalizeQuotes(payload) {
     .sort((a, b) => a.price - b.price);
 }
 
+async function doQuote(token, payload, userAgent) {
+  return fetch(`${ME_URL}/api/v2/me/shipment/calculate`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "User-Agent": userAgent
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -31,12 +45,10 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return reply(res, 405, { error: "Método não permitido." });
 
-  const token = process.env.MELHOR_ENVIO_TOKEN;
   const origin = cleanCep(process.env.STORE_ORIGIN_POSTAL_CODE);
-  const userAgent = process.env.MELHOR_ENVIO_USER_AGENT || "Fase Teen (contato tecnico)";
+  const userAgent = process.env.MELHOR_ENVIO_USER_AGENT || "Fase Teen (contato técnico)";
   const services = String(process.env.MELHOR_ENVIO_SERVICES || "").trim();
 
-  if (!token) return reply(res, 500, { error: "Frete ainda não configurado: MELHOR_ENVIO_TOKEN ausente." });
   if (origin.length !== 8) return reply(res, 500, { error: "Frete ainda não configurado: STORE_ORIGIN_POSTAL_CODE ausente ou inválido." });
 
   const destination = cleanCep(req.body?.postalCode);
@@ -69,27 +81,30 @@ export default async function handler(req, res) {
   if (services) payload.services = services;
 
   try {
-    const r = await fetch(`${ME_URL}/api/v2/me/shipment/calculate`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": userAgent
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await r.json().catch(() => ({}));
-    if (r.status === 401) {
-      return reply(res, 502, { error: "O token do Melhor Envio foi recusado ou expirou. Atualize MELHOR_ENVIO_TOKEN na Vercel." });
+    let token;
+    try {
+      token = await getAccessToken(false);
+    } catch (error) {
+      return reply(res, 401, { error: error?.message || "Melhor Envio ainda não autorizado." });
     }
-    if (!r.ok) {
+
+    let response = await doQuote(token, payload, userAgent);
+    if (response.status === 401) {
+      try {
+        token = await getAccessToken(true);
+        response = await doQuote(token, payload, userAgent);
+      } catch (refreshError) {
+        return reply(res, 401, { error: refreshError?.message || "A autorização do Melhor Envio expirou. Autorize novamente." });
+      }
+    }
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
       return reply(res, 502, { error: data?.message || data?.error || "O Melhor Envio recusou a cotação." });
     }
 
     return reply(res, 200, { options: normalizeQuotes(data), postalCode: destination });
-  } catch {
-    return reply(res, 502, { error: "Não foi possível conectar ao Melhor Envio agora. Tente novamente." });
+  } catch (error) {
+    return reply(res, 502, { error: error?.message || "Não foi possível conectar ao Melhor Envio agora." });
   }
 }
