@@ -186,9 +186,29 @@
       <button class="btn btn-dark" id="goShoppingBtn">Continuar comprando</button>
     </div>
     <div class="cart-footer">
-      <div class="totals-row"><span>Subtotal</span><strong id="cartTotal">R$ 0,00</strong></div>
-      <p class="mini-note">Frete e forma de pagamento são combinados no fechamento do pedido.</p>
-      <button class="btn btn-dark full" id="checkoutBtn">Finalizar pedido</button>
+      <div class="shipping-box">
+        <div class="shipping-title-row">
+          <strong>Como você quer receber?</strong>
+          <span>Escolha uma opção</span>
+        </div>
+        <div class="shipping-choice-row">
+          <button class="shipping-choice active" id="deliveryChoice" type="button">Entrega</button>
+          <button class="shipping-choice" id="pickupChoice" type="button">Retirada na loja</button>
+        </div>
+        <div id="deliveryArea">
+          <div class="cep-row">
+            <input id="cepInput" type="text" inputmode="numeric" maxlength="9" placeholder="Digite seu CEP" autocomplete="postal-code">
+            <button class="btn btn-dark small-btn" id="calculateFreightBtn" type="button">Calcular</button>
+          </div>
+          <p class="shipping-status" id="shippingStatus"></p>
+          <div class="shipping-options" id="shippingOptions"></div>
+        </div>
+      </div>
+      <div class="totals-row"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
+      <div class="totals-row freight-total-row"><span>Frete</span><strong id="cartFreight">A calcular</strong></div>
+      <div class="totals-row grand-total-row"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
+      <p class="mini-note">O valor do frete é calculado conforme o CEP e a opção de envio escolhida.</p>
+      <button class="btn btn-dark full" id="checkoutBtn" type="button">Finalizar pedido</button>
     </div>
   </aside>
 
@@ -209,6 +229,9 @@
         </label>
         <label>WhatsApp
           <input name="phone" required placeholder="(00) 00000-0000">
+        </label>
+        <label>CEP
+          <input id="checkoutCep" name="cep" required inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
         </label>
         <label>Cidade / Estado
           <input name="location" required placeholder="Ex.: Espinosa - MG">
