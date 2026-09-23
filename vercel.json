@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/frete.js": {
-      "runtime": "nodejs22.x"
-    }
-  }
-}
