@@ -32,10 +32,8 @@ window.products = [
     sizes: ["10","12","14","16"],
     colors: ["Rosa","Jeans"],
     media: [
+      { type: "image", src: "assets/products/produto-01.svg" },
       { type: "image", src: "assets/products/produto-01.svg" }
-      // Exemplo de como adicionar mais mídia:
-      // { type: "image", src: "assets/products/produto-01-b.jpg" },
-      // { type: "video", src: "assets/products/produto-01.mp4" }
     ],
     reference: "FT-1001",
     featured: true,
@@ -53,6 +51,7 @@ window.products = [
     sizes: ["10","12","14","16"],
     colors: ["Floral"],
     media: [
+      { type: "image", src: "assets/products/produto-02.svg" },
       { type: "image", src: "assets/products/produto-02.svg" }
     ],
     reference: "FT-1002",
@@ -71,6 +70,7 @@ window.products = [
     sizes: ["10","12","14","16"],
     colors: ["Jeans"],
     media: [
+      { type: "image", src: "assets/products/produto-03.svg" },
       { type: "image", src: "assets/products/produto-03.svg" }
     ],
     reference: "FT-1003",
@@ -89,6 +89,7 @@ window.products = [
     sizes: ["8","10","12","14","16"],
     colors: ["Off-white","Rosa"],
     media: [
+      { type: "image", src: "assets/products/produto-04.svg" },
       { type: "image", src: "assets/products/produto-04.svg" }
     ],
     reference: "FT-1004",
@@ -107,6 +108,7 @@ window.products = [
     sizes: ["10","12","14","16"],
     colors: ["Jeans"],
     media: [
+      { type: "image", src: "assets/products/produto-05.svg" },
       { type: "image", src: "assets/products/produto-05.svg" }
     ],
     reference: "FT-1005",
@@ -125,6 +127,7 @@ window.products = [
     sizes: ["10","12","14","16"],
     colors: ["Preto","Rosa","Branco"],
     media: [
+      { type: "image", src: "assets/products/produto-06.svg" },
       { type: "image", src: "assets/products/produto-06.svg" }
     ],
     reference: "FT-1006",
@@ -143,6 +146,7 @@ window.products = [
     sizes: ["10","12","14","16"],
     colors: ["Lilás"],
     media: [
+      { type: "image", src: "assets/products/produto-07.svg" },
       { type: "image", src: "assets/products/produto-07.svg" }
     ],
     reference: "FT-1007",
@@ -161,6 +165,7 @@ window.products = [
     sizes: ["10","12","14","16"],
     colors: ["Jeans"],
     media: [
+      { type: "image", src: "assets/products/produto-08.svg" },
       { type: "image", src: "assets/products/produto-08.svg" }
     ],
     reference: "FT-1008",
