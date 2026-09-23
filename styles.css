@@ -173,19 +173,40 @@ img { max-width: 100%; display: block; }
 }
 .product-image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
 .product-card:hover .product-image-wrap img { transform: scale(1.035); }
+
+/* Carrossel de mídia (imagens + vídeo) do produto */
+.media-track { display: flex; width: 100%; height: 100%; transition: transform .3s ease; }
+.media-slide { min-width: 100%; height: 100%; }
+.media-slide img, .media-slide video { width: 100%; height: 100%; object-fit: cover; display: block; background: #f7f4f5; }
+.media-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%;
+  border: 0; background: rgba(255,255,255,.9); color: var(--ink); font-size: 18px; line-height: 1;
+  display: grid; place-items: center; opacity: 0; transition: opacity .2s ease; z-index: 3; cursor: pointer;
+}
+.media-nav.prev { left: 9px; }
+.media-nav.next { right: 9px; }
+.product-image-wrap:hover .media-nav { opacity: 1; }
+.media-dots {
+  position: absolute; top: 11px; right: 11px; display: flex; gap: 4px; z-index: 3;
+}
+.media-dots .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.65); }
+.media-dots .dot.active { background: white; width: 14px; border-radius: 99px; }
+.modal-media { aspect-ratio: auto; }
+
 .badge {
   position: absolute; top: 11px; left: 11px; background: white; color: var(--pink-dark);
-  border-radius: 99px; padding: 6px 9px; font-size: 9px; font-weight: 900; letter-spacing: .08em;
+  border-radius: 99px; padding: 6px 9px; font-size: 9px; font-weight: 900; letter-spacing: .08em; z-index: 3;
 }
 .quick-view {
   position: absolute; bottom: 12px; left: 12px; right: 12px; min-height: 42px; border-radius: 99px;
   border: 1px solid rgba(0,0,0,.07); background: rgba(255,255,255,.94); font-weight: 800;
-  opacity: 0; transform: translateY(6px); transition: .2s ease;
+  opacity: 0; transform: translateY(6px); transition: .2s ease; z-index: 3;
 }
 .product-card:hover .quick-view { opacity: 1; transform: translateY(0); }
 .product-info { padding: 12px 2px 0; }
 .product-info h3 { font-size: 15px; margin-bottom: 6px; }
 .product-category { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.product-ref { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: .02em; }
 .price-row { display:flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
 .price { font-size: 17px; font-weight: 900; }
 .old-price { color: #9b9197; text-decoration: line-through; font-size: 12px; }
@@ -304,11 +325,15 @@ img { max-width: 100%; display: block; }
 }
 .modal .modal-close, .checkout-card .modal-close { position:absolute; right:14px; top:14px; z-index:4; }
 .quick-product { display:grid; grid-template-columns: 1fr 1fr; }
-.quick-product img { width:100%; height:100%; min-height:520px; object-fit:cover; background:#f6f2f4; }
+.quick-product .product-image-wrap.modal-media { min-height:520px; border-radius:0; border:0; }
+.quick-product .product-image-wrap.modal-media .media-slide img,
+.quick-product .product-image-wrap.modal-media .media-slide video { background:#f6f2f4; }
 .quick-info { padding:45px; }
 .quick-info .product-category { font-size:12px; }
 .quick-info h2 { font-family:"Playfair Display",serif; font-size:40px; line-height:1.03; margin:5px 0 15px; }
+.quick-info .product-ref { font-size:12px; margin-bottom:2px; }
 .quick-desc { color:var(--muted); margin: 15px 0 20px; }
+.quick-composition { color:var(--muted); font-size:13px; line-height:1.5; }
 .option-row { margin: 18px 0; }
 .option-row span { display:block; font-size:12px; font-weight:800; margin-bottom:8px; }
 .option-chips { display:flex; flex-wrap:wrap; gap:7px; }
@@ -360,8 +385,9 @@ img { max-width: 100%; display: block; }
   .footer-inner { grid-template-columns:1fr; padding:45px 22px; }
   .topbar { font-size:8px; }
   .quick-product { grid-template-columns:1fr; }
-  .quick-product img { min-height:320px; max-height:390px; }
+  .quick-product .product-image-wrap.modal-media { min-height:320px; max-height:390px; }
   .quick-info { padding:28px 22px 30px; }
+  .media-nav { opacity:1; width:26px; height:26px; font-size:16px; }
   .checkout-card { padding:30px 20px; }
 }
 

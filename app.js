@@ -21,6 +21,51 @@ const persist = () => localStorage.setItem("faseTeenCart", JSON.stringify(state.
 const persistCheckout = () => localStorage.setItem("faseTeenCheckout", JSON.stringify({ deliveryMode: state.deliveryMode, cep: state.cep, address: state.address }));
 const productById = (id) => products.find(p => p.id === id);
 
+// --- Mídia do produto (imagens + vídeo) ---
+function mediaFor(p) {
+  if (Array.isArray(p.media) && p.media.length) return p.media;
+  return p.image ? [{ type: "image", src: p.image }] : [];
+}
+function mainImage(p) {
+  const m = mediaFor(p).find(x => x.type !== "video");
+  return m ? m.src : (p.image || "");
+}
+function mediaSlideHtml(m, alt) {
+  return m.type === "video"
+    ? `<div class="media-slide"><video src="${m.src}" muted loop playsinline preload="metadata" controls></video></div>`
+    : `<div class="media-slide"><img src="${m.src}" alt="${alt}" loading="lazy"></div>`;
+}
+function mediaCarouselHtml(p, extraClass, innerExtra) {
+  const media = mediaFor(p);
+  const slides = media.map(m => mediaSlideHtml(m, p.name)).join("");
+  const multi = media.length > 1;
+  const arrows = multi ? `<button class="media-nav prev" data-nav="-1" type="button" aria-label="Imagem anterior">‹</button><button class="media-nav next" data-nav="1" type="button" aria-label="Próxima imagem">›</button>` : "";
+  const dots = multi ? `<div class="media-dots">${media.map((_, i) => `<span class="dot ${i === 0 ? "active" : ""}" data-dot="${i}"></span>`).join("")}</div>` : "";
+  return `<div class="product-image-wrap${extraClass ? " " + extraClass : ""}" data-count="${media.length}"><div class="media-track">${slides}</div>${arrows}${dots}${innerExtra || ""}</div>`;
+}
+function bindMediaCarousels(scope) {
+  const root = scope || document;
+  [...root.querySelectorAll(".product-image-wrap")].forEach(wrap => {
+    const track = wrap.querySelector(".media-track");
+    const slides = [...wrap.querySelectorAll(".media-slide")];
+    const dots = [...wrap.querySelectorAll(".dot")];
+    const count = slides.length;
+    if (!count) return;
+    wrap.dataset.index = wrap.dataset.index || "0";
+    const setIndex = (i) => {
+      const idx = ((i % count) + count) % count;
+      wrap.dataset.index = idx;
+      track.style.transform = `translateX(-${idx * 100}%)`;
+      dots.forEach((d, di) => d.classList.toggle("active", di === idx));
+      slides.forEach((s, si) => { const v = s.querySelector("video"); if (v && si !== idx) v.pause(); });
+    };
+    wrap.querySelectorAll(".media-nav").forEach(btn => {
+      btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); setIndex(Number(wrap.dataset.index) + Number(btn.dataset.nav)); };
+    });
+    dots.forEach((d, di) => { d.onclick = (e) => { e.preventDefault(); e.stopPropagation(); setIndex(di); }; });
+  });
+}
+
 function renderCategories() {
   const cats = ["Todos", ...new Set(products.map(p => p.category))];
   $("#categoryChips").innerHTML = cats.map(c => `<button class="chip ${state.category === c ? "active" : ""}" data-category="${c}">${c}</button>`).join("");
@@ -43,7 +88,8 @@ function filtered() {
 
 function card(p) {
   const inst = (p.price / 3).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  return `<article class="product-card"><div class="product-image-wrap"><img src="${p.image}" alt="${p.name}" loading="lazy">${p.badge ? `<span class="badge">${p.badge}</span>` : ""}<button class="quick-view" data-id="${p.id}">Ver produto</button></div><div class="product-info"><div class="product-category">${p.category}</div><h3>${p.name}</h3><div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice ? `<span class="old-price">${money(p.oldPrice)}</span>` : ""}</div><div class="installment">ou 3x de ${inst}*</div></div></article>`;
+  const overlay = `${p.badge ? `<span class="badge">${p.badge}</span>` : ""}<button class="quick-view" data-id="${p.id}">Ver produto</button>`;
+  return `<article class="product-card">${mediaCarouselHtml(p, "", overlay)}<div class="product-info"><div class="product-category">${p.category}</div><h3>${p.name}</h3>${p.reference ? `<div class="product-ref">Ref.: ${p.reference}</div>` : ""}<div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice ? `<span class="old-price">${money(p.oldPrice)}</span>` : ""}</div><div class="installment">ou 3x de ${inst}*</div></div></article>`;
 }
 
 function renderProducts() {
@@ -52,6 +98,7 @@ function renderProducts() {
   $("#featuredGrid").innerHTML = products.filter(p => p.featured).slice(0, 4).map(card).join("");
   $("#emptyState").classList.toggle("hidden", list.length !== 0);
   bindQuickViews();
+  bindMediaCarousels();
 }
 
 function bindQuickViews() {
@@ -61,9 +108,10 @@ function bindQuickViews() {
 function openProductModal(id) {
   const p = productById(id);
   if (!p) return;
-  $("#modalContent").innerHTML = `<div class="quick-product"><img src="${p.image}" alt="${p.name}"><div class="quick-info"><div class="product-category">${p.category}</div><h2>${p.name}</h2><div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice ? `<span class="old-price">${money(p.oldPrice)}</span>` : ""}</div><p class="quick-desc">${p.description}</p><div class="option-row"><span>TAMANHO</span><div class="option-chips" id="sizeOptions">${p.sizes.map((s, i) => `<button class="option-chip ${i === 0 ? "active" : ""}" data-size="${s}">${s}</button>`).join("")}</div></div><div class="option-row"><span>COR</span><div class="option-chips" id="colorOptions">${p.colors.map((c, i) => `<button class="option-chip ${i === 0 ? "active" : ""}" data-color="${c}">${c}</button>`).join("")}</div></div><button class="btn btn-dark quick-buy" id="addToCartModal">Adicionar ao carrinho</button></div></div>`;
+  $("#modalContent").innerHTML = `<div class="quick-product">${mediaCarouselHtml(p, "modal-media")}<div class="quick-info"><div class="product-category">${p.category}</div><h2>${p.name}</h2>${p.reference ? `<div class="product-ref">Ref.: ${p.reference}</div>` : ""}<div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice ? `<span class="old-price">${money(p.oldPrice)}</span>` : ""}</div><p class="quick-desc">${p.description}</p>${p.composition ? `<div class="option-row"><span>COMPOSIÇÃO / DETALHES</span><p class="quick-composition">${p.composition}</p></div>` : ""}<div class="option-row"><span>TAMANHO</span><div class="option-chips" id="sizeOptions">${p.sizes.map((s, i) => `<button class="option-chip ${i === 0 ? "active" : ""}" data-size="${s}">${s}</button>`).join("")}</div></div><div class="option-row"><span>COR</span><div class="option-chips" id="colorOptions">${p.colors.map((c, i) => `<button class="option-chip ${i === 0 ? "active" : ""}" data-color="${c}">${c}</button>`).join("")}</div></div><button class="btn btn-dark quick-buy" id="addToCartModal">Adicionar ao carrinho</button></div></div>`;
   $("#productModal").classList.remove("hidden");
   document.body.style.overflow = "hidden";
+  bindMediaCarousels($("#modalContent"));
   $$("#sizeOptions .option-chip").forEach(b => b.onclick = () => { $$("#sizeOptions .option-chip").forEach(x => x.classList.remove("active")); b.classList.add("active"); });
   $$("#colorOptions .option-chip").forEach(b => b.onclick = () => { $$("#colorOptions .option-chip").forEach(x => x.classList.remove("active")); b.classList.add("active"); });
   $("#addToCartModal").onclick = () => { addToCart({ id: p.id, size: $("#sizeOptions .active")?.dataset.size || p.sizes[0] || "", color: $("#colorOptions .active")?.dataset.color || p.colors[0] || "", qty: 1 }); closeProductModal(); openCart(); };
@@ -116,7 +164,7 @@ function renderTotals() {
 function renderCart() {
   const items = detailed();
   $("#cartCount").textContent = state.cart.reduce((s, x) => s + x.qty, 0);
-  $("#cartItems").innerHTML = items.map(x => `<div class="cart-item"><img src="${x.product.image}" alt="${x.product.name}"><div><h4>${x.product.name}</h4><small>Tamanho: ${x.size || "-"} • Cor: ${x.color || "-"}</small><div class="cart-item-price">${money(x.product.price)}</div><div class="qty"><button data-minus="${x.id}" data-size="${x.size}" data-color="${x.color}" type="button">−</button><strong>${x.qty}</strong><button data-plus="${x.id}" data-size="${x.size}" data-color="${x.color}" type="button">+</button></div><button class="remove-btn" data-remove="${x.id}" data-size="${x.size}" data-color="${x.color}" type="button">Remover</button></div></div>`).join("");
+  $("#cartItems").innerHTML = items.map(x => `<div class="cart-item"><img src="${mainImage(x.product)}" alt="${x.product.name}"><div><h4>${x.product.name}</h4><small>Tamanho: ${x.size || "-"} • Cor: ${x.color || "-"}</small><div class="cart-item-price">${money(x.product.price)}</div><div class="qty"><button data-minus="${x.id}" data-size="${x.size}" data-color="${x.color}" type="button">−</button><strong>${x.qty}</strong><button data-plus="${x.id}" data-size="${x.size}" data-color="${x.color}" type="button">+</button></div><button class="remove-btn" data-remove="${x.id}" data-size="${x.size}" data-color="${x.color}" type="button">Remover</button></div></div>`).join("");
   $("#cartEmpty").classList.toggle("hidden", items.length !== 0);
   $(".cart-footer").classList.toggle("hidden", items.length === 0);
   if (items.length) {
