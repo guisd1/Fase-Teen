@@ -224,18 +224,52 @@
       <h2>Quase lá ✨</h2>
       <p class="checkout-intro">Preencha seus dados. Ao continuar, o pedido será enviado para o WhatsApp da Fase Teen para confirmação de estoque, entrega e pagamento.</p>
       <form id="checkoutForm">
-        <label>Nome
-          <input name="name" required placeholder="Seu nome">
+        <div class="checkout-section-title">Dados do cliente</div>
+        <div class="form-grid">
+          <label>Nome completo
+            <input name="name" required autocomplete="name" placeholder="Seu nome completo">
+          </label>
+          <label>WhatsApp
+            <input name="phone" required inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000">
+          </label>
+        </div>
+        <label>E-mail
+          <input name="email" type="email" required autocomplete="email" placeholder="seuemail@email.com">
         </label>
-        <label>WhatsApp
-          <input name="phone" required placeholder="(00) 00000-0000">
+
+        <div class="checkout-section-title address-title">Endereço de entrega</div>
+        <p class="checkout-address-note">Digite o CEP para buscar automaticamente o logradouro, bairro, cidade e estado.</p>
+        <div class="form-grid cep-checkout-grid">
+          <label>CEP
+            <input id="checkoutCep" name="cep" required inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
+          </label>
+          <button class="btn btn-light cep-search-btn" id="checkoutCepBtn" type="button">Buscar CEP</button>
+        </div>
+        <p class="form-note" id="checkoutAddressNote"></p>
+
+        <label>Logradouro
+          <input id="checkoutAddress" name="address" required autocomplete="street-address" placeholder="Rua, Avenida, etc.">
         </label>
-        <label>CEP
-          <input id="checkoutCep" name="cep" required inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
+        <div class="form-grid form-grid-number">
+          <label>Número
+            <input id="checkoutNumber" name="number" required inputmode="text" autocomplete="address-line2" placeholder="123">
+          </label>
+          <label>Complemento <span class="optional-label">(opcional)</span>
+            <input id="checkoutComplement" name="complement" autocomplete="address-line2" placeholder="Apto, bloco, casa...">
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>Bairro
+            <input id="checkoutDistrict" name="district" required autocomplete="address-level3" placeholder="Bairro">
+          </label>
+          <label>Cidade
+            <input id="checkoutCity" name="city" required autocomplete="address-level2" placeholder="Cidade">
+          </label>
+        </div>
+        <label>Estado (UF)
+          <input id="checkoutState" name="state" required maxlength="2" autocomplete="address-level1" placeholder="MG">
         </label>
-        <label>Cidade / Estado
-          <input name="location" required placeholder="Ex.: Espinosa - MG">
-        </label>
+
         <label>Observações
           <textarea name="notes" rows="3" placeholder="Tamanho, cor ou alguma observação"></textarea>
         </label>

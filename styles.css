@@ -379,3 +379,18 @@ img { max-width: 100%; display: block; }
 .shipping-option small{display:block;color:var(--muted);margin-top:2px;font-size:9px}.shipping-option .shipping-price{font-weight:900;font-size:12px;white-space:nowrap}
 .freight-total-row strong{color:var(--pink-dark)}.grand-total-row{margin-top:5px;padding-top:9px;border-top:1px dashed var(--line)}.grand-total-row strong{font-size:22px}
 @media(max-width:430px){.shipping-choice-row{grid-template-columns:1fr}}
+
+/* Checkout completo / endereço */
+.checkout-section-title{font-size:13px;font-weight:900;margin:7px 0 2px;letter-spacing:.01em}
+.address-title{margin-top:10px}
+.checkout-address-note{color:var(--muted);font-size:11px;margin:-4px 0 2px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid-number{grid-template-columns:.7fr 1.3fr}
+.cep-checkout-grid{grid-template-columns:1fr auto;align-items:end}
+.cep-search-btn{min-height:48px;white-space:nowrap}
+.optional-label{font-weight:500;color:var(--muted);font-size:10px}
+.checkout-card label input:read-only{background:#f8f5f6;color:#514a4e}
+@media(max-width:560px){
+  .form-grid,.form-grid-number,.cep-checkout-grid{grid-template-columns:1fr}
+  .cep-search-btn{width:100%}
+}
