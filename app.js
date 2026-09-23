@@ -355,7 +355,25 @@ function init() {
     window.open(`https://wa.me/${storeConfig.whatsapp}?text=${whatsappMessage(data)}`, "_blank", "noopener");
     $("#checkoutNote").textContent = "Pedido preparado no WhatsApp. Confira a mensagem antes de enviar.";
   };
-  $("#newsletterForm").onsubmit = e => { e.preventDefault(); const em = $("#newsletterEmail").value.trim(); $("#newsletterNote").textContent = `Pronto! ${em} foi cadastrado nesta demonstração.`; e.target.reset(); };
+  $("#newsletterForm").onsubmit = async e => {
+    e.preventDefault();
+    const em = $("#newsletterEmail").value.trim();
+    const note = $("#newsletterNote");
+    const btn = $("#newsletterForm button[type=submit]") || $("#newsletterForm").querySelector("button");
+    if (btn) btn.disabled = true;
+    note.textContent = "Enviando...";
+    try {
+      const r = await fetch("/api/newsletter", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: em }) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || "Não foi possível cadastrar seu e-mail agora.");
+      note.textContent = `Pronto! ${em} foi cadastrado com sucesso.`;
+      e.target.reset();
+    } catch (err) {
+      note.textContent = err.message || "Não foi possível cadastrar seu e-mail agora.";
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  };
   $("#mobileMenuBtn").onclick = () => $("#mainNav").classList.toggle("open");
   $$("#mainNav a").forEach(a => a.onclick = () => $("#mainNav").classList.remove("open"));
 }
