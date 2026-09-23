@@ -123,7 +123,7 @@ window.products = [
 
 window.storeConfig = {
   brand: "Fase Teen",
-  whatsapp: "5500000000000", // TROQUE pelo número da loja com DDI + DDD, somente números.
+  whatsapp: "5538998286040", // TROQUE pelo número da loja com DDI + DDD, somente números.
   instagram: "https://instagram.com/faseteen", // TROQUE pelo Instagram oficial.
   instagramHandle: "@faseteen",
   currency: "BRL"
