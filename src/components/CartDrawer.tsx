@@ -26,7 +26,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
         <div className="cart-items">
           {items.map(x => (
             <div className="cart-item" key={`${x.id}|${x.size}|${x.color}`}>
-              <img src={mainImage(x.product)} alt={x.product.name} />
+              <img src={mainImage(x.product, x.color)} alt={x.product.name} />
               <div>
                 <h4>{x.product.name}</h4>
                 <small>Tamanho: {x.size || "-"} • Cor: {x.color || "-"}</small>

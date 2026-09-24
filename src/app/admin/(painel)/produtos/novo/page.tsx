@@ -7,7 +7,7 @@ export default async function NewProductPage() {
   return (
     <>
       <div className="admin-head"><h1>Novo produto</h1></div>
-      <ProductForm id={null} initial={null} categories={categories} youtubeConnected={ytConnected} />
+      <ProductForm id={null} initial={null} categories={categories} youtubeConnected={ytConnected} blobConfigured={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
     </>
   );
 }

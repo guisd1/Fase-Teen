@@ -17,7 +17,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         <h1>{product.name}</h1>
         <DeleteButton action={deleteProduct.bind(null, product.id)} />
       </div>
-      <ProductForm id={product.id} initial={product} categories={categories} youtubeConnected={ytConnected} />
+      <ProductForm id={product.id} initial={product} categories={categories} youtubeConnected={ytConnected} blobConfigured={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
     </>
   );
 }

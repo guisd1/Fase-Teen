@@ -3,6 +3,8 @@ import { boolean, integer, jsonb, numeric, pgTable, serial, text, timestamp } fr
 export interface ProductImage {
   /** URL pública da foto (Vercel Blob). */
   src: string;
+  /** Cor (variação) que a foto mostra. Vazio = vale para todas as cores. */
+  color?: string | null;
 }
 
 export interface ProductSize {

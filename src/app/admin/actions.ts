@@ -75,6 +75,7 @@ function toRow(input: ProductInput): NewProductRow {
   const sizes = input.sizes
     .map(s => ({ size: s.size.trim(), stock: Math.max(0, Math.floor(Number(s.stock) || 0)) }))
     .filter(s => s.size && !seen.has(s.size.toLowerCase()) && seen.add(s.size.toLowerCase()));
+  const colors = input.colors.map(c => c.trim()).filter(Boolean);
   return {
     name,
     reference: text(input.reference),
@@ -87,8 +88,9 @@ function toRow(input: ProductInput): NewProductRow {
     featured: input.featured,
     active: input.active,
     sizes,
-    colors: input.colors.map(c => c.trim()).filter(Boolean),
-    images: input.images.filter(i => i.src),
+    colors,
+    // Foto marcada com uma cor que não existe mais volta a valer para todas.
+    images: input.images.filter(i => i.src).map(i => ({ src: i.src, color: i.color && colors.includes(i.color) ? i.color : null })),
     youtubeUrl: text(input.youtubeUrl),
     weightKg: toNumber(input.weightKg, "Peso"),
     lengthCm: toNumber(input.lengthCm, "Comprimento"),

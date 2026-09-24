@@ -114,3 +114,8 @@
   .admin-grid-2, .admin-grid-3, .admin-grid-4 { grid-template-columns: 1fr; }
   .admin-size-row { grid-template-columns: 1fr 90px 40px; }
 }
+
+/* Cor de cada foto */
+.admin-photo-color { position: absolute; top: 6px; right: 6px; left: 48px; width: auto !important; padding: 4px 6px !important; font-size: 11px !important; border-radius: 8px !important; background: rgba(255,255,255,.95) !important; }
+.admin-inline { display: flex !important; align-items: center; gap: 10px; flex-wrap: wrap; }
+.admin-inline select { width: auto !important; margin-top: 0 !important; }

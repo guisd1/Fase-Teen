@@ -31,7 +31,8 @@ export default function ProductDetail({ product }: { product: Product }) {
         <Link href="/">Início</Link> / <Link href="/#colecao">{product.category || "Coleção"}</Link> / <span>{product.name}</span>
       </nav>
       <div className="quick-product">
-        <MediaCarousel product={product} className="modal-media" playVideo />
+        {/* key: volta para a primeira foto ao trocar de cor */}
+        <MediaCarousel key={color} product={product} color={color} className="modal-media" playVideo />
         <div className="quick-info">
           {product.category && <div className="product-category">{product.category}</div>}
           <h1>{product.name}</h1>
@@ -66,9 +67,15 @@ export default function ProductDetail({ product }: { product: Product }) {
             <div className="option-row">
               <span>COR</span>
               <div className="option-chips">
-                {product.colors.map(c => (
-                  <button key={c} type="button" className={`option-chip ${c === color ? "active" : ""}`} onClick={() => setColor(c)}>{c}</button>
-                ))}
+                {product.colors.map(c => {
+                  const photo = product.images.find(i => i.color === c);
+                  return (
+                    <button key={c} type="button" className={`option-chip ${photo ? "color-chip" : ""} ${c === color ? "active" : ""}`} onClick={() => setColor(c)}>
+                      {photo && <img src={photo.src} alt="" />}
+                      {c}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

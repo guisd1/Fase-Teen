@@ -33,16 +33,20 @@ function initialInput(p: ProductRow | null): ProductInput {
   };
 }
 
-export default function ProductForm({ id, initial, categories, youtubeConnected }: {
+export default function ProductForm({ id, initial, categories, youtubeConnected, blobConfigured }: {
   id: number | null;
   initial: ProductRow | null;
   categories: string[];
   youtubeConnected: boolean;
+  /** Falso quando o Vercel Blob ainda não está conectado ao projeto. */
+  blobConfigured: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<ProductInput>(() => initialInput(initial));
   const [colorsText, setColorsText] = useState(form.colors.join(", "));
   const [uploading, setUploading] = useState(0);
+  const [uploadColor, setUploadColor] = useState("");
+  const colorList = colorsText.split(",").map(c => c.trim()).filter(Boolean);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [saving, startSaving] = useTransition();
 
@@ -68,9 +72,13 @@ export default function ProductForm({ id, initial, categories, youtubeConnected 
     for (const file of list) {
       try {
         const blob = await upload(`produtos/${file.name}`, file, { access: "public", handleUploadUrl: "/api/admin/upload" });
-        uploaded.push({ src: blob.url });
+        uploaded.push({ src: blob.url, color: uploadColor || null });
       } catch (error) {
-        setMessage({ type: "error", text: `Falha ao enviar ${file.name}: ${error instanceof Error ? error.message : "erro"}` });
+        const raw = error instanceof Error ? error.message : "erro";
+        const text = /client token/i.test(raw)
+          ? "o envio não foi autorizado. Confira se o Blob está conectado ao projeto na Vercel e faça o Redeploy."
+          : raw;
+        setMessage({ type: "error", text: `Falha ao enviar ${file.name}: ${text}` });
       } finally {
         setUploading(n => n - 1);
       }
@@ -85,6 +93,8 @@ export default function ProductForm({ id, initial, categories, youtubeConnected 
     set("images", images);
   };
   const removePhoto = (i: number) => set("images", form.images.filter((_, idx) => idx !== i));
+  const setPhotoColor = (i: number, color: string) =>
+    set("images", form.images.map((img, idx) => (idx === i ? { ...img, color: color || null } : img)));
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,11 +173,35 @@ export default function ProductForm({ id, initial, categories, youtubeConnected 
 
       <section className="admin-card">
         <h2>Fotos</h2>
-        <p className="admin-hint">A primeira foto é a capa. Use as setas para mudar a ordem.</p>
+        <p className="admin-hint">
+          A primeira foto é a capa. Use as setas para mudar a ordem. Marque a cor de cada foto: na página do
+          produto, ao escolher a cor, o cliente vê as fotos dela. Fotos em &quot;Todas as cores&quot; aparecem sempre.
+        </p>
+        {!blobConfigured && (
+          <p className="admin-alert">
+            Envio de fotos ainda não configurado. Na Vercel: <strong>Storage → Create → Blob</strong>, conecte ao
+            projeto da loja e faça o <strong>Redeploy</strong>.
+          </p>
+        )}
+        {colorList.length > 0 && (
+          <label className="admin-inline">Enviar as próximas fotos como
+            <select value={uploadColor} onChange={e => setUploadColor(e.target.value)}>
+              <option value="">Todas as cores</option>
+              {colorList.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+        )}
         <div className="admin-photos">
           {form.images.map((img, i) => (
             <div className="admin-photo" key={img.src}>
               <img src={img.src} alt="" />
+              {colorList.length > 0 && (
+                <select className="admin-photo-color" value={img.color ?? ""} onChange={e => setPhotoColor(i, e.target.value)}>
+                  <option value="">Todas as cores</option>
+                  {colorList.map(c => <option key={c} value={c}>{c}</option>)}
+                  {img.color && !colorList.includes(img.color) && <option value={img.color}>{img.color} (removida)</option>}
+                </select>
+              )}
               <div>
                 <button type="button" onClick={() => movePhoto(i, -1)} disabled={i === 0} aria-label="Mover para a esquerda">←</button>
                 <button type="button" onClick={() => removePhoto(i)} aria-label="Remover foto">✕</button>
@@ -175,8 +209,8 @@ export default function ProductForm({ id, initial, categories, youtubeConnected 
               </div>
             </div>
           ))}
-          <label className="admin-photo admin-photo-add">
-            <input type="file" accept="image/*" multiple hidden onChange={e => { addPhotos(e.target.files); e.target.value = ""; }} />
+          <label className={`admin-photo admin-photo-add ${blobConfigured ? "" : "admin-muted"}`}>
+            <input type="file" accept="image/*" multiple hidden disabled={!blobConfigured} onChange={e => { addPhotos(e.target.files); e.target.value = ""; }} />
             {uploading ? `Enviando ${uploading}...` : "+ Adicionar fotos"}
           </label>
         </div>

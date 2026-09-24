@@ -464,3 +464,5 @@ img { max-width: 100%; display: block; }
   .product-page .quick-info h1 { font-size: 32px; }
   .product-page .quick-product .product-image-wrap.modal-media { min-height: 380px; max-height: 480px; }
 }
+.color-chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 4px; }
+.color-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }

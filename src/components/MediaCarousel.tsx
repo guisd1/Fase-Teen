@@ -3,25 +3,28 @@
 import { useState, type MouseEvent, type ReactNode } from "react";
 import type { Product } from "@/db/products";
 import { youtubeId } from "@/lib/youtube-id";
+import { imagesForColor } from "@/lib/product-media";
 
 type Slide = { type: "image"; src: string } | { type: "youtube"; id: string };
 
-/** Fotos na ordem cadastrada e o vídeo do YouTube sempre por último. */
-function slidesFor(p: Product): Slide[] {
-  const slides: Slide[] = p.images.map(i => ({ type: "image", src: i.src }));
+/** Fotos (da cor escolhida primeiro) e o vídeo do YouTube sempre por último. */
+function slidesFor(p: Product, color?: string | null): Slide[] {
+  const slides: Slide[] = imagesForColor(p.images, color).map(i => ({ type: "image", src: i.src }));
   const video = youtubeId(p.youtubeUrl);
   if (video) slides.push({ type: "youtube", id: video });
   return slides;
 }
 
-export default function MediaCarousel({ product, className = "", playVideo = false, children }: {
+export default function MediaCarousel({ product, color, className = "", playVideo = false, children }: {
   product: Product;
+  /** Cor escolhida: mostra as fotos dessa variação primeiro. */
+  color?: string | null;
   className?: string;
   /** true na página do produto (vídeo tocável); false nos cards (só a capa). */
   playVideo?: boolean;
   children?: ReactNode;
 }) {
-  const slides = slidesFor(product);
+  const slides = slidesFor(product, color);
   const [index, setIndex] = useState(0);
   const multi = slides.length > 1;
 
