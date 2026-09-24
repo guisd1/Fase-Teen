@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "admin:hash": "tsx scripts/admin-hash.ts"
+    "admin:hash": "tsx scripts/admin-hash.ts",
+    "admin:check": "tsx scripts/admin-check.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
