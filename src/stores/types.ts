@@ -38,6 +38,10 @@ export interface StoreConfig {
     primarySoft: string;
     /** Versão clara usada sobre fundo escuro (rodapé, banner). */
     primaryLight: string;
+    /** Cor secundária de destaque (segunda parte do logo em texto). */
+    accent: string;
+    /** Cor da parte principal do logo em texto. */
+    logoText: string;
     /** Cor de texto e fundos escuros. */
     ink: string;
     /** Degradê do bloco principal (hero): [início, meio, fim]. */
@@ -88,6 +92,8 @@ export interface StoreConfig {
       primaryCta: string;
       secondaryCta: string;
       pill: string;
+      /** Se preenchido, mostra esta imagem (dentro de public/) no lugar do cartão com o nome da loja. */
+      image?: string;
       cardTop: string;
       cardBottom: string;
       cardCaption: string;

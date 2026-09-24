@@ -114,11 +114,15 @@ export default function Storefront({ store, products }: { store: StoreConfig; pr
           <div className="hero-art">
             <div className="hero-pill">{t.hero.pill}</div>
             <div className="hero-card card-back" />
-            <div className="hero-card card-front">
-              <span>{t.hero.cardTop}</span>
-              <strong>{t.hero.cardBottom}</strong>
-              <small>{t.hero.cardCaption}</small>
-            </div>
+            {t.hero.image ? (
+              <img className="hero-card hero-image" src={t.hero.image} alt={store.name} />
+            ) : (
+              <div className="hero-card card-front">
+                <span>{t.hero.cardTop}</span>
+                <strong>{t.hero.cardBottom}</strong>
+                <small>{t.hero.cardCaption}</small>
+              </div>
+            )}
           </div>
         </section>
 

@@ -62,12 +62,13 @@ img { max-width: 100%; display: block; }
   font-size: 31px;
   font-weight: 700;
   letter-spacing: -.03em;
+  color: var(--logo-text);
 }
 .logo-sub {
   font-size: 10px;
   letter-spacing: .56em;
   margin-left: 4px;
-  color: var(--primary);
+  color: var(--accent);
   font-weight: 800;
 }
 .nav { display: flex; gap: 30px; align-items: center; font-size: 14px; font-weight: 600; }
@@ -142,6 +143,7 @@ img { max-width: 100%; display: block; }
 .card-front span { font-size: 52px; letter-spacing: .06em; font-family: var(--font-heading); }
 .card-front strong { font-size: 24px; letter-spacing: .48em; margin-left: 4px; }
 .card-front small { margin-top: 12px; opacity: .85; font-size: 12px; }
+.hero-image { width: min(92%, 420px); aspect-ratio: 1; object-fit: cover; background: white; }
 .hero-pill {
   position: absolute; right: 4%; top: 4%; z-index: 3; width: 74px; height: 74px; border-radius: 50%;
   background: white; color: var(--primary-dark); display: grid; place-items: center; font-weight: 900;

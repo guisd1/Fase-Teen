@@ -16,14 +16,18 @@ const cirandaCirandinha: StoreConfig = {
   },
 
   theme: {
-    primary: "#e8793a",
-    primaryDark: "#c45d22",
-    primarySoft: "#fdf0e6",
-    primaryLight: "#ffc49e",
-    ink: "#1d2a33",
-    heroGradient: ["#fde3cf", "#fdf2e8", "#fbd9c2"],
-    cardGradient: ["#f08f55", "#d9692c"],
-    cardBackGradient: ["#ffd0ae", "#d4e8e4"],
+    // Paleta tirada do logo provisório: azul "Ciranda", verde "Cirandinha",
+    // amarelo do pintinho, rosa dos corações, azul-céu e creme da placa.
+    primary: "#3c9cd8",
+    primaryDark: "#2677b0",
+    primarySoft: "#eaf5fc",
+    primaryLight: "#a8d8f0",
+    accent: "#9cb460",
+    logoText: "#3c9cd8",
+    ink: "#1e3a52",
+    heroGradient: ["#d4ecfa", "#fdf6ee", "#fde3ea"],
+    cardGradient: ["#5aaee3", "#3c9cd8"],
+    cardBackGradient: ["#fcd848", "#fc90a8"],
     fonts: {
       googleFontsUrl: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap",
       heading: "\"Fredoka\", \"Trebuchet MS\", sans-serif",
@@ -57,6 +61,7 @@ const cirandaCirandinha: StoreConfig = {
       primaryCta: "Comprar agora",
       secondaryCta: "Ver novidades",
       pill: "NOVO",
+      image: "/brand/ciranda-cirandinha.png", // logo provisório
       cardTop: "CIRANDA",
       cardBottom: "KIDS",
       cardCaption: "Moda infantil"

@@ -15,6 +15,8 @@ const faseTeen: StoreConfig = {
     primaryDark: "#b83d6d",
     primarySoft: "#f8e9ef",
     primaryLight: "#f6aac6",
+    accent: "#d94f86",
+    logoText: "#171317",
     ink: "#171317",
     heroGradient: ["#f7dce7", "#f7e9ee", "#f5d3e1"],
     cardGradient: ["#cf6a95", "#b74676"],

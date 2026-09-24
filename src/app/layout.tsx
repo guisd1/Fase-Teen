@@ -22,6 +22,8 @@ function themeVars(theme: StoreConfig["theme"]): CSSProperties {
     "--primary-dark": theme.primaryDark,
     "--primary-soft": theme.primarySoft,
     "--primary-light": theme.primaryLight,
+    "--accent": theme.accent,
+    "--logo-text": theme.logoText,
     "--ink": theme.ink,
     "--hero-1": theme.heroGradient[0],
     "--hero-2": theme.heroGradient[1],
