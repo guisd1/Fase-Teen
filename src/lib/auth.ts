@@ -13,14 +13,28 @@ import { redirect } from "next/navigation";
 const COOKIE = "admin_session";
 const SESSION_DAYS = 7;
 
+/**
+ * Lê a variável tolerando erros comuns ao colar na Vercel:
+ * espaços, aspas e o nome da variável junto (ex.: "ADMIN_PASSWORD_HASH=scrypt:...").
+ */
+function env(name: "ADMIN_EMAIL" | "ADMIN_PASSWORD_HASH" | "ADMIN_SESSION_SECRET") {
+  const unquote = (v: string) => v.trim().replace(/^["']+|["']+$/g, "").trim();
+  return unquote(unquote(process.env[name] ?? "").replace(new RegExp(`^${name}\\s*=`), ""));
+}
+
 function secret() {
-  const s = process.env.ADMIN_SESSION_SECRET;
-  if (!s || s.length < 32) throw new Error("ADMIN_SESSION_SECRET ausente ou curto demais (mínimo 32 caracteres).");
+  const s = env("ADMIN_SESSION_SECRET");
+  if (s.length < 32) throw new Error("ADMIN_SESSION_SECRET ausente ou curto demais (mínimo 32 caracteres).");
   return s;
 }
 
+/** Falso quando ADMIN_PASSWORD_HASH não é um hash gerado pelo `npm run admin:hash` (ex.: a senha pura). */
+export function adminHashValid() {
+  return /^scrypt:[0-9a-f]{32}:[0-9a-f]{128}$/.test(env("ADMIN_PASSWORD_HASH"));
+}
+
 export function adminConfigured() {
-  return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD_HASH && process.env.ADMIN_SESSION_SECRET);
+  return Boolean(env("ADMIN_EMAIL") && env("ADMIN_PASSWORD_HASH") && env("ADMIN_SESSION_SECRET"));
 }
 
 export function hashPassword(password: string) {
@@ -45,8 +59,8 @@ function sameText(a: string, b: string) {
 
 export function checkCredentials(email: string, password: string) {
   if (!adminConfigured()) return false;
-  const emailOk = sameText(email.trim().toLowerCase(), process.env.ADMIN_EMAIL!.trim().toLowerCase());
-  const passwordOk = verifyPassword(password, process.env.ADMIN_PASSWORD_HASH!);
+  const emailOk = sameText(email.trim().toLowerCase(), env("ADMIN_EMAIL").toLowerCase());
+  const passwordOk = verifyPassword(password, env("ADMIN_PASSWORD_HASH"));
   return emailOk && passwordOk;
 }
 
@@ -56,7 +70,7 @@ function sign(payload: string) {
 
 export async function startSession() {
   const payload = Buffer.from(JSON.stringify({
-    email: process.env.ADMIN_EMAIL,
+    email: env("ADMIN_EMAIL"),
     exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000
   })).toString("base64url");
   (await cookies()).set(COOKIE, `${payload}.${sign(payload)}`, {
@@ -81,7 +95,7 @@ export async function isAdmin() {
   try {
     const data = JSON.parse(Buffer.from(payload, "base64url").toString());
     // Trocar ADMIN_EMAIL na Vercel invalida as sessões antigas.
-    return data.exp > Date.now() && data.email === process.env.ADMIN_EMAIL;
+    return data.exp > Date.now() && data.email === env("ADMIN_EMAIL");
   } catch {
     return false;
   }

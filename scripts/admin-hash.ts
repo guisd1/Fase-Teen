@@ -1,16 +1,34 @@
 /*
   Gera as variáveis de login do painel.
-  Uso: npm run admin:hash -- "sua senha"
+  Uso: npm run admin:hash   (o comando pede a senha; assim símbolos como $ ! % não se perdem)
   Cole o resultado nas Environment Variables do projeto da loja na Vercel.
 */
 import crypto from "node:crypto";
+import { createInterface } from "node:readline/promises";
 import { hashPassword } from "../src/lib/auth";
 
-const password = process.argv[2];
-if (!password || password.length < 8) {
-  console.error('Informe uma senha com pelo menos 8 caracteres: npm run admin:hash -- "sua senha"');
+let password = process.argv[2];
+if (!password) {
+  const rl = createInterface({ input: process.stdin });
+  const lines = rl[Symbol.asyncIterator]();
+  const ask = async (question: string) => {
+    process.stdout.write(question);
+    // Remove caracteres invisíveis que alguns terminais do Windows acrescentam.
+    return String((await lines.next()).value ?? "").replace(/^﻿/, "").replace(/\r$/, "");
+  };
+  password = await ask("Digite a senha do painel: ");
+  const again = await ask("Digite de novo para confirmar: ");
+  rl.close();
+  if (password !== again) {
+    console.error("\nAs senhas não conferem. Rode o comando de novo.");
+    process.exit(1);
+  }
+}
+if (password.length < 8) {
+  console.error("\nA senha precisa ter pelo menos 8 caracteres.");
   process.exit(1);
 }
 
+console.log("\nCadastre na Vercel (Key = antes do '=', Value = depois do '='):\n");
 console.log(`ADMIN_PASSWORD_HASH=${hashPassword(password)}`);
 console.log(`ADMIN_SESSION_SECRET=${crypto.randomBytes(32).toString("base64url")}`);
