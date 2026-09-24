@@ -1,4 +1,5 @@
 import { getStore } from "@/stores";
+import { blobMode } from "@/lib/blob";
 import { melhorEnvioStatus } from "@/lib/melhor-envio";
 import { getYoutubeRedirectUri, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
 import { disconnectYoutubeAction } from "../../actions";
@@ -19,7 +20,7 @@ export default async function IntegrationsPage({ searchParams }: {
   const store = getStore();
   const [me, yt] = await Promise.all([melhorEnvioStatus(), youtubeConnected()]);
   const ytReady = youtubeConfigured();
-  const blobReady = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  const blobReady = blobMode() !== null;
 
   const meLabel = { connected: "Conectado", expired: "Autorização expirada", disconnected: "Não conectado", "no-redis": "Redis não configurado" }[me];
 

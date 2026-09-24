@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
+import { upload, uploadPresigned } from "@vercel/blob/client";
+import type { BlobMode } from "@/lib/blob";
 import type { ProductImage, ProductRow, ProductSize } from "@/db/schema";
 import { saveProduct, type ProductInput } from "@/app/admin/actions";
 import { youtubeId } from "@/lib/youtube-id";
@@ -33,17 +34,18 @@ function initialInput(p: ProductRow | null): ProductInput {
   };
 }
 
-export default function ProductForm({ id, initial, categories, youtubeConnected, blobConfigured }: {
+export default function ProductForm({ id, initial, categories, youtubeConnected, blobMode }: {
   id: number | null;
   initial: ProductRow | null;
   categories: string[];
   youtubeConnected: boolean;
-  /** Falso quando o Vercel Blob ainda não está conectado ao projeto. */
-  blobConfigured: boolean;
+  /** Como o Vercel Blob está conectado (null = ainda não conectado). */
+  blobMode: BlobMode;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<ProductInput>(() => initialInput(initial));
   const [colorsText, setColorsText] = useState(form.colors.join(", "));
+  const blobConfigured = blobMode !== null;
   const [uploading, setUploading] = useState(0);
   const [uploadColor, setUploadColor] = useState("");
   const colorList = colorsText.split(",").map(c => c.trim()).filter(Boolean);
@@ -71,11 +73,12 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
     const uploaded: ProductImage[] = [];
     for (const file of list) {
       try {
-        const blob = await upload(`produtos/${file.name}`, file, { access: "public", handleUploadUrl: "/api/admin/upload" });
+        const send = blobMode === "presigned" ? uploadPresigned : upload;
+        const blob = await send(`produtos/${file.name}`, file, { access: "public", handleUploadUrl: "/api/admin/upload" });
         uploaded.push({ src: blob.url, color: uploadColor || null });
       } catch (error) {
         const raw = error instanceof Error ? error.message : "erro";
-        const text = /client token/i.test(raw)
+        const text = /client token|presigned/i.test(raw)
           ? "o envio não foi autorizado. Confira se o Blob está conectado ao projeto na Vercel e faça o Redeploy."
           : raw;
         setMessage({ type: "error", text: `Falha ao enviar ${file.name}: ${text}` });

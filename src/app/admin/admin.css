@@ -119,3 +119,6 @@
 .admin-photo-color { position: absolute; top: 6px; right: 6px; left: 48px; width: auto !important; padding: 4px 6px !important; font-size: 11px !important; border-radius: 8px !important; background: rgba(255,255,255,.95) !important; }
 .admin-inline { display: flex !important; align-items: center; gap: 10px; flex-wrap: wrap; }
 .admin-inline select { width: auto !important; margin-top: 0 !important; }
+
+/* Mantém escondidos os campos com o atributo hidden (ex.: seletor de arquivo das fotos). */
+.admin [hidden] { display: none !important; }

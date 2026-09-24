@@ -1,13 +1,14 @@
 import { adminCategories } from "@/db/products";
 import { youtubeConnected } from "@/lib/youtube";
 import ProductForm from "@/components/admin/ProductForm";
+import { blobMode } from "@/lib/blob";
 
 export default async function NewProductPage() {
   const [categories, ytConnected] = await Promise.all([adminCategories(), youtubeConnected()]);
   return (
     <>
       <div className="admin-head"><h1>Novo produto</h1></div>
-      <ProductForm id={null} initial={null} categories={categories} youtubeConnected={ytConnected} blobConfigured={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
+      <ProductForm id={null} initial={null} categories={categories} youtubeConnected={ytConnected} blobMode={blobMode()} />
     </>
   );
 }
