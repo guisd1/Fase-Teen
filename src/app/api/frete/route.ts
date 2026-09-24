@@ -11,11 +11,25 @@ const reply = (status: number, body: unknown) =>
 // A resposta do Melhor Envio varia entre versões da API, por isso os campos são lidos com fallback.
 type RawQuote = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-function normalizeQuotes(payload: unknown): ShippingOption[] {
-  const list: RawQuote[] = Array.isArray(payload)
+function quoteList(payload: unknown): RawQuote[] {
+  return Array.isArray(payload)
     ? payload
     : Array.isArray((payload as { data?: unknown })?.data) ? (payload as { data: RawQuote[] }).data : [];
-  return list
+}
+
+/** Motivos que as transportadoras deram para recusar a cotação (ex.: peso ou medidas fora do limite). */
+function unavailableReasons(payload: unknown): string[] {
+  return quoteList(payload)
+    .filter(q => q?.error || q?.status === "unavailable")
+    .map(q => {
+      const name = [q.company?.name, q.name].filter(Boolean).join(" ") || "Transportadora";
+      const reason = typeof q.error === "string" ? q.error : q.error?.message ?? q.message ?? "indisponível";
+      return `${name}: ${reason}`;
+    });
+}
+
+function normalizeQuotes(payload: unknown): ShippingOption[] {
+  return quoteList(payload)
     .filter(q => !q?.error && q?.status !== "unavailable")
     .map((q, index) => ({
       id: String(q.id ?? q.service_id ?? q.service?.id ?? index),
@@ -106,7 +120,10 @@ export async function POST(request: Request) {
     if (!response.ok) {
       return reply(502, { error: data?.message || data?.error || "O Melhor Envio recusou a cotação." });
     }
-    return reply(200, { options: normalizeQuotes(data), postalCode: destination });
+    const options = normalizeQuotes(data);
+    const unavailable = options.length ? [] : unavailableReasons(data);
+    if (!options.length) console.warn("Frete sem opções:", JSON.stringify({ payload, unavailable }));
+    return reply(200, { options, unavailable, postalCode: destination });
   } catch (error) {
     return reply(502, { error: error instanceof Error ? error.message : "Não foi possível conectar ao Melhor Envio agora." });
   }

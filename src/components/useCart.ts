@@ -186,7 +186,10 @@ export function useCart(storeId: string, products: Product[]) {
       if (!r.ok) throw new Error(data.error || "Não foi possível calcular o frete.");
       const options: ShippingOption[] = Array.isArray(data.options) ? data.options : [];
       setShippingOptions(options);
-      setShippingStatus(options.length ? "Escolha uma opção de envio:" : "CEP válido, mas nenhuma opção de envio foi encontrada.");
+      const reasons: string[] = Array.isArray(data.unavailable) ? data.unavailable : [];
+      setShippingStatus(options.length
+        ? "Escolha uma opção de envio:"
+        : `Nenhuma opção de envio para este CEP.${reasons.length ? ` Motivo: ${reasons.slice(0, 2).join(" • ")}` : ""} Você pode escolher retirada na loja ou falar com a gente no WhatsApp.`);
     } catch (e) {
       setShippingStatus(e instanceof Error ? e.message : "Erro ao calcular o frete.");
     } finally {

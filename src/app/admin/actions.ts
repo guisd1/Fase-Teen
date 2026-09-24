@@ -68,9 +68,24 @@ function toNumber(value: string, label: string): number | null {
 
 const text = (v: string) => v.trim() || null;
 
+/** Barra valores que nenhuma transportadora aceita (ex.: peso digitado em gramas). */
+function checkPackage(weightKg: number | null, dims: (number | null)[]) {
+  if (weightKg !== null && weightKg > 30) {
+    throw new Error(`Peso de ${weightKg} kg é alto demais. O campo é em quilos: 450 g = 0,45.`);
+  }
+  if (dims.some(d => d !== null && d > 105)) {
+    throw new Error("Alguma medida passou de 105 cm. As medidas são da embalagem, em centímetros.");
+  }
+}
+
 function toRow(input: ProductInput): NewProductRow {
   const name = input.name.trim();
   if (!name) throw new Error("O nome do produto é obrigatório.");
+  const weightKg = toNumber(input.weightKg, "Peso");
+  const lengthCm = toNumber(input.lengthCm, "Comprimento");
+  const widthCm = toNumber(input.widthCm, "Largura");
+  const heightCm = toNumber(input.heightCm, "Altura");
+  checkPackage(weightKg, [lengthCm, widthCm, heightCm]);
   const seen = new Set<string>();
   const sizes = input.sizes
     .map(s => ({ size: s.size.trim(), stock: Math.max(0, Math.floor(Number(s.stock) || 0)) }))
@@ -92,10 +107,7 @@ function toRow(input: ProductInput): NewProductRow {
     // Foto marcada com uma cor que não existe mais volta a valer para todas.
     images: input.images.filter(i => i.src).map(i => ({ src: i.src, color: i.color && colors.includes(i.color) ? i.color : null })),
     youtubeUrl: text(input.youtubeUrl),
-    weightKg: toNumber(input.weightKg, "Peso"),
-    lengthCm: toNumber(input.lengthCm, "Comprimento"),
-    widthCm: toNumber(input.widthCm, "Largura"),
-    heightCm: toNumber(input.heightCm, "Altura")
+    weightKg, lengthCm, widthCm, heightCm
   };
 }
 
