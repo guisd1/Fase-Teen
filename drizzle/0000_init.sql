@@ -1,0 +1,23 @@
+CREATE TABLE "products" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"category" text NOT NULL,
+	"price" numeric(10, 2) NOT NULL,
+	"old_price" numeric(10, 2),
+	"sizes" text[] DEFAULT '{}' NOT NULL,
+	"colors" text[] DEFAULT '{}' NOT NULL,
+	"media" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"reference" text,
+	"featured" boolean DEFAULT false NOT NULL,
+	"badge" text,
+	"description" text DEFAULT '' NOT NULL,
+	"composition" text,
+	"weight_kg" numeric(8, 3) NOT NULL,
+	"height_cm" numeric(8, 2) NOT NULL,
+	"width_cm" numeric(8, 2) NOT NULL,
+	"length_cm" numeric(8, 2) NOT NULL,
+	"active" boolean DEFAULT true NOT NULL,
+	"sort_order" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);

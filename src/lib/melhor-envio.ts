@@ -1,10 +1,29 @@
 import crypto from "node:crypto";
 import { Redis } from "@upstash/redis";
+import { getStore } from "@/stores";
 
-const REDIRECT_URI = "https://fase-teen.vercel.app/api/melhor-envio/callback";
-const ME_URL = "https://melhorenvio.com.br";
-const TOKEN_KEY = "fase-teen:melhor-envio:tokens";
-const STATE_PREFIX = "fase-teen:melhor-envio:oauth-state:";
+export const ME_URL = "https://melhorenvio.com.br";
+
+interface SavedTokens {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_at: number;
+  refresh_expires_at: number;
+}
+
+interface TokenResponse {
+  access_token?: string;
+  refresh_token?: string;
+  token_type?: string;
+  expires_in?: number;
+  message?: string;
+  error?: string;
+}
+
+// As chaves levam o id da loja, então duas lojas podem até dividir o mesmo Redis sem conflito.
+const tokenKey = () => `${getStore().id}:melhor-envio:tokens`;
+const statePrefix = () => `${getStore().id}:melhor-envio:oauth-state:`;
 
 function getRedis() {
   const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
@@ -16,11 +35,11 @@ function getRedis() {
 }
 
 export function getUserAgent() {
-  return process.env.MELHOR_ENVIO_USER_AGENT || "Fase Teen (contato técnico)";
+  return process.env.MELHOR_ENVIO_USER_AGENT || `${getStore().name} (contato técnico)`;
 }
 
 export function getRedirectUri() {
-  return REDIRECT_URI;
+  return `${getStore().siteUrl}/api/melhor-envio/callback`;
 }
 
 export function getClientId() {
@@ -28,40 +47,37 @@ export function getClientId() {
 }
 
 export async function createOAuthState() {
-  const redis = getRedis();
   const state = crypto.randomBytes(32).toString("hex");
-  await redis.set(`${STATE_PREFIX}${state}`, "1", { ex: 600 });
+  await getRedis().set(`${statePrefix()}${state}`, "1", { ex: 600 });
   return state;
 }
 
-export async function consumeOAuthState(state) {
+export async function consumeOAuthState(state: string) {
   const redis = getRedis();
-  const key = `${STATE_PREFIX}${String(state || "")}`;
+  const key = `${statePrefix()}${state}`;
   const found = await redis.get(key);
   if (!found) return false;
   await redis.del(key);
   return true;
 }
 
-export async function saveTokens(tokens) {
-  const redis = getRedis();
-  const saved = {
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
+async function saveTokens(tokens: TokenResponse): Promise<SavedTokens> {
+  const saved: SavedTokens = {
+    access_token: tokens.access_token!,
+    refresh_token: tokens.refresh_token!,
     token_type: tokens.token_type || "Bearer",
     expires_at: Date.now() + Number(tokens.expires_in || 2592000) * 1000,
     refresh_expires_at: Date.now() + 45 * 24 * 60 * 60 * 1000
   };
-  await redis.set(TOKEN_KEY, saved);
+  await getRedis().set(tokenKey(), saved);
   return saved;
 }
 
-export async function readTokens() {
-  const redis = getRedis();
-  return await redis.get(TOKEN_KEY);
+async function readTokens() {
+  return await getRedis().get<SavedTokens>(tokenKey());
 }
 
-async function requestToken(body) {
+async function requestToken(body: Record<string, string>) {
   const clientId = getClientId();
   const clientSecret = process.env.MELHOR_ENVIO_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
@@ -79,11 +95,11 @@ async function requestToken(body) {
       ...body,
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: REDIRECT_URI
+      redirect_uri: getRedirectUri()
     })
   });
 
-  const data = await response.json().catch(() => ({}));
+  const data: TokenResponse = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data?.message || data?.error || `Melhor Envio recusou a autenticação (${response.status}).`);
   }
@@ -93,29 +109,19 @@ async function requestToken(body) {
   return data;
 }
 
-export async function exchangeCode(code) {
-  const tokens = await requestToken({
-    grant_type: "authorization_code",
-    code: String(code)
-  });
-  return saveTokens(tokens);
+export async function exchangeCode(code: string) {
+  return saveTokens(await requestToken({ grant_type: "authorization_code", code }));
 }
 
-export async function refreshAccessToken() {
+async function refreshAccessToken() {
   const current = await readTokens();
   if (!current?.refresh_token) {
-    throw new Error("A Fase Teen ainda não autorizou o Melhor Envio. Abra /api/melhor-envio/authorize.");
+    throw new Error(`A ${getStore().name} ainda não autorizou o Melhor Envio. Abra /api/melhor-envio/authorize.`);
   }
-
   if (current.refresh_expires_at && Number(current.refresh_expires_at) < Date.now()) {
     throw new Error("A autorização do Melhor Envio expirou. Abra /api/melhor-envio/authorize novamente.");
   }
-
-  const tokens = await requestToken({
-    grant_type: "refresh_token",
-    refresh_token: current.refresh_token
-  });
-  return saveTokens(tokens);
+  return saveTokens(await requestToken({ grant_type: "refresh_token", refresh_token: current.refresh_token }));
 }
 
 export async function getAccessToken(forceRefresh = false) {
@@ -123,12 +129,7 @@ export async function getAccessToken(forceRefresh = false) {
   if (!current?.access_token || !current?.refresh_token) {
     throw new Error("Frete ainda não conectado ao Melhor Envio. Abra /api/melhor-envio/authorize para autorizar a conta.");
   }
-
   const notExpired = Number(current.expires_at || 0) > Date.now() + 60_000;
   if (!forceRefresh && notExpired) return current.access_token;
-
-  const renewed = await refreshAccessToken();
-  return renewed.access_token;
+  return (await refreshAccessToken()).access_token;
 }
-
-export { ME_URL, TOKEN_KEY };
