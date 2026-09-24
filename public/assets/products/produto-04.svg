@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <rect width="800" height="1000" fill="#f7efda"/>
-  <circle cx="650" cy="150" r="90" fill="#ffffff" fill-opacity=".55"/>
-  <rect x="150" y="150" width="500" height="650" rx="250" fill="#be8c3c" opacity=".88"/>
-  <path d="M255 470 Q400 360 545 470 L505 730 Q400 785 295 730 Z" fill="#ffffff" fill-opacity=".72"/>
-  <text x="400" y="885" text-anchor="middle" font-family="Arial, sans-serif" font-size="45" font-weight="700" fill="#2a2327">FASE TEEN</text>
-  <text x="400" y="935" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" letter-spacing="5" fill="#5c5358">LOOK 04</text>
-</svg>
