@@ -4,6 +4,7 @@
   Cole o resultado nas Environment Variables do projeto da loja na Vercel.
 */
 import crypto from "node:crypto";
+import { writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { hashPassword } from "../src/lib/auth";
 
@@ -29,6 +30,24 @@ if (password.length < 8) {
   process.exit(1);
 }
 
-console.log("\nCadastre na Vercel (Key = antes do '=', Value = depois do '='):\n");
-console.log(`ADMIN_PASSWORD_HASH=${hashPassword(password)}`);
-console.log(`ADMIN_SESSION_SECRET=${crypto.randomBytes(32).toString("base64url")}`);
+const hash = hashPassword(password);
+const secret = crypto.randomBytes(32).toString("base64url");
+
+// Salva num arquivo: copiar do terminal costuma quebrar o código em várias linhas.
+const file = "admin-login.local.txt";
+writeFileSync(file, [
+  "Cadastre na Vercel (Settings > Environment Variables). Copie cada valor inteiro, numa linha só.",
+  "Depois de cadastrar, APAGUE este arquivo.",
+  "",
+  "Key:   ADMIN_PASSWORD_HASH",
+  `Value: ${hash}`,
+  "",
+  "Key:   ADMIN_SESSION_SECRET",
+  `Value: ${secret}`,
+  ""
+].join("\n"));
+
+console.log(`\nPronto! Abra o arquivo ${file} (na raiz do projeto) e copie os valores de lá.`);
+console.log("Ele não vai para o GitHub. Apague depois de cadastrar na Vercel.\n");
+console.log(`ADMIN_PASSWORD_HASH=${hash}`);
+console.log(`ADMIN_SESSION_SECRET=${secret}`);
