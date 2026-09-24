@@ -66,6 +66,9 @@ export async function POST(request: Request) {
     const product = catalog.find(p => p.id === Number(item?.id));
     const quantity = Math.max(1, Math.min(50, Number(item?.quantity) || 1));
     if (!product) return reply(400, { error: `Produto ${item?.id} não encontrado.` });
+    if (![product.weightKg, product.heightCm, product.widthCm, product.lengthCm].every(v => v && v > 0)) {
+      return reply(422, { error: `O produto "${product.name}" está sem peso/dimensões para o frete. Escolha retirada na loja ou fale com a gente no WhatsApp.` });
+    }
     payloadProducts.push({
       id: String(product.id),
       width: product.widthCm, height: product.heightCm, length: product.lengthCm,

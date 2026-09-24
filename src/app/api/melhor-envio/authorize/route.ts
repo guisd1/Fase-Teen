@@ -1,8 +1,11 @@
+import { isAdmin } from "@/lib/auth";
 import { createOAuthState, getClientId, getRedirectUri } from "@/lib/melhor-envio";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Só o administrador pode vincular a conta do Melhor Envio à loja.
+  if (!(await isAdmin())) return new Response("Acesso restrito ao administrador. Entre em /admin primeiro.", { status: 401 });
   try {
     const clientId = getClientId();
     if (!clientId) return new Response("MELHOR_ENVIO_CLIENT_ID não configurado na Vercel.", { status: 500 });

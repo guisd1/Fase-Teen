@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
-import { Redis } from "@upstash/redis";
 import { getStore } from "@/stores";
+import { getRedis, storeKey } from "./redis";
 
 export const ME_URL = "https://melhorenvio.com.br";
 
@@ -21,18 +21,8 @@ interface TokenResponse {
   error?: string;
 }
 
-// As chaves levam o id da loja, então duas lojas podem até dividir o mesmo Redis sem conflito.
-const tokenKey = () => `${getStore().id}:melhor-envio:tokens`;
-const statePrefix = () => `${getStore().id}:melhor-envio:oauth-state:`;
-
-function getRedis() {
-  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-  if (!url || !token) {
-    throw new Error("Upstash Redis não configurado. Instale o Redis do Vercel Marketplace e faça o deploy novamente.");
-  }
-  return new Redis({ url, token, enableTelemetry: false });
-}
+const tokenKey = () => storeKey("melhor-envio:tokens");
+const statePrefix = () => storeKey("melhor-envio:oauth-state:");
 
 export function getUserAgent() {
   return process.env.MELHOR_ENVIO_USER_AGENT || `${getStore().name} (contato técnico)`;
@@ -75,6 +65,16 @@ async function saveTokens(tokens: TokenResponse): Promise<SavedTokens> {
 
 async function readTokens() {
   return await getRedis().get<SavedTokens>(tokenKey());
+}
+
+export async function melhorEnvioStatus(): Promise<"connected" | "expired" | "disconnected" | "no-redis"> {
+  try {
+    const t = await readTokens();
+    if (!t?.refresh_token) return "disconnected";
+    return Number(t.refresh_expires_at) < Date.now() ? "expired" : "connected";
+  } catch {
+    return "no-redis";
+  }
 }
 
 async function requestToken(body: Record<string, string>) {

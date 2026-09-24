@@ -2,7 +2,7 @@
 
 import { formatCep, money } from "@/lib/format";
 import type { Cart } from "./useCart";
-import { mainImage } from "./MediaCarousel";
+import { mainImage } from "@/lib/product-media";
 
 export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRef }: {
   cart: Cart;
@@ -34,7 +34,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
                 <div className="qty">
                   <button type="button" onClick={() => cart.changeQty(x, -1)}>−</button>
                   <strong>{x.qty}</strong>
-                  <button type="button" onClick={() => cart.changeQty(x, 1)}>+</button>
+                  <button type="button" disabled={!cart.canIncrease(x)} onClick={() => cart.changeQty(x, 1)}>+</button>
                 </div>
                 <button className="remove-btn" type="button" onClick={() => cart.removeItem(x)}>Remover</button>
               </div>

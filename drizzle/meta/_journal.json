@@ -8,6 +8,13 @@
       "when": 1790261440924,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790265207962,
+      "tag": "0001_produtos-painel",
+      "breakpoints": true
     }
   ]
 }

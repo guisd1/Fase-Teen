@@ -1,50 +1,63 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useState, type MouseEvent, type ReactNode } from "react";
 import type { Product } from "@/db/products";
-import type { ProductMedia } from "@/db/schema";
+import { youtubeId } from "@/lib/youtube-id";
 
-export function mainImage(p: Product) {
-  return p.media.find(m => m.type !== "video")?.src ?? "";
+type Slide = { type: "image"; src: string } | { type: "youtube"; id: string };
+
+/** Fotos na ordem cadastrada e o vídeo do YouTube sempre por último. */
+function slidesFor(p: Product): Slide[] {
+  const slides: Slide[] = p.images.map(i => ({ type: "image", src: i.src }));
+  const video = youtubeId(p.youtubeUrl);
+  if (video) slides.push({ type: "youtube", id: video });
+  return slides;
 }
 
-export default function MediaCarousel({ product, className = "", children }: {
+export default function MediaCarousel({ product, className = "", playVideo = false, children }: {
   product: Product;
   className?: string;
+  /** true na página do produto (vídeo tocável); false nos cards (só a capa). */
+  playVideo?: boolean;
   children?: ReactNode;
 }) {
-  const media: ProductMedia[] = product.media;
+  const slides = slidesFor(product);
   const [index, setIndex] = useState(0);
-  const videos = useRef<(HTMLVideoElement | null)[]>([]);
-  const multi = media.length > 1;
-
-  useEffect(() => {
-    videos.current.forEach((v, i) => { if (v && i !== index) v.pause(); });
-  }, [index]);
+  const multi = slides.length > 1;
 
   const go = (e: MouseEvent, i: number) => {
     e.preventDefault();
     e.stopPropagation();
-    setIndex(((i % media.length) + media.length) % media.length);
+    setIndex(((i % slides.length) + slides.length) % slides.length);
   };
 
   return (
-    <div className={`product-image-wrap ${className}`.trim()} data-count={media.length}>
+    <div className={`product-image-wrap ${className}`.trim()} data-count={slides.length}>
       <div className="media-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        {media.map((m, i) => (
+        {slides.map((s, i) => (
           <div className="media-slide" key={i}>
-            {m.type === "video"
-              ? <video ref={el => { videos.current[i] = el; }} src={m.src} muted loop playsInline preload="metadata" controls />
-              : <img src={m.src} alt={product.name} loading="lazy" />}
+            {s.type === "image" && <img src={s.src} alt={product.name} loading="lazy" />}
+            {s.type === "youtube" && (playVideo && i === index
+              ? <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${s.id}?rel=0&playsinline=1`}
+                  title={`Vídeo: ${product.name}`}
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              : <div className="video-cover">
+                  <img src={`https://i.ytimg.com/vi/${s.id}/hqdefault.jpg`} alt={`Vídeo: ${product.name}`} loading="lazy" />
+                  <span className="video-play" aria-hidden>▶</span>
+                </div>)}
           </div>
         ))}
+        {slides.length === 0 && <div className="media-slide media-empty">Sem foto</div>}
       </div>
       {multi && (
         <>
-          <button className="media-nav prev" type="button" aria-label="Imagem anterior" onClick={e => go(e, index - 1)}>‹</button>
-          <button className="media-nav next" type="button" aria-label="Próxima imagem" onClick={e => go(e, index + 1)}>›</button>
+          <button className="media-nav prev" type="button" aria-label="Anterior" onClick={e => go(e, index - 1)}>‹</button>
+          <button className="media-nav next" type="button" aria-label="Próxima" onClick={e => go(e, index + 1)}>›</button>
           <div className="media-dots">
-            {media.map((_, i) => (
+            {slides.map((_, i) => (
               <span key={i} className={`dot ${i === index ? "active" : ""}`} onClick={e => go(e, i)} />
             ))}
           </div>

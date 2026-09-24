@@ -434,3 +434,33 @@ img { max-width: 100%; display: block; }
 .institutional h1 { font-family: var(--font-heading); font-size: clamp(34px, 4.6vw, 52px); line-height: 1.05; margin-bottom: 22px; }
 .institutional p { color: #60575c; margin-bottom: 14px; }
 .institutional .text-link { display: inline-block; margin-top: 18px; }
+
+/* Página do produto */
+.product-page { max-width: 1220px; margin: auto; padding: 24px 22px 40px; }
+.breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.breadcrumb a:hover { color: var(--primary-dark); }
+.breadcrumb span { color: var(--ink); }
+.product-page .quick-product { background: white; border: 1px solid var(--line); border-radius: 25px; overflow: hidden; }
+.product-page .quick-info h1 { font-family: var(--font-heading); font-size: 40px; line-height: 1.03; margin: 5px 0 15px; }
+.product-page .quick-product .product-image-wrap.modal-media { min-height: 560px; }
+.share-btn { width: 100%; margin-top: 10px; }
+.option-chip:disabled { opacity: .35; text-decoration: line-through; cursor: not-allowed; }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.qty button:disabled { opacity: .35; cursor: not-allowed; }
+.product-info h3 a:hover { color: var(--primary-dark); }
+.quick-view { display: grid; place-items: center; }
+
+/* Vídeo do YouTube no carrossel */
+.media-slide iframe { width: 100%; height: 100%; border: 0; display: block; background: #000; }
+.video-cover { position: relative; width: 100%; height: 100%; }
+.video-cover img { width: 100%; height: 100%; object-fit: cover; }
+.video-play {
+  position: absolute; inset: 0; margin: auto; width: 58px; height: 58px; border-radius: 50%;
+  background: rgba(0,0,0,.6); color: white; display: grid; place-items: center; font-size: 22px; padding-left: 4px;
+}
+.media-empty { display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) {
+  .product-page { padding: 16px 12px 30px; }
+  .product-page .quick-info h1 { font-size: 32px; }
+  .product-page .quick-product .product-image-wrap.modal-media { min-height: 380px; max-height: 480px; }
+}

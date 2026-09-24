@@ -1,28 +1,26 @@
+import { isAdmin } from "@/lib/auth";
 import { consumeOAuthState, exchangeCode } from "@/lib/melhor-envio";
 
 export const dynamic = "force-dynamic";
 
+const back = (request: Request, status: string) =>
+  Response.redirect(new URL(`/admin/integracoes?melhorenvio=${encodeURIComponent(status)}`, request.url), 302);
+
 export async function GET(request: Request) {
+  if (!(await isAdmin())) return new Response("Acesso restrito ao administrador.", { status: 401 });
   const query = new URL(request.url).searchParams;
   const code = query.get("code");
   const state = query.get("state");
   const error = query.get("error");
 
-  if (error) {
-    return new Response(`Autorização cancelada: ${query.get("error_description") || error}`, { status: 400 });
-  }
-  if (!code || !state) {
-    return new Response("Callback inválido: faltou code ou state.", { status: 400 });
-  }
+  if (error) return back(request, `Autorização cancelada: ${query.get("error_description") || error}`);
+  if (!code || !state) return back(request, "Callback inválido: faltou code ou state.");
 
   try {
-    const validState = await consumeOAuthState(state);
-    if (!validState) return new Response("State inválido ou expirado. Inicie a autorização novamente.", { status: 400 });
-
+    if (!(await consumeOAuthState(state))) return back(request, "Autorização expirada. Tente de novo.");
     await exchangeCode(code);
-
-    return new Response(null, { status: 302, headers: { Location: "/?melhorenvio=connected", "Cache-Control": "no-store" } });
+    return back(request, "ok");
   } catch (err) {
-    return new Response(`Não foi possível concluir a autorização: ${err instanceof Error ? err.message : "erro desconhecido"}`, { status: 500 });
+    return back(request, err instanceof Error ? err.message : "Erro desconhecido.");
   }
 }

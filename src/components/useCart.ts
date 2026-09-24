@@ -95,17 +95,28 @@ export function useCart(storeId: string, products: Product[]) {
   const freight = deliveryMode === "pickup" ? 0 : (selectedShipping ? Number(selectedShipping.price) : null);
   const total = subtotal + (freight ?? 0);
 
+  /** Estoque do tamanho escolhido; produtos sem tamanhos cadastrados não têm limite. */
+  const stockFor = (line: CartItem) => {
+    const product = products.find(p => p.id === line.id);
+    const size = product?.sizes.find(s => s.size === line.size);
+    return size ? size.stock : Infinity;
+  };
+
   const addToCart = (item: CartItem) => {
     setCart(current => {
       const found = current.find(x => sameLine(x, item.id, item.size, item.color));
+      const limit = stockFor(item);
       return found
-        ? current.map(x => (x === found ? { ...x, qty: x.qty + item.qty } : x))
-        : [...current, item];
+        ? current.map(x => (x === found ? { ...x, qty: Math.min(limit, x.qty + item.qty) } : x))
+        : [...current, { ...item, qty: Math.min(limit, item.qty) }];
     });
     resetShipping();
   };
 
+  const canIncrease = (line: CartItem) => line.qty < stockFor(line);
+
   const changeQty = (line: CartItem, delta: number) => {
+    if (delta > 0 && !canIncrease(line)) return;
     setCart(current => current
       .map(x => (sameLine(x, line.id, line.size, line.color) ? { ...x, qty: x.qty + delta } : x))
       .filter(x => x.qty > 0));
@@ -185,7 +196,7 @@ export function useCart(storeId: string, products: Product[]) {
 
   return {
     items, count, subtotal, freight, total,
-    addToCart, changeQty, removeItem,
+    addToCart, changeQty, canIncrease, removeItem,
     deliveryMode, setDeliveryMode,
     cep, setCep, address, lookupCep, clearAddress,
     shippingOptions, selectedShipping, setSelectedShipping,
