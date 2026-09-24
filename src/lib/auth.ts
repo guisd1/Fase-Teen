@@ -19,7 +19,10 @@ const SESSION_DAYS = 7;
  */
 function env(name: "ADMIN_EMAIL" | "ADMIN_PASSWORD_HASH" | "ADMIN_SESSION_SECRET") {
   const unquote = (v: string) => v.trim().replace(/^["']+|["']+$/g, "").trim();
-  return unquote(unquote(process.env[name] ?? "").replace(new RegExp(`^${name}\\s*=`), ""));
+  const value = unquote(unquote(process.env[name] ?? "").replace(new RegExp(`^${name}\\s*=`), ""));
+  // Hash colado sem o prefixo "scrypt:".
+  if (name === "ADMIN_PASSWORD_HASH" && /^[0-9a-f]{32}:[0-9a-f]{128}$/.test(value)) return `scrypt:${value}`;
+  return value;
 }
 
 function secret() {
