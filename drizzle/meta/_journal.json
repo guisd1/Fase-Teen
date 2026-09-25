@@ -15,6 +15,13 @@
       "when": 1790265207962,
       "tag": "0001_produtos-painel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790339208136,
+      "tag": "0002_pedidos-avaliacoes-cupons",
+      "breakpoints": true
     }
   ]
 }

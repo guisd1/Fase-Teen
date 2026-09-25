@@ -25,6 +25,7 @@ export interface Product {
 export interface ProductShipping {
   id: number;
   name: string;
+  reference: string | null;
   price: number;
   weightKg: number | null;
   heightCm: number | null;
@@ -94,7 +95,7 @@ export async function getShippingInfo(ids: number[]): Promise<ProductShipping[]>
   if (!ids.length || noDatabase()) return [];
   const rows = await getDb().select().from(products).where(and(inArray(products.id, ids), visible));
   return rows.map(r => ({
-    id: r.id, name: r.name, price: r.price ?? 0,
+    id: r.id, name: r.name, reference: r.reference, price: r.price ?? 0,
     weightKg: r.weightKg, heightCm: r.heightCm, widthCm: r.widthCm, lengthCm: r.lengthCm
   }));
 }

@@ -1,8 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import { formatCep, money } from "@/lib/format";
 import type { Cart } from "./useCart";
 import { mainImage } from "@/lib/product-media";
+import { couponLabel } from "@/lib/coupon";
+
+function CouponBox({ cart }: { cart: Cart }) {
+  const [code, setCode] = useState("");
+  const { coupon } = cart;
+  if (coupon) {
+    const belowMin = cart.discount === 0 && coupon.minSubtotal;
+    return (
+      <div className="coupon-box">
+        <div className="coupon-applied">
+          <span>🏷 <strong>{coupon.code}</strong> • {couponLabel(coupon)}</span>
+          <button type="button" className="remove-btn" onClick={cart.removeCoupon}>Remover</button>
+        </div>
+        {belowMin && <p className="shipping-status">Vale para compras a partir de {money(coupon.minSubtotal)} em produtos.</p>}
+      </div>
+    );
+  }
+  return (
+    <div className="coupon-box">
+      <form className="cep-row" onSubmit={e => { e.preventDefault(); cart.applyCoupon(code); }}>
+        <input type="text" placeholder="Cupom de desconto" autoCapitalize="characters" value={code} onChange={e => setCode(e.target.value.toUpperCase())} />
+        <button className="btn btn-light small-btn" type="submit" disabled={!code.trim()}>Aplicar</button>
+      </form>
+      {cart.couponStatus && <p className="shipping-status">{cart.couponStatus}</p>}
+    </div>
+  );
+}
 
 export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRef }: {
   cart: Cart;
@@ -99,7 +127,11 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
                 </div>
               )}
             </div>
+            <CouponBox cart={cart} />
             <div className="totals-row"><span>Subtotal</span><strong>{money(cart.subtotal)}</strong></div>
+            {cart.discount > 0 && (
+              <div className="totals-row discount-row"><span>Desconto ({cart.coupon?.code})</span><strong>− {money(cart.discount)}</strong></div>
+            )}
             <div className="totals-row freight-total-row">
               <span>Frete</span>
               <strong>{cart.freight === null ? "A calcular" : money(cart.freight)}</strong>

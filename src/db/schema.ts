@@ -1,4 +1,5 @@
-import { boolean, integer, jsonb, numeric, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, numeric, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import type { OrderStatus } from "@/lib/order-status";
 
 export interface ProductImage {
   /** URL pública da foto (Vercel Blob). */
@@ -51,3 +52,112 @@ export const products = pgTable("products", {
 
 export type ProductRow = typeof products.$inferSelect;
 export type NewProductRow = typeof products.$inferInsert;
+
+// ---- Pedidos ----
+
+export type { OrderStatus };
+
+export interface OrderItem {
+  productId: number;
+  name: string;
+  reference: string | null;
+  size: string;
+  color: string;
+  qty: number;
+  /** Preço unitário no momento do pedido. */
+  price: number;
+}
+
+export interface OrderAddress {
+  cep: string;
+  address: string;
+  number: string;
+  complement: string;
+  district: string;
+  city: string;
+  state: string;
+}
+
+export interface OrderShipping {
+  company: string;
+  service: string;
+  deliveryTime: number | null;
+}
+
+/*
+  O pedido é gravado quando o cliente clica em "Enviar pedido pelo WhatsApp".
+  Começa como "pendente" (aguardando a conversa no WhatsApp) e o estoque só
+  é baixado quando o administrador confirma (passa para "preparacao").
+*/
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  status: text("status").$type<OrderStatus>().notNull().default("pendente"),
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone").notNull(),
+  customerEmail: text("customer_email"),
+  deliveryMode: text("delivery_mode").$type<"delivery" | "pickup">().notNull(),
+  address: jsonb("address").$type<OrderAddress>(),
+  shipping: jsonb("shipping").$type<OrderShipping>(),
+  items: jsonb("items").$type<OrderItem[]>().notNull(),
+  subtotal: numeric("subtotal", { precision: 10, scale: 2, mode: "number" }).notNull(),
+  freight: numeric("freight", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+  discount: numeric("discount", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+  couponCode: text("coupon_code"),
+  total: numeric("total", { precision: 10, scale: 2, mode: "number" }).notNull(),
+  /** Observações do cliente. */
+  notes: text("notes"),
+  /** Anotações internas do administrador (não aparecem para o cliente). */
+  adminNotes: text("admin_notes"),
+  trackingCode: text("tracking_code"),
+  /** Verdadeiro enquanto o estoque deste pedido estiver descontado dos produtos. */
+  stockApplied: boolean("stock_applied").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date())
+});
+
+export type OrderRow = typeof orders.$inferSelect;
+export type NewOrderRow = typeof orders.$inferInsert;
+
+// ---- Avaliações ----
+
+/*
+  Qualquer visitante pode avaliar, então toda avaliação entra como não
+  aprovada e só aparece no site depois que o administrador aprova no painel.
+*/
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  /** Nota de 1 a 5. */
+  rating: integer("rating").notNull(),
+  comment: text("comment").notNull().default(""),
+  /** Fotos enviadas pelo cliente (Vercel Blob). */
+  images: text("images").array().notNull().default([]),
+  approved: boolean("approved").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, t => [index("reviews_product_idx").on(t.productId, t.approved)]);
+
+export type ReviewRow = typeof reviews.$inferSelect;
+
+// ---- Cupons ----
+
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  /** Sempre em maiúsculas. */
+  code: text("code").notNull().unique(),
+  /** "percent": value é a porcentagem; "fixed": value é em reais. */
+  type: text("type").$type<"percent" | "fixed">().notNull(),
+  value: numeric("value", { precision: 10, scale: 2, mode: "number" }).notNull(),
+  /** Valor mínimo em produtos para o cupom valer. */
+  minSubtotal: numeric("min_subtotal", { precision: 10, scale: 2, mode: "number" }),
+  startsAt: timestamp("starts_at", { withTimezone: true }),
+  endsAt: timestamp("ends_at", { withTimezone: true }),
+  /** Limite de pedidos com o cupom. Vazio = sem limite. */
+  maxUses: integer("max_uses"),
+  uses: integer("uses").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+});
+
+export type CouponRow = typeof coupons.$inferSelect;
+export type NewCouponRow = typeof coupons.$inferInsert;

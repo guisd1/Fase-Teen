@@ -4,6 +4,11 @@ import { getProduct, getProducts } from "@/db/products";
 import { getStore } from "@/stores";
 import ProductDetail from "@/components/ProductDetail";
 import { mainImage } from "@/lib/product-media";
+import { blobMode } from "@/lib/blob";
+// Fotos nas avaliações precisam do Redis (limite de envios por IP).
+import { hasRedis } from "@/lib/redis";
+import { getProductReviews } from "@/db/reviews";
+import ProductReviews from "@/components/ProductReviews";
 
 export const revalidate = 60;
 
@@ -36,5 +41,10 @@ export default async function ProductPage({ params }: Props) {
   if (!product) notFound();
   // Mantém o link certo mesmo se o nome do produto mudar.
   if (slug !== product.slug) permanentRedirect(`/produto/${product.slug}`);
-  return <ProductDetail product={product} />;
+  const { reviews, summary } = await getProductReviews(product.id);
+  return (
+    <ProductDetail product={product} reviewSummary={summary}>
+      <ProductReviews productId={product.id} reviews={reviews} summary={summary} blobMode={hasRedis() ? blobMode() : null} />
+    </ProductDetail>
+  );
 }

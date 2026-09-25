@@ -1,6 +1,13 @@
 # Template de loja (Fase Teen / Ciranda Cirandinha)
 
-Loja virtual em **Next.js + TypeScript**: catálogo com página própria por produto, carrinho com controle de estoque, frete pelo Melhor Envio, retirada na loja, finalização pelo WhatsApp, newsletter pela Brevo e **painel de administrador** (`/admin`).
+Loja virtual em **Next.js + TypeScript**: catálogo com página própria por produto, avaliações com fotos, carrinho com controle de estoque e cupons, frete pelo Melhor Envio, retirada na loja, finalização pelo WhatsApp, newsletter pela Brevo e **painel de administrador** (`/admin`).
+
+### Painel
+- **Produtos**: cadastro completo, fotos no Vercel Blob e vídeo do YouTube.
+- **Pedidos**: todo pedido enviado pelo WhatsApp fica registrado com número. Status: aguardando confirmação → em preparação → enviado → entregue (ou cancelado). Ao sair de "aguardando confirmação" o estoque dos tamanhos é baixado; ao cancelar ou excluir, ele volta. O botão "Avisar cliente no WhatsApp" abre a conversa com a mensagem do status (e o rastreio, se salvo).
+- **Cupons**: porcentagem ou valor fixo, compra mínima, período de validade e limite de usos. O desconto vale sobre os produtos, não sobre o frete, e é conferido de novo no servidor ao gravar o pedido.
+- **Avaliações**: os clientes avaliam na página do produto (nota, comentário e até 3 fotos). Tudo entra como pendente e só aparece no site depois de aprovado aqui. Fotos em avaliações exigem Blob e Redis (o Redis limita os envios por IP).
+- **Integrações**: Melhor Envio, YouTube e Blob.
 
 O mesmo código publica várias lojas. Cada loja é **um projeto separado na Vercel** que aponta para este repositório e tem as próprias variáveis de ambiente: banco, login do painel, fotos e chaves.
 
@@ -13,11 +20,12 @@ src/stores/              ← ARQUIVO CENTRAL DE MARCA (um por loja)
   ciranda-cirandinha.ts
   index.ts               escolhe a loja pela variável STORE
 src/db/
-  schema.ts              tabelas do banco (produtos)
+  schema.ts              tabelas do banco (produtos, pedidos, avaliações, cupons)
   products.ts            consultas da loja e do painel
+  orders.ts / reviews.ts / coupons.ts
 src/app/(shop)/          páginas da loja: início, /produto/<id>-<nome>, /institucional/<página>
-src/app/admin/           painel: login, produtos, integrações
-src/app/api/             frete, newsletter, Melhor Envio, YouTube, upload de fotos
+src/app/admin/           painel: login, produtos, pedidos, cupons, avaliações, integrações
+src/app/api/             frete, pedidos, cupom, avaliações, newsletter, Melhor Envio, YouTube, upload de fotos
 src/components/          componentes da loja; src/components/admin/ os do painel
 public/brand/            logo e imagens da marca
 drizzle/                 migrações SQL do banco

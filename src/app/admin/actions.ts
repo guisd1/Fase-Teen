@@ -6,7 +6,12 @@ import { del } from "@vercel/blob";
 import { checkCredentials, endSession, requireAdmin, startSession } from "@/lib/auth";
 import { disconnectYoutube } from "@/lib/youtube";
 import { adminCreateProduct, adminDeleteProduct, adminGetProduct, adminUpdateProduct } from "@/db/products";
+import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/orders";
+import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
+import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
+import { normalizeCode } from "@/lib/coupon";
 import type { NewProductRow, ProductImage, ProductSize } from "@/db/schema";
+import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 
 // ---- Login ----
 
@@ -148,8 +153,10 @@ export async function saveProduct(id: number | null, input: ProductInput): Promi
 
 export async function deleteProduct(id: number) {
   await requireAdmin();
+  // As avaliações somem junto com o produto (cascade); as fotos delas precisam sair do Blob também.
+  const reviewPhotos = await reviewImagesOf(id);
   const removed = await adminDeleteProduct(id);
-  if (removed) await deleteBlobs(removed.images.map(i => i.src));
+  if (removed) await deleteBlobs([...removed.images.map(i => i.src), ...reviewPhotos]);
   refreshSite();
   redirect("/admin/produtos");
 }
@@ -167,4 +174,100 @@ export async function disconnectYoutubeAction() {
   await requireAdmin();
   await disconnectYoutube();
   revalidatePath("/admin/integracoes");
+}
+
+// ---- Pedidos ----
+
+export async function setOrderStatus(id: number, status: OrderStatus): Promise<{ error?: string }> {
+  await requireAdmin();
+  if (!isOrderStatus(status)) return { error: "Status inválido." };
+  try {
+    await adminSetOrderStatus(id, status);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Não foi possível mudar o status." };
+  }
+  // O estoque pode ter mudado.
+  refreshSite();
+  return {};
+}
+
+export async function saveOrderNotes(id: number, form: FormData) {
+  await requireAdmin();
+  await adminUpdateOrder(id, {
+    trackingCode: String(form.get("trackingCode") || "").trim() || null,
+    adminNotes: String(form.get("adminNotes") || "").trim() || null
+  });
+  revalidatePath(`/admin/pedidos/${id}`);
+}
+
+export async function deleteOrder(id: number) {
+  await requireAdmin();
+  await adminDeleteOrder(id);
+  refreshSite();
+  redirect("/admin/pedidos");
+}
+
+// ---- Avaliações ----
+
+export async function setReviewApproved(id: number, approved: boolean) {
+  await requireAdmin();
+  await adminSetReviewApproved(id, approved);
+  refreshSite();
+}
+
+export async function deleteReview(id: number) {
+  await requireAdmin();
+  const removed = await adminDeleteReview(id);
+  if (removed) await deleteBlobs(removed.images);
+  refreshSite();
+}
+
+// ---- Cupons ----
+
+/** Data do formulário (AAAA-MM-DD) no horário de Brasília: início do dia ou fim do dia. */
+const brDate = (v: FormDataEntryValue | null, end: boolean) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? new Date(`${v}T${end ? "23:59:59" : "00:00:00"}-03:00`) : null;
+
+export async function createCoupon(form: FormData) {
+  await requireAdmin();
+  const fail = (msg: string) => redirect(`/admin/cupons?erro=${encodeURIComponent(msg)}`);
+  const code = normalizeCode(form.get("code"));
+  const type = form.get("type") === "fixed" ? "fixed" : "percent";
+  let value: number | null, minSubtotal: number | null;
+  try {
+    value = toNumber(String(form.get("value") || ""), "Valor");
+    minSubtotal = toNumber(String(form.get("minSubtotal") || ""), "Compra mínima");
+  } catch (error) {
+    return fail((error as Error).message);
+  }
+  const maxUsesText = String(form.get("maxUses") || "").trim();
+  const maxUses = maxUsesText ? Math.floor(Number(maxUsesText)) : null;
+  const startsAt = brDate(form.get("startsAt"), false);
+  const endsAt = brDate(form.get("endsAt"), true);
+
+  if (!/^[A-Z0-9_-]{3,40}$/.test(code)) return fail("Use de 3 a 40 letras, números, - ou _ no código.");
+  if (!value || value <= 0) return fail("Informe o valor do desconto.");
+  if (type === "percent" && value > 90) return fail("Desconto em porcentagem vai até 90%.");
+  if (maxUses !== null && !(maxUses >= 1)) return fail("Limite de usos inválido.");
+  if (startsAt && endsAt && endsAt < startsAt) return fail("A data final é antes da inicial.");
+
+  try {
+    await adminCreateCoupon({ code, type, value, minSubtotal, maxUses, startsAt, endsAt });
+  } catch {
+    return fail(`Já existe um cupom ${code}.`);
+  }
+  revalidatePath("/admin/cupons");
+  redirect("/admin/cupons");
+}
+
+export async function setCouponActive(id: number, active: boolean) {
+  await requireAdmin();
+  await adminSetCouponActive(id, active);
+  revalidatePath("/admin/cupons");
+}
+
+export async function deleteCoupon(id: number) {
+  await requireAdmin();
+  await adminDeleteCoupon(id);
+  revalidatePath("/admin/cupons");
 }

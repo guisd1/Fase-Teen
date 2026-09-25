@@ -31,7 +31,39 @@ function initialForm(cart: Cart): FormData {
   };
 }
 
-function orderMessage(store: StoreConfig, cart: Cart, data: FormData) {
+/** Pedido gravado no painel, com o desconto confirmado pelo servidor. */
+interface Registered {
+  id: number;
+  discount: number;
+  couponCode: string | null;
+  couponError: string | null;
+}
+
+/** Registra o pedido no painel. Devolve null se não deu para gravar. */
+async function registerOrder(cart: Cart, data: FormData): Promise<Registered | null> {
+  try {
+    const r = await fetch("/api/pedidos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer: { name: data.name, phone: data.phone, email: data.email },
+        items: cart.items.map(x => ({ id: x.id, size: x.size, color: x.color, qty: x.qty })),
+        deliveryMode: cart.deliveryMode,
+        address: { ...data, cep: cleanCep(data.cep) },
+        shipping: cart.selectedShipping,
+        couponCode: cart.discount > 0 ? cart.coupon?.code : undefined,
+        notes: data.notes
+      })
+    });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok || !Number.isInteger(json.id)) return null;
+    return { id: json.id, discount: Number(json.discount) || 0, couponCode: json.couponCode ?? null, couponError: json.couponError ?? null };
+  } catch {
+    return null;
+  }
+}
+
+function orderMessage(store: StoreConfig, cart: Cart, data: FormData, order: Registered | null) {
   const s = cart.selectedShipping;
   const delivery = cart.deliveryMode === "pickup" || !s
     ? "Retirada na loja física — frete R$ 0,00"
@@ -44,15 +76,23 @@ function orderMessage(store: StoreConfig, cart: Cart, data: FormData) {
     `*Estado:* ${data.state.toUpperCase()}`,
     `*CEP:* ${formatCep(data.cep)}`
   ];
+  // Com o pedido gravado, vale o desconto conferido pelo servidor; sem ele, o do carrinho.
+  const discount = order ? order.discount : cart.discount;
+  const couponCode = order ? order.couponCode : cart.coupon?.code;
+  const total = cart.subtotal - discount + (cart.freight ?? 0);
   return [
-    `Olá! Quero fazer um pedido na *${store.name}*.`, "",
+    `Olá! Quero fazer um pedido na *${store.name}*.`,
+    ...(order ? [`*Pedido nº ${order.id}*`] : []), "",
     "*Produtos:*", ...cart.items.map(x => `• ${x.product.name} | Tam. ${x.size} | Cor: ${x.color} | Qtd: ${x.qty} | ${money(x.product.price * x.qty)}`), "",
-    `*Subtotal:* ${money(cart.subtotal)}`, `*Entrega:* ${delivery}`, `*TOTAL:* ${money(cart.total)}`, "",
+    `*Subtotal:* ${money(cart.subtotal)}`,
+    ...(discount > 0 ? [`*Cupom ${couponCode}:* − ${money(discount)}`] : []),
+    `*Entrega:* ${delivery}`, `*TOTAL:* ${money(total)}`, "",
     `*Nome:* ${data.name}`, `*WhatsApp:* ${data.phone}`, `*E-mail:* ${data.email}`,
     ...addressLines,
     `*Observações:* ${data.notes || "Não informado"}`, "", "Aguardo confirmação de estoque, pagamento e envio."
   ].join("\n");
 }
+
 
 export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
   store: StoreConfig;
@@ -63,6 +103,8 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
   const [form, setForm] = useState<FormData>(() => initialForm(cart));
   const [addressNote, setAddressNote] = useState("");
   const [note, setNote] = useState("");
+  const [sending, setSending] = useState(false);
+  const [registered, setRegistered] = useState<{ key: string; order: Registered } | null>(null);
   const delivery = cart.deliveryMode === "delivery";
 
   const set = (field: keyof FormData) => (e: { target: { value: string } }) =>
@@ -91,7 +133,7 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
     }
   };
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (delivery) {
       if (!cart.selectedShipping) {
@@ -112,8 +154,25 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
       setNote("Preencha nome, WhatsApp e e-mail.");
       return;
     }
-    window.open(whatsappUrl(store, orderMessage(store, cart, form)), "_blank", "noopener");
-    setNote("Pedido preparado no WhatsApp. Confira a mensagem antes de enviar.");
+    if (sending) return;
+    // A aba abre já no clique: se abrir só depois do fetch, o navegador do celular bloqueia como pop-up.
+    const tab = window.open("", "_blank");
+    setSending(true);
+    setNote("Registrando o pedido...");
+    // Se não der para registrar, o pedido segue pelo WhatsApp mesmo assim.
+    // Reenviar sem mudar nada (ex.: fechou o WhatsApp sem querer) reaproveita o mesmo pedido.
+    const key = JSON.stringify([form, cart.items.map(x => [x.id, x.size, x.color, x.qty]), cart.deliveryMode, cart.selectedShipping?.id, cart.coupon?.code]);
+    const order = registered?.key === key ? registered.order : await registerOrder(cart, form);
+    if (order) setRegistered({ key, order });
+    const url = whatsappUrl(store, orderMessage(store, cart, form, order));
+    if (tab) tab.location.href = url;
+    else window.location.href = url;
+    setSending(false);
+    setNote([
+      order ? `Pedido nº ${order.id} registrado.` : "",
+      order?.couponError ? `Cupom não aplicado: ${order.couponError}` : "",
+      "Confira a mensagem no WhatsApp antes de enviar."
+    ].filter(Boolean).join(" "));
   };
 
   return (
@@ -182,7 +241,7 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
           <label>Observações
             <textarea name="notes" rows={3} placeholder="Deixar na portaria, tocar a campainha, preferência de entrega" value={form.notes} onChange={set("notes")} />
           </label>
-          <button className="btn btn-dark full" type="submit">Enviar pedido pelo WhatsApp</button>
+          <button className="btn btn-dark full" type="submit" disabled={sending}>{sending ? "Registrando..." : "Enviar pedido pelo WhatsApp"}</button>
           <p className="form-note">{note}</p>
         </form>
       </div>

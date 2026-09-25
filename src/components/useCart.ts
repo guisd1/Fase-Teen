@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/db/products";
 import { cleanCep, formatCep } from "@/lib/format";
 import type { ShippingOption } from "@/lib/shipping";
+import { couponDiscount, normalizeCode, type CouponRule } from "@/lib/coupon";
 
 export interface CartItem {
   id: number;
@@ -27,6 +28,7 @@ interface SavedCheckout {
   deliveryMode?: DeliveryMode;
   cep?: string;
   address?: Address | null;
+  coupon?: CouponRule | null;
 }
 
 function readJson<T>(key: string, fallback: T): T {
@@ -53,6 +55,8 @@ export function useCart(storeId: string, products: Product[]) {
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [shippingStatus, setShippingStatus] = useState("");
   const [calculating, setCalculating] = useState<"" | "validating" | "calculating">("");
+  const [coupon, setCoupon] = useState<CouponRule | null>(null);
+  const [couponStatus, setCouponStatus] = useState("");
 
   // O carrinho fica salvo no navegador, separado por loja.
   useEffect(() => {
@@ -61,6 +65,7 @@ export function useCart(storeId: string, products: Product[]) {
     setDeliveryModeState(saved.deliveryMode === "pickup" ? "pickup" : "delivery");
     setCepState(saved.cep || "");
     setAddress(saved.address || null);
+    setCoupon(saved.coupon || null);
     setHydrated(true);
   }, [cartKey, checkoutKey]);
 
@@ -69,8 +74,8 @@ export function useCart(storeId: string, products: Product[]) {
   }, [hydrated, cartKey, cart]);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(checkoutKey, JSON.stringify({ deliveryMode, cep, address }));
-  }, [hydrated, checkoutKey, deliveryMode, cep, address]);
+    if (hydrated) localStorage.setItem(checkoutKey, JSON.stringify({ deliveryMode, cep, address, coupon }));
+  }, [hydrated, checkoutKey, deliveryMode, cep, address, coupon]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -93,7 +98,8 @@ export function useCart(storeId: string, products: Product[]) {
   const count = cart.reduce((s, x) => s + x.qty, 0);
   const subtotal = items.reduce((s, x) => s + x.product.price * x.qty, 0);
   const freight = deliveryMode === "pickup" ? 0 : (selectedShipping ? Number(selectedShipping.price) : null);
-  const total = subtotal + (freight ?? 0);
+  const discount = coupon ? couponDiscount(coupon, subtotal) : 0;
+  const total = subtotal - discount + (freight ?? 0);
 
   /** Estoque do tamanho escolhido; produtos sem tamanhos cadastrados não têm limite. */
   const stockFor = (line: CartItem) => {
@@ -164,6 +170,30 @@ export function useCart(storeId: string, products: Product[]) {
 
   const clearAddress = () => setAddress(null);
 
+  const applyCoupon = async (code: string) => {
+    const clean = normalizeCode(code);
+    if (!clean) return;
+    setCouponStatus("Conferindo o cupom...");
+    try {
+      const r = await fetch("/api/cupom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: clean, subtotal })
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || "Cupom inválido.");
+      setCoupon({ code: data.code, type: data.type, value: Number(data.value), minSubtotal: data.minSubtotal === null ? null : Number(data.minSubtotal) });
+      setCouponStatus("");
+    } catch (e) {
+      setCouponStatus(e instanceof Error ? e.message : "Cupom inválido.");
+    }
+  };
+
+  const removeCoupon = () => {
+    setCoupon(null);
+    setCouponStatus("");
+  };
+
   const calculateFreight = async () => {
     if (!cart.length) return;
     if (cep.length !== 8) {
@@ -198,7 +228,8 @@ export function useCart(storeId: string, products: Product[]) {
   };
 
   return {
-    items, count, subtotal, freight, total,
+    items, count, subtotal, freight, discount, total,
+    coupon, couponStatus, applyCoupon, removeCoupon,
     addToCart, changeQty, canIncrease, removeItem,
     deliveryMode, setDeliveryMode,
     cep, setCep, address, lookupCep, clearAddress,

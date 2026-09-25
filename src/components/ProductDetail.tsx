@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { Product } from "@/db/products";
+import type { ReviewSummary } from "@/db/reviews";
+import { Stars } from "./ProductReviews";
 import { money } from "@/lib/format";
 import MediaCarousel from "./MediaCarousel";
 import { PriceRow, soldOut } from "./ProductCard";
 import { useShop } from "./ShopShell";
 
-export default function ProductDetail({ product }: { product: Product }) {
+export default function ProductDetail({ product, reviewSummary, children }: {
+  product: Product;
+  reviewSummary: ReviewSummary;
+  /** Seções abaixo do produto (avaliações). */
+  children?: ReactNode;
+}) {
   const { store, cart, openCart } = useShop();
   const firstAvailable = product.sizes.find(s => s.stock > 0)?.size ?? "";
   const [size, setSize] = useState(firstAvailable);
@@ -37,6 +44,11 @@ export default function ProductDetail({ product }: { product: Product }) {
           {product.category && <div className="product-category">{product.category}</div>}
           <h1>{product.name}</h1>
           {product.reference && <div className="product-ref">Ref.: {product.reference}</div>}
+          {reviewSummary.total > 0 && (
+            <a className="product-rating" href="#avaliacoes">
+              <Stars value={reviewSummary.average} /> <small>({reviewSummary.total})</small>
+            </a>
+          )}
           <PriceRow product={product} />
           {installments > 1 && <div className="installment">ou {installments}x de {money(product.price / installments)}*</div>}
           {product.description && <p className="quick-desc">{product.description}</p>}
@@ -92,6 +104,7 @@ export default function ProductDetail({ product }: { product: Product }) {
           </button>
         </div>
       </div>
+      {children}
     </main>
   );
 }
