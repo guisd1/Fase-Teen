@@ -3,12 +3,24 @@ import type { Metadata, Viewport } from "next";
 import { getStore, type StoreConfig } from "@/stores";
 import "./globals.css";
 
+/**
+ * Código da "tag HTML" do Google Search Console (prova que o site é da loja,
+ * pedido pelo Google Cloud para publicar o app do YouTube). Aceita só o código
+ * ou a tag <meta> inteira colada na variável GOOGLE_SITE_VERIFICATION.
+ */
+function googleSiteVerification() {
+  const raw = (process.env.GOOGLE_SITE_VERIFICATION ?? "").trim();
+  return raw.match(/content=["']([^"']+)["']/)?.[1] ?? (raw.replace(/^["']|["']$/g, "") || undefined);
+}
+
 export function generateMetadata(): Metadata {
   const store = getStore();
+  const google = googleSiteVerification();
   return {
     title: store.meta.title,
     description: store.meta.description,
-    metadataBase: new URL(store.siteUrl)
+    metadataBase: new URL(store.siteUrl),
+    ...(google ? { verification: { google } } : {})
   };
 }
 
