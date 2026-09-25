@@ -22,8 +22,9 @@ const round = (n: number) => Math.round(n * 100) / 100;
 */
 export async function POST(request: Request) {
   if (!hasDatabase()) return reply(503, { error: "Banco de dados não configurado." });
-  // Até 10 pedidos por hora por IP, para ninguém encher a lista de pedidos falsos.
-  if (await rateLimited(request, "orders", 10, 60 * 60)) return reply(429, { error: "Muitos pedidos em pouco tempo. Tente novamente mais tarde." });
+  // Até 30 pedidos por hora por IP, para ninguém encher a lista de pedidos falsos.
+  // Não dá para ser muito menos: na internet do celular vários clientes saem pelo mesmo IP da operadora.
+  if (await rateLimited(request, "orders", 30, 60 * 60)) return reply(429, { error: "Muitos pedidos em pouco tempo. Tente novamente mais tarde." });
 
   const body = await request.json().catch(() => null);
   const customerName = str(body?.customer?.name, 120);

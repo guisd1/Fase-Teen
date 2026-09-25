@@ -241,8 +241,15 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
           </label>
           {ready ? (
             <div className="checkout-ready">
-              <p>{ready.order ? <>Pedido <strong>nº {ready.order.code}</strong> registrado! ✨</> : "Pedido pronto!"} Agora é só enviar a mensagem:</p>
+              {ready.order ? (
+                <p>Pedido <strong>nº {ready.order.code}</strong> registrado! ✨ Agora é só enviar a mensagem:</p>
+              ) : (
+                <p>Não conseguimos registrar o pedido agora, mas você pode enviá-lo pelo WhatsApp do mesmo jeito.</p>
+              )}
               <a className="btn btn-dark full" href={ready.url} target="_blank" rel="noopener">Abrir o WhatsApp</a>
+              {!ready.order && (
+                <button className="btn btn-light full" type="submit" disabled={sending}>{sending ? "Registrando..." : "Tentar registrar de novo"}</button>
+              )}
             </div>
           ) : (
             <button className="btn btn-dark full" type="submit" disabled={sending}>{sending ? "Registrando..." : "Enviar pedido pelo WhatsApp"}</button>
