@@ -3,7 +3,7 @@ import type { StoreConfig } from "./types";
 const faseTeen: StoreConfig = {
   id: "fase-teen",
   name: "Fase Teen",
-  siteUrl: "https://fase-teen.vercel.app",
+  siteUrl: "https://www.faseteen.com.br",
 
   meta: {
     title: "Fase Teen | Moda Infantil Feminina",
