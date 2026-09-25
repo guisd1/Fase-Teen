@@ -16,6 +16,12 @@ export function PriceRow({ product }: { product: Product }) {
   );
 }
 
+/** "ou R$ X no Pix" — só aparece quando o Pix sai mais barato (Mercado Pago ativo). */
+export function PixPrice({ product }: { product: Product }) {
+  if (!(product.pixPrice < product.price)) return null;
+  return <div className="pix-price">ou <strong>{money(product.pixPrice)}</strong> no Pix</div>;
+}
+
 export default function ProductCard({ product, installments }: { product: Product; installments: number }) {
   const href = `/produto/${product.slug}`;
   const badge = soldOut(product) ? "ESGOTADO" : product.badge;
@@ -30,6 +36,7 @@ export default function ProductCard({ product, installments }: { product: Produc
         <h3><Link href={href}>{product.name}</Link></h3>
         {product.reference && <div className="product-ref">Ref.: {product.reference}</div>}
         <PriceRow product={product} />
+        <PixPrice product={product} />
         {installments > 1 && (
           <div className="installment">ou {installments}x de {money(product.price / installments)}*</div>
         )}

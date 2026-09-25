@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { adminCategories, adminGetProduct } from "@/db/products";
 import { youtubeConnected } from "@/lib/youtube";
 import ProductForm from "@/components/admin/ProductForm";
+import { getPaymentFees } from "@/db/settings";
 import { blobMode } from "@/lib/blob";
 import { deleteProduct } from "../../../actions";
 import DeleteButton from "@/components/admin/DeleteButton";
@@ -18,7 +19,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         <h1>{product.name}</h1>
         <DeleteButton action={deleteProduct.bind(null, product.id)} />
       </div>
-      <ProductForm id={product.id} initial={product} categories={categories} youtubeConnected={ytConnected} blobMode={blobMode()} />
+      <ProductForm id={product.id} initial={product} categories={categories} youtubeConnected={ytConnected} blobMode={blobMode()} fees={await getPaymentFees()} />
     </>
   );
 }

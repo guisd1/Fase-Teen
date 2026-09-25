@@ -36,6 +36,13 @@
       "when": 1790346795455,
       "tag": "0004_pagamento-online",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790352770553,
+      "tag": "0005_configuracoes",
+      "breakpoints": true
     }
   ]
 }

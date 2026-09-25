@@ -8,6 +8,8 @@ import type { ProductImage, ProductRow, ProductSize } from "@/db/schema";
 import { saveProduct, type ProductInput } from "@/app/admin/actions";
 import { youtubeId } from "@/lib/youtube-id";
 import YoutubeUploader from "./YoutubeUploader";
+import { cardPrice, pixPrice, type PaymentFees } from "@/lib/pricing";
+import { money } from "@/lib/format";
 
 const num = (v: number | null | undefined) => (v === null || v === undefined ? "" : String(v).replace(".", ","));
 
@@ -34,13 +36,15 @@ function initialInput(p: ProductRow | null): ProductInput {
   };
 }
 
-export default function ProductForm({ id, initial, categories, youtubeConnected, blobMode }: {
+export default function ProductForm({ id, initial, categories, youtubeConnected, blobMode, fees }: {
   id: number | null;
   initial: ProductRow | null;
   categories: string[];
   youtubeConnected: boolean;
   /** Como o Vercel Blob está conectado (null = ainda não conectado). */
   blobMode: BlobMode;
+  /** Taxas do Mercado Pago que entram no preço do site (zero sem Mercado Pago). */
+  fees: PaymentFees;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<ProductInput>(() => initialInput(initial));
@@ -117,6 +121,11 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
 
   const videoId = youtubeId(form.youtubeUrl);
   const noPrice = !form.price.trim();
+  const netPrice = (() => {
+    const v = form.price.trim();
+    const n = Number(v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
 
   return (
     <form className="admin-form product-form" onSubmit={submit}>
@@ -145,10 +154,10 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
       <section className="admin-card">
         <h2>Preço</h2>
         <div className="admin-grid-3">
-          <label>Preço (R$)
+          <label>Quanto quer receber (R$)
             <input inputMode="decimal" {...field("price")} placeholder="89,90" />
           </label>
-          <label>Preço antigo (R$) <small>promoção</small>
+          <label>Preço antigo (R$) <small>promoção, também sem taxa</small>
             <input inputMode="decimal" {...field("oldPrice")} placeholder="119,90" />
           </label>
           <label>Selo <small>opcional</small>
@@ -156,6 +165,12 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
           </label>
         </div>
         {noPrice && <p className="admin-hint">Sem preço, o produto fica como <strong>rascunho</strong> e não aparece no site.</p>}
+        {!noPrice && netPrice !== null && (fees.cardPercent > 0 || fees.pixPercent > 0) && (
+          <p className="admin-hint">
+            No site: <strong>{money(cardPrice(netPrice, fees))}</strong> no cartão e <strong>{money(pixPrice(netPrice, fees))}</strong> no Pix
+            {" "}(com as taxas do Mercado Pago de {String(fees.cardPercent).replace(".", ",")}% e {String(fees.pixPercent).replace(".", ",")}%, ajustáveis em Integrações).
+          </p>
+        )}
       </section>
 
       <section className="admin-card">

@@ -10,6 +10,8 @@ import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/or
 import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
 import { normalizeCode } from "@/lib/coupon";
+import { savePaymentFees } from "@/db/settings";
+import { parseFee } from "@/lib/pricing";
 import type { NewProductRow, ProductImage, ProductSize } from "@/db/schema";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 
@@ -270,4 +272,21 @@ export async function deleteCoupon(id: number) {
   await requireAdmin();
   await adminDeleteCoupon(id);
   revalidatePath("/admin/cupons");
+}
+
+// ---- Taxas do Mercado Pago ----
+
+export async function savePaymentFeesAction(form: FormData) {
+  await requireAdmin();
+  let pixPercent: number, cardPercent: number;
+  try {
+    pixPercent = parseFee(String(form.get("pixPercent") ?? ""), "Taxa do Pix");
+    cardPercent = parseFee(String(form.get("cardPercent") ?? ""), "Taxa do cartão");
+  } catch (error) {
+    redirect(`/admin/integracoes?taxas=${encodeURIComponent((error as Error).message)}`);
+  }
+  await savePaymentFees({ pixPercent, cardPercent });
+  // Todos os preços do site mudam.
+  refreshSite();
+  redirect("/admin/integracoes?taxas=ok#mercado-pago");
 }

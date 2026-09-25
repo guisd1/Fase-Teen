@@ -80,11 +80,6 @@ export interface StoreConfig {
   commerce: {
     /** Número de parcelas exibido no card do produto ("ou 3x de ..."). */
     installments: number;
-    /**
-     * Desconto (%) para pagamento por Pix no Mercado Pago, sobre os produtos
-     * (o frete não entra). Repassa ao cliente a taxa menor do Pix. 0 = sem desconto.
-     */
-    pixDiscountPercent: number;
   };
 
   texts: {

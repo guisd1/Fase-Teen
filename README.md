@@ -81,7 +81,7 @@ Limite padrão: 10.000 unidades por dia, e cada envio gasta 1.600, ou seja, cerc
 1. Em mercadopago.com.br/developers, **Suas integrações → Criar aplicação** (Checkout Pro / pagamentos online).
 2. Copie o **Access Token** (de teste, que começa com `TEST-`, ou de produção) e cadastre `MERCADO_PAGO_ACCESS_TOKEN` na Vercel. Faça um Redeploy.
 3. A conta precisa ter uma **chave Pix** cadastrada para gerar QR Codes.
-4. Desconto do Pix e parcelas: `pixDiscountPercent` e `installments` em `src/stores/<loja>.ts`. Parcelamento sem juros para o cliente é configurado na conta do Mercado Pago.
+4. **Taxas no preço:** o preço cadastrado em cada produto é quanto a loja quer receber. Com o Mercado Pago ativo, o site mostra o preço com a taxa do cartão embutida e o Pix mais barato (só com a taxa do Pix). As duas taxas são ajustadas no painel, em Integrações. Parcelas mostradas no site: `installments` em `src/stores/<loja>.ts`; os juros do parcelamento ficam com o cliente, a menos que a conta ative parcelas sem juros.
 
 O site avisa o Mercado Pago do endereço de notificação a cada pagamento (`/api/mercado-pago/webhook`) e também confere o pagamento quando o cliente está na tela, então não precisa configurar Webhooks. Se configurar, cadastre a assinatura secreta como `MERCADO_PAGO_WEBHOOK_SECRET`.
 Pedido pago vai sozinho para "Em preparação" (baixando o estoque). O cliente acompanha em `/pedido/<token>`.

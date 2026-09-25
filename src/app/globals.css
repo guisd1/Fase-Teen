@@ -554,3 +554,4 @@ img { max-width: 100%; display: block; }
 .order-actions { display: grid; gap: 8px; }
 .order-actions .btn, .order-card > .btn { text-align: center; }
 @media (max-width: 760px) { .order-card { padding: 22px 18px; } .order-card h1 { font-size: 26px; } }
+.pix-price { font-size: 13px; color: #1f7a3d; margin-top: 2px; } .pix-price strong { font-weight: 800; }

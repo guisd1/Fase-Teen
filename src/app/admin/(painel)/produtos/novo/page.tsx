@@ -1,6 +1,7 @@
 import { adminCategories } from "@/db/products";
 import { youtubeConnected } from "@/lib/youtube";
 import ProductForm from "@/components/admin/ProductForm";
+import { getPaymentFees } from "@/db/settings";
 import { blobMode } from "@/lib/blob";
 
 export default async function NewProductPage() {
@@ -8,7 +9,7 @@ export default async function NewProductPage() {
   return (
     <>
       <div className="admin-head"><h1>Novo produto</h1></div>
-      <ProductForm id={null} initial={null} categories={categories} youtubeConnected={ytConnected} blobMode={blobMode()} />
+      <ProductForm id={null} initial={null} categories={categories} youtubeConnected={ytConnected} blobMode={blobMode()} fees={await getPaymentFees()} />
     </>
   );
 }

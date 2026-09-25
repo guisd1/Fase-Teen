@@ -104,6 +104,10 @@ export function useCart(storeId: string, products: Product[]) {
   const freight = deliveryMode === "pickup" ? 0 : (selectedShipping ? Number(selectedShipping.price) : null);
   const discount = coupon ? couponDiscount(coupon, subtotal) : 0;
   const total = subtotal - discount + (freight ?? 0);
+  // Total pagando no Pix: produtos pelo preço do Pix; o cupom vale sobre esse valor (como no servidor).
+  const pixSubtotal = items.reduce((s, x) => s + x.product.pixPrice * x.qty, 0);
+  const pixDiscount = coupon && discount > 0 ? couponDiscount({ ...coupon, minSubtotal: null }, pixSubtotal) : 0;
+  const pixTotal = Math.round((pixSubtotal - pixDiscount + (freight ?? 0)) * 100) / 100;
 
   /** Estoque do tamanho escolhido; produtos sem tamanhos cadastrados não têm limite. */
   const stockFor = (line: CartItem) => {
@@ -243,7 +247,7 @@ export function useCart(storeId: string, products: Product[]) {
   };
 
   return {
-    items, count, subtotal, freight, discount, total,
+    items, count, subtotal, freight, discount, total, pixTotal,
     coupon, couponStatus, applyCoupon, removeCoupon, clearCart,
     addToCart, changeQty, canIncrease, removeItem,
     deliveryMode, setDeliveryMode,

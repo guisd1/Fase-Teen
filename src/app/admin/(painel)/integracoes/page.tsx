@@ -3,7 +3,10 @@ import { blobMode } from "@/lib/blob";
 import { melhorEnvioStatus } from "@/lib/melhor-envio";
 import { checkCredentials, getLastError, mercadoPagoConfigured, mercadoPagoTestMode, webhookUrl } from "@/lib/mercado-pago";
 import { getYoutubeRedirectUri, youtubeClientIdLooksValid, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
-import { disconnectYoutubeAction } from "../../actions";
+import { disconnectYoutubeAction, savePaymentFeesAction } from "../../actions";
+import { getSavedFees } from "@/db/settings";
+import { cardPrice, pixPrice } from "@/lib/pricing";
+import { money } from "@/lib/format";
 
 const ME_TOKENS_URL = "https://melhorenvio.com.br/painel/gerenciar/tokens";
 
@@ -15,7 +18,7 @@ function Notice({ value }: { value?: string }) {
 }
 
 export default async function IntegrationsPage({ searchParams }: {
-  searchParams: Promise<{ youtube?: string; melhorenvio?: string }>;
+  searchParams: Promise<{ youtube?: string; melhorenvio?: string; taxas?: string }>;
 }) {
   const query = await searchParams;
   const store = getStore();
@@ -24,6 +27,7 @@ export default async function IntegrationsPage({ searchParams }: {
   const blobReady = blobMode() !== null;
   const mpReady = mercadoPagoConfigured();
   const mpTest = mercadoPagoTestMode();
+  const fees = await getSavedFees();
   const [mpCheck, mpLastError] = mpReady ? await Promise.all([checkCredentials(), getLastError()]) : [null, null];
 
   const meLabel = { connected: "Conectado", expired: "Autorização expirada", disconnected: "Não conectado", "no-redis": "Redis não configurado" }[me];
@@ -85,7 +89,7 @@ export default async function IntegrationsPage({ searchParams }: {
         {!blobReady && <p className="admin-alert">Na Vercel: Storage → Create → Blob, e conecte ao projeto da loja.</p>}
       </section>
 
-      <section className="admin-card">
+      <section className="admin-card" id="mercado-pago">
         <div className="admin-integration-head">
           <h2>💳 Mercado Pago</h2>
           <span className={`admin-status ${mpReady && !mpTest ? "ok" : ""}`}>
@@ -93,8 +97,7 @@ export default async function IntegrationsPage({ searchParams }: {
           </span>
         </div>
         <p>
-          Pix com QR Code ({store.commerce.pixDiscountPercent}% de desconto nos produtos) e cartão de crédito em até{" "}
-          {store.commerce.installments}x. Pedido pago vai sozinho para &quot;Em preparação&quot;.
+          Pix com QR Code e cartão de crédito em até {store.commerce.installments}x. Pedido pago vai sozinho para &quot;Em preparação&quot;.
         </p>
         {!mpReady ? (
           <div className="admin-alert">
@@ -122,9 +125,33 @@ export default async function IntegrationsPage({ searchParams }: {
             </p>
           </>
         )}
-        <p className="admin-hint">
-          O desconto do Pix e o número de parcelas ficam em <code>src/stores/{store.id}.ts</code> (<code>pixDiscountPercent</code> e <code>installments</code>).
-          Parcelas sem juros para o cliente precisam ser ativadas na conta do Mercado Pago.
+        <h2 style={{ marginTop: 20 }}>Taxas repassadas no preço</h2>
+        <p>
+          O preço cadastrado em cada produto é <strong>quanto você quer receber</strong>. O site soma a taxa do Mercado Pago:
+          o preço do cartão leva a taxa do cartão e o Pix sai mais barato, só com a taxa do Pix.
+          {!mpReady && " Enquanto o Mercado Pago não estiver ativo, os preços aparecem sem taxa."}
+        </p>
+        {query.taxas === "ok" && <p className="admin-ok">Taxas salvas. Os preços do site já foram atualizados.</p>}
+        {query.taxas && query.taxas !== "ok" && <p className="admin-error">{query.taxas}</p>}
+        <form action={savePaymentFeesAction}>
+          <div className="admin-grid-2">
+            <label>Taxa do Pix (%)
+              <input name="pixPercent" inputMode="decimal" defaultValue={String(fees.pixPercent).replace(".", ",")} />
+            </label>
+            <label>Taxa do cartão de crédito (%)
+              <input name="cardPercent" inputMode="decimal" defaultValue={String(fees.cardPercent).replace(".", ",")} />
+            </label>
+          </div>
+          <p className="admin-hint">
+            Exemplo com essas taxas: para receber {money(100)}, o site mostra <strong>{money(cardPrice(100, fees))}</strong> no cartão
+            e <strong>{money(pixPrice(100, fees))}</strong> no Pix.
+          </p>
+          <button className="btn btn-dark" type="submit">Salvar taxas</button>
+        </form>
+        <p className="admin-hint" style={{ marginTop: 12 }}>
+          Confira as suas em <em>Mercado Pago → Seu negócio → Custos</em>. A taxa do cartão muda com o prazo de recebimento que você escolher.
+          Os juros do parcelamento ficam com o cliente (ele vê na hora de pagar), a não ser que você ative parcelas sem juros na conta.
+          O número de parcelas mostrado no site fica em <code>src/stores/{store.id}.ts</code> (<code>installments</code>).
         </p>
       </section>
     </>

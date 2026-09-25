@@ -133,8 +133,8 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
   const [method, setMethod] = useState<PaymentChoice>(onlinePayments ? "pix" : "whatsapp");
   const [pixOrder, setPixOrder] = useState<OnlineOrder | null>(null);
   const pixStatus = useOrderStatus(pixOrder?.token ?? "", Boolean(pixOrder), () => cart.clearCart());
-  const pixPercent = store.commerce.pixDiscountPercent;
-  const pixDiscount = Math.round((cart.subtotal - cart.discount) * pixPercent) / 100;
+  // Economia no Pix em relação ao cartão (o Pix tem taxa menor).
+  const pixSaving = Math.round((cart.total - cart.pixTotal) * 100) / 100;
   const [registered, setRegistered] = useState<{ key: string; order: Registered | null; url: string } | null>(null);
   const delivery = cart.deliveryMode === "delivery";
   // Mudar qualquer dado depois de registrar pede um novo registro (e uma nova mensagem).
@@ -322,8 +322,8 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
               <div className="checkout-section-title">Pagamento</div>
               <div className="pay-options" role="radiogroup" aria-label="Forma de pagamento">
                 <button type="button" role="radio" aria-checked={method === "pix"} className={`pay-option ${method === "pix" ? "active" : ""}`} onClick={() => setMethod("pix")}>
-                  <span><strong>Pix</strong>{pixPercent > 0 && <em>{pixPercent}% off nos produtos</em>}</span>
-                  <b>{money(cart.total - pixDiscount)}</b>
+                  <span><strong>Pix</strong>{pixSaving > 0 && <em>economize {money(pixSaving)}</em>}</span>
+                  <b>{money(cart.pixTotal)}</b>
                 </button>
                 <button type="button" role="radio" aria-checked={method === "card"} className={`pay-option ${method === "card" ? "active" : ""}`} onClick={() => setMethod("card")}>
                   <span><strong>Cartão de crédito</strong>{store.commerce.installments > 1 && <em>em até {store.commerce.installments}x</em>}</span>
@@ -339,7 +339,7 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
 
           {method !== "whatsapp" ? (
             <button className="btn btn-dark full" type="submit" disabled={sending}>
-              {sending ? "Aguarde..." : method === "pix" ? `Gerar Pix de ${money(cart.total - pixDiscount)}` : "Pagar com cartão"}
+              {sending ? "Aguarde..." : method === "pix" ? `Gerar Pix de ${money(cart.pixTotal)}` : "Pagar com cartão"}
             </button>
           ) : ready ? (
             <div className="checkout-ready">

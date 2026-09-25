@@ -7,7 +7,7 @@ import type { ReviewSummary } from "@/db/reviews";
 import { Stars } from "./ProductReviews";
 import { money } from "@/lib/format";
 import MediaCarousel from "./MediaCarousel";
-import { PriceRow, soldOut } from "./ProductCard";
+import { PixPrice, PriceRow, soldOut } from "./ProductCard";
 import { useShop } from "./ShopShell";
 
 export default function ProductDetail({ product, reviewSummary, children }: {
@@ -50,6 +50,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
             </a>
           )}
           <PriceRow product={product} />
+          <PixPrice product={product} />
           {installments > 1 && <div className="installment">ou {installments}x de {money(product.price / installments)}*</div>}
           {product.description && <p className="quick-desc">{product.description}</p>}
           {product.composition && (

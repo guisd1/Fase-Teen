@@ -49,6 +49,8 @@ export async function POST(request: Request) {
 
   const catalog = await getShippingInfo([...new Set(rawItems.map(i => Number((i as { id?: unknown })?.id)).filter(Number.isInteger))]);
   const items: OrderItem[] = [];
+  // Preço do Pix de cada item (o pedido guarda o preço cheio, do cartão).
+  const pixPrices: number[] = [];
   for (const raw of rawItems as { id?: unknown; size?: unknown; color?: unknown; qty?: unknown }[]) {
     const product = catalog.find(p => p.id === Number(raw?.id));
     if (!product) return reply(400, { error: "Um dos produtos do carrinho não está mais disponível. Atualize a página." });
@@ -59,8 +61,9 @@ export async function POST(request: Request) {
       size: str(raw.size, 30),
       color: str(raw.color, 60),
       qty: Math.max(1, Math.min(50, Math.floor(Number(raw.qty) || 1))),
-      price: product.price
+      price: product.cardPrice
     });
+    pixPrices.push(product.pixPrice);
   }
 
   const pickup = body?.deliveryMode === "pickup";
@@ -97,6 +100,9 @@ export async function POST(request: Request) {
   }
 
   const subtotal = round(items.reduce((sum, i) => sum + i.price * i.qty, 0));
+  // Pix: os produtos saem pelo preço do Pix (só com a taxa do Pix); a diferença aparece como desconto.
+  const productsTotal = paymentMethod === "pix" ? round(items.reduce((sum, i, idx) => sum + pixPrices[idx] * i.qty, 0)) : subtotal;
+  const paymentDiscount = round(subtotal - productsTotal);
 
   // Cupom: conferido de novo aqui (pode ter expirado desde que foi aplicado no carrinho).
   let coupon: Awaited<ReturnType<typeof checkCoupon>> | null = null;
@@ -112,7 +118,8 @@ export async function POST(request: Request) {
   let couponCode: string | null = null;
   if (coupon && "coupon" in coupon) {
     if (await redeemCoupon(coupon.coupon.id)) {
-      discount = couponDiscount(coupon.coupon, subtotal);
+      // O mínimo do cupom já foi conferido com o preço cheio; o desconto vale sobre o que o cliente paga nos produtos.
+      discount = couponDiscount({ ...coupon.coupon, minSubtotal: null }, productsTotal);
       couponCode = coupon.coupon.code;
     } else {
       couponError = "Este cupom já atingiu o limite de usos.";
@@ -120,9 +127,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // Desconto do Pix: sobre os produtos (depois do cupom), sem o frete.
-  const paymentDiscount = paymentMethod === "pix" ? round((subtotal - discount) * store.commerce.pixDiscountPercent / 100) : 0;
-  const total = round(subtotal - discount - paymentDiscount + freight);
+  const total = round(productsTotal - discount + freight);
 
   let order;
   try {

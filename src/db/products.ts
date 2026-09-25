@@ -2,6 +2,8 @@ import { cache } from "react";
 import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { getDb, hasDatabase } from "./client";
 import { products, type NewProductRow, type ProductImage, type ProductRow, type ProductSize } from "./schema";
+import { getPaymentFees } from "./settings";
+import { cardPrice, pixPrice, type PaymentFees } from "@/lib/pricing";
 
 /** Dados do produto que vão para o navegador (sem peso/dimensões). */
 export interface Product {
@@ -9,7 +11,10 @@ export interface Product {
   slug: string;
   name: string;
   category: string;
+  /** Preço no site (cartão), já com a taxa do Mercado Pago. */
   price: number;
+  /** Preço no Pix (menor, com a taxa do Pix). Igual a price sem Mercado Pago. */
+  pixPrice: number;
   oldPrice: number | null;
   sizes: ProductSize[];
   colors: string[];
@@ -26,7 +31,11 @@ export interface ProductShipping {
   id: number;
   name: string;
   reference: string | null;
+  /** Valor que a loja quer receber (cadastrado no painel). */
   price: number;
+  /** Preço cobrado no cartão / WhatsApp e no Pix, com as taxas. */
+  cardPrice: number;
+  pixPrice: number;
   weightKg: number | null;
   heightCm: number | null;
   widthCm: number | null;
@@ -55,14 +64,16 @@ function noDatabase() {
   return true;
 }
 
-function toPublic(row: ProductRow): Product {
+function toPublic(row: ProductRow, fees: PaymentFees): Product {
+  const net = row.price ?? 0;
   return {
     id: row.id,
     slug: productSlug(row),
     name: row.name,
     category: row.category ?? "",
-    price: row.price ?? 0,
-    oldPrice: row.oldPrice,
+    price: cardPrice(net, fees),
+    pixPrice: pixPrice(net, fees),
+    oldPrice: row.oldPrice === null ? null : cardPrice(row.oldPrice, fees),
     sizes: row.sizes,
     colors: row.colors,
     images: row.images,
@@ -81,9 +92,11 @@ const visible = and(eq(products.active, true), isNotNull(products.price));
 // cache(): layout e página da mesma requisição compartilham uma única consulta.
 export const getProducts = cache(async (): Promise<Product[]> => {
   if (noDatabase()) return [];
-  const rows = await getDb().select().from(products).where(visible)
-    .orderBy(asc(products.sortOrder), desc(products.id));
-  return rows.map(toPublic);
+  const [rows, fees] = await Promise.all([
+    getDb().select().from(products).where(visible).orderBy(asc(products.sortOrder), desc(products.id)),
+    getPaymentFees()
+  ]);
+  return rows.map(r => toPublic(r, fees));
 });
 
 export async function getProduct(id: number): Promise<Product | null> {
@@ -93,9 +106,13 @@ export async function getProduct(id: number): Promise<Product | null> {
 
 export async function getShippingInfo(ids: number[]): Promise<ProductShipping[]> {
   if (!ids.length || noDatabase()) return [];
-  const rows = await getDb().select().from(products).where(and(inArray(products.id, ids), visible));
+  const [rows, fees] = await Promise.all([
+    getDb().select().from(products).where(and(inArray(products.id, ids), visible)),
+    getPaymentFees()
+  ]);
   return rows.map(r => ({
     id: r.id, name: r.name, reference: r.reference, price: r.price ?? 0,
+    cardPrice: cardPrice(r.price ?? 0, fees), pixPrice: pixPrice(r.price ?? 0, fees),
     weightKg: r.weightKg, heightCm: r.heightCm, widthCm: r.widthCm, lengthCm: r.lengthCm
   }));
 }

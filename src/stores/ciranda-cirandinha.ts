@@ -48,8 +48,7 @@ const cirandaCirandinha: StoreConfig = {
   },
 
   commerce: {
-    installments: 3,
-    pixDiscountPercent: 5
+    installments: 3
   },
 
   texts: {

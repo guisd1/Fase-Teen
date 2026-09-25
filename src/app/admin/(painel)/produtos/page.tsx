@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { adminListProducts, productSlug } from "@/db/products";
 import { money } from "@/lib/format";
+import { getPaymentFees } from "@/db/settings";
+import { cardPrice } from "@/lib/pricing";
 import { mainImage } from "@/lib/product-media";
 import { setProductActive } from "../../actions";
 
 export default async function ProductsPage() {
-  const products = await adminListProducts();
+  const [products, fees] = await Promise.all([adminListProducts(), getPaymentFees()]);
 
   return (
     <>
@@ -26,7 +28,7 @@ export default async function ProductsPage() {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th></th><th>Produto</th><th>Preço</th><th>Estoque</th><th>Status</th><th></th></tr>
+              <tr><th></th><th>Produto</th><th>Receber</th><th>Estoque</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
               {products.map(p => {
@@ -40,7 +42,10 @@ export default async function ProductsPage() {
                       <Link href={`/admin/produtos/${p.id}`}><strong>{p.name}</strong></Link>
                       <small>{[p.reference, p.category].filter(Boolean).join(" • ") || "—"}</small>
                     </td>
-                    <td>{p.price === null ? "—" : money(p.price)}</td>
+                    <td>
+                      {p.price === null ? "—" : money(p.price)}
+                      {p.price !== null && fees.cardPercent > 0 && <small>no site: {money(cardPrice(p.price, fees))}</small>}
+                    </td>
                     <td>{p.sizes.length ? `${stock} un.` : "—"}</td>
                     <td>
                       <span className={`admin-status ${status === "No site" ? "ok" : ""}`}>{status}</span>
