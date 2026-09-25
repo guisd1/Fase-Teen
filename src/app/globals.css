@@ -568,3 +568,10 @@ img { max-width: 100%; display: block; }
 .size-chart tr.active td { background: var(--primary-soft, #f7f3f5); }
 .size-chart-box p { margin: 10px 0 0; color: var(--muted); line-height: 1.5; }
 .shipping-note { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+/* Zoom da foto ao passar o mouse (página do produto, só em telas com mouse) */
+@media (hover: hover) and (pointer: fine) {
+  .zoomable .media-slide { overflow: hidden; }
+  .zoomable .media-slide > img { cursor: zoom-in; transition: transform .2s ease; }
+  .zoomable .media-slide > img:hover { transform: scale(2.2); }
+}

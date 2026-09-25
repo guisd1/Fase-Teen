@@ -41,7 +41,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
       </nav>
       <div className="quick-product">
         {/* key: volta para a primeira foto ao trocar de cor */}
-        <MediaCarousel key={color} product={product} color={color} className="modal-media" playVideo />
+        <MediaCarousel key={color} product={product} color={color} className="modal-media" playVideo zoom />
         <div className="quick-info">
           {product.category && <div className="product-category">{product.category}</div>}
           <h1>{product.name}</h1>

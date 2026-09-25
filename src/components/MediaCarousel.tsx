@@ -15,13 +15,21 @@ function slidesFor(p: Product, color?: string | null): Slide[] {
   return slides;
 }
 
-export default function MediaCarousel({ product, color, className = "", playVideo = false, children }: {
+/** Zoom que acompanha o mouse: amplia a região da foto embaixo do cursor. */
+function followMouse(e: MouseEvent<HTMLImageElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`;
+}
+
+export default function MediaCarousel({ product, color, className = "", playVideo = false, zoom = false, children }: {
   product: Product;
   /** Cor escolhida: mostra as fotos dessa variação primeiro. */
   color?: string | null;
   className?: string;
   /** true na página do produto (vídeo tocável); false nos cards (só a capa). */
   playVideo?: boolean;
+  /** Amplia a foto ao passar o mouse (página do produto, só no computador). */
+  zoom?: boolean;
   children?: ReactNode;
 }) {
   const slides = slidesFor(product, color);
@@ -35,11 +43,11 @@ export default function MediaCarousel({ product, color, className = "", playVide
   };
 
   return (
-    <div className={`product-image-wrap ${className}`.trim()} data-count={slides.length}>
+    <div className={`product-image-wrap ${zoom ? "zoomable" : ""} ${className}`.trim()} data-count={slides.length}>
       <div className="media-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         {slides.map((s, i) => (
           <div className="media-slide" key={i}>
-            {s.type === "image" && <img src={s.src} alt={product.name} loading="lazy" />}
+            {s.type === "image" && <img src={s.src} alt={product.name} loading="lazy" onMouseMove={zoom ? followMouse : undefined} />}
             {s.type === "youtube" && (playVideo && i === index
               ? <iframe
                   src={`https://www.youtube-nocookie.com/embed/${s.id}?rel=0&playsinline=1`}
