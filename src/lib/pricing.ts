@@ -27,7 +27,15 @@ export function withFee(net: number, percent: number) {
 }
 
 export const cardPrice = (net: number, fees: PaymentFees) => withFee(net, fees.cardPercent);
-export const pixPrice = (net: number, fees: PaymentFees) => withFee(net, fees.pixPercent);
+/** Sobe para o próximo valor terminado em ,99 (R$ 242,42 → R$ 242,99). */
+export const endIn99 = (value: number) => Math.round((Math.floor(value + 1e-6) + 0.99) * 100) / 100;
+
+/**
+ * Preço no Pix: valor a receber + taxa do Pix, arredondado para cima até ,99.
+ * Nunca passa do preço no cartão (em peças baratas o arredondamento poderia passar).
+ */
+export const pixPrice = (net: number, fees: PaymentFees) =>
+  Math.min(endIn99(withFee(net, fees.pixPercent)), cardPrice(net, fees));
 
 /** Valida uma taxa digitada no painel ("4,98" ou "4.98"). */
 export function parseFee(value: string, label: string) {
