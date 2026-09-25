@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb, hasDatabase } from "./client";
 import { orders, products, type NewOrderRow, type OrderRow } from "./schema";
@@ -6,9 +7,24 @@ import type { OrderStatus } from "@/lib/order-status";
 /** Status em que o estoque do pedido fica descontado dos produtos. */
 const holdsStock = (status: OrderStatus) => status !== "pendente" && status !== "cancelado";
 
-export async function createOrder(data: NewOrderRow) {
-  const [row] = await getDb().insert(orders).values(data).returning({ id: orders.id });
-  return row.id;
+const randomCode = () => String(randomInt(100000, 1000000));
+
+const isUniqueViolation = (error: unknown) => {
+  const e = error as { code?: string; cause?: { code?: string } };
+  return (e?.cause?.code ?? e?.code) === "23505";
+};
+
+/** Grava o pedido com um código aleatório de 6 dígitos (tenta outro se já existir). */
+export async function createOrder(data: Omit<NewOrderRow, "code">) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const [row] = await getDb().insert(orders).values({ ...data, code: randomCode() })
+        .returning({ id: orders.id, code: orders.code });
+      return row;
+    } catch (error) {
+      if (!isUniqueViolation(error) || attempt >= 5) throw error;
+    }
+  }
 }
 
 export async function adminListOrders(status?: OrderStatus): Promise<OrderRow[]> {

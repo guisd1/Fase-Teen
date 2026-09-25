@@ -24,7 +24,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <div className="admin-head">
         <div>
           <p><Link href="/admin/pedidos">← Pedidos</Link></p>
-          <h1>Pedido #{order.id}</h1>
+          <h1>Pedido nº {order.code}</h1>
           <p>
             {order.createdAt.toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short", timeZone: "America/Sao_Paulo" })}
             {" • "}<span className={`admin-status status-${order.status}`}>{STATUS_LABELS[order.status]}</span>

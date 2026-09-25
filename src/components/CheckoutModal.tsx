@@ -33,7 +33,8 @@ function initialForm(cart: Cart): FormData {
 
 /** Pedido gravado no painel, com o desconto confirmado pelo servidor. */
 interface Registered {
-  id: number;
+  /** Número do pedido que o cliente vê. */
+  code: string;
   discount: number;
   couponCode: string | null;
   couponError: string | null;
@@ -56,8 +57,8 @@ async function registerOrder(cart: Cart, data: FormData): Promise<Registered | n
       })
     });
     const json = await r.json().catch(() => ({}));
-    if (!r.ok || !Number.isInteger(json.id)) return null;
-    return { id: json.id, discount: Number(json.discount) || 0, couponCode: json.couponCode ?? null, couponError: json.couponError ?? null };
+    if (!r.ok || typeof json.code !== "string") return null;
+    return { code: json.code, discount: Number(json.discount) || 0, couponCode: json.couponCode ?? null, couponError: json.couponError ?? null };
   } catch {
     return null;
   }
@@ -82,7 +83,7 @@ function orderMessage(store: StoreConfig, cart: Cart, data: FormData, order: Reg
   const total = cart.subtotal - discount + (cart.freight ?? 0);
   return [
     `Olá! Quero fazer um pedido na *${store.name}*.`,
-    ...(order ? [`*Pedido nº ${order.id}*`] : []), "",
+    ...(order ? [`*Pedido nº ${order.code}*`] : []), "",
     "*Produtos:*", ...cart.items.map(x => `• ${x.product.name} | Tam. ${x.size} | Cor: ${x.color} | Qtd: ${x.qty} | ${money(x.product.price * x.qty)}`), "",
     `*Subtotal:* ${money(cart.subtotal)}`,
     ...(discount > 0 ? [`*Cupom ${couponCode}:* − ${money(discount)}`] : []),
@@ -240,7 +241,7 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
           </label>
           {ready ? (
             <div className="checkout-ready">
-              <p>{ready.order ? <>Pedido <strong>nº {ready.order.id}</strong> registrado! ✨</> : "Pedido pronto!"} Agora é só enviar a mensagem:</p>
+              <p>{ready.order ? <>Pedido <strong>nº {ready.order.code}</strong> registrado! ✨</> : "Pedido pronto!"} Agora é só enviar a mensagem:</p>
               <a className="btn btn-dark full" href={ready.url} target="_blank" rel="noopener">Abrir o WhatsApp</a>
             </div>
           ) : (

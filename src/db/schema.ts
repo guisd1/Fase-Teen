@@ -91,6 +91,8 @@ export interface OrderShipping {
 */
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
+  /** Número que o cliente vê (6 dígitos aleatórios), para não revelar quantos pedidos a loja já teve. */
+  code: text("code").notNull().unique(),
   status: text("status").$type<OrderStatus>().notNull().default("pendente"),
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),

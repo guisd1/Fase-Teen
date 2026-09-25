@@ -86,14 +86,14 @@ export async function POST(request: Request) {
 
   const total = round(subtotal - discount + freight);
   try {
-    const id = await createOrder({
+    const order = await createOrder({
       customerName, customerPhone, customerEmail,
       deliveryMode: pickup ? "pickup" : "delivery",
       address, shipping, items,
       subtotal, freight, discount, couponCode, total,
       notes: str(body?.notes, 1000) || null
     });
-    return reply(200, { id, subtotal, discount, couponCode, couponError, total });
+    return reply(200, { code: order.code, subtotal, discount, couponCode, couponError, total });
   } catch (error) {
     console.error("Falha ao gravar pedido:", error);
     return reply(500, { error: "Não foi possível registrar o pedido." });

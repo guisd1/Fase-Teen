@@ -12,9 +12,9 @@ export function customerWhatsapp(phone: string) {
 }
 
 /** Mensagem para avisar o cliente sobre o status atual do pedido. */
-export function statusMessage(store: StoreConfig, order: Pick<OrderRow, "id" | "customerName" | "status" | "trackingCode" | "deliveryMode">) {
+export function statusMessage(store: StoreConfig, order: Pick<OrderRow, "code" | "customerName" | "status" | "trackingCode" | "deliveryMode">) {
   const name = order.customerName.split(" ")[0];
-  const n = `seu pedido nº ${order.id} na *${store.name}*`;
+  const n = `seu pedido nº ${order.code} na *${store.name}*`;
   const texts: Record<OrderStatus, string> = {
     pendente: `Olá, ${name}! Recebemos ${n}. Já vamos conferir o estoque e te passar os dados para pagamento.`,
     preparacao: `Olá, ${name}! O pagamento de ${n} foi confirmado e ele já está em preparação. 💕`,
