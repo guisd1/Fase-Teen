@@ -104,8 +104,11 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
   const [addressNote, setAddressNote] = useState("");
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
-  const [registered, setRegistered] = useState<{ key: string; order: Registered } | null>(null);
+  const [registered, setRegistered] = useState<{ key: string; order: Registered | null; url: string } | null>(null);
   const delivery = cart.deliveryMode === "delivery";
+  // Mudar qualquer dado depois de registrar pede um novo registro (e uma nova mensagem).
+  const orderKey = JSON.stringify([form, cart.items.map(x => [x.id, x.size, x.color, x.qty]), cart.deliveryMode, cart.selectedShipping?.id, cart.coupon?.code]);
+  const ready = registered?.key === orderKey ? registered : null;
 
   const set = (field: keyof FormData) => (e: { target: { value: string } }) =>
     setForm(f => ({ ...f, [field]: e.target.value }));
@@ -155,24 +158,18 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
       return;
     }
     if (sending) return;
-    // A aba abre já no clique: se abrir só depois do fetch, o navegador do celular bloqueia como pop-up.
-    const tab = window.open("", "_blank");
+    /*
+      Abrir o WhatsApp sozinho depois de gravar o pedido é bloqueado como pop-up
+      em vários navegadores. Por isso o clique só grava, e o botão vira um link
+      comum para o WhatsApp, que abre em qualquer navegador.
+      Se não der para registrar, o link sai mesmo assim (sem o número do pedido).
+    */
     setSending(true);
     setNote("Registrando o pedido...");
-    // Se não der para registrar, o pedido segue pelo WhatsApp mesmo assim.
-    // Reenviar sem mudar nada (ex.: fechou o WhatsApp sem querer) reaproveita o mesmo pedido.
-    const key = JSON.stringify([form, cart.items.map(x => [x.id, x.size, x.color, x.qty]), cart.deliveryMode, cart.selectedShipping?.id, cart.coupon?.code]);
-    const order = registered?.key === key ? registered.order : await registerOrder(cart, form);
-    if (order) setRegistered({ key, order });
-    const url = whatsappUrl(store, orderMessage(store, cart, form, order));
-    if (tab) tab.location.href = url;
-    else window.location.href = url;
+    const order = await registerOrder(cart, form);
+    setRegistered({ key: orderKey, order, url: whatsappUrl(store, orderMessage(store, cart, form, order)) });
     setSending(false);
-    setNote([
-      order ? `Pedido nº ${order.id} registrado.` : "",
-      order?.couponError ? `Cupom não aplicado: ${order.couponError}` : "",
-      "Confira a mensagem no WhatsApp antes de enviar."
-    ].filter(Boolean).join(" "));
+    setNote(order?.couponError ? `Cupom não aplicado: ${order.couponError}` : "");
   };
 
   return (
@@ -241,7 +238,14 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
           <label>Observações
             <textarea name="notes" rows={3} placeholder="Deixar na portaria, tocar a campainha, preferência de entrega" value={form.notes} onChange={set("notes")} />
           </label>
-          <button className="btn btn-dark full" type="submit" disabled={sending}>{sending ? "Registrando..." : "Enviar pedido pelo WhatsApp"}</button>
+          {ready ? (
+            <div className="checkout-ready">
+              <p>{ready.order ? <>Pedido <strong>nº {ready.order.id}</strong> registrado! ✨</> : "Pedido pronto!"} Agora é só enviar a mensagem:</p>
+              <a className="btn btn-dark full" href={ready.url} target="_blank" rel="noopener">Abrir o WhatsApp</a>
+            </div>
+          ) : (
+            <button className="btn btn-dark full" type="submit" disabled={sending}>{sending ? "Registrando..." : "Enviar pedido pelo WhatsApp"}</button>
+          )}
           <p className="form-note">{note}</p>
         </form>
       </div>

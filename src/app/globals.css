@@ -514,3 +514,7 @@ img { max-width: 100%; display: block; }
 .coupon-applied { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--primary-soft); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
 .coupon-applied .remove-btn { margin: 0; }
 .discount-row strong { color: #1f7a3d; }
+
+/* Pedido registrado: link para o WhatsApp */
+.checkout-ready { background: var(--primary-soft); border-radius: 16px; padding: 14px; display: grid; gap: 10px; text-align: center; }
+.checkout-ready .btn { text-align: center; }
