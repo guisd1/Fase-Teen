@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/db/products";
 import { cleanCep, formatCep } from "@/lib/format";
 import type { ShippingOption } from "@/lib/shipping";
@@ -84,7 +84,11 @@ export function useCart(storeId: string, products: Product[]) {
     // Só reage à troca de modo; as buscas de CEP e frete atualizam a mensagem por conta própria.
   }, [hydrated, deliveryMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** CEP usado na última cotação de frete. */
+  const quotedCep = useRef("");
+
   const resetShipping = () => {
+    quotedCep.current = "";
     setShippingOptions([]);
     setSelectedShipping(null);
   };
@@ -162,8 +166,11 @@ export function useCart(storeId: string, products: Product[]) {
     };
     setCepState(clean);
     setAddress(found);
-    setShippingOptions([]);
-    setSelectedShipping(null);
+    // Consultar de novo o mesmo CEP (ex.: ao sair do campo no checkout) não pode apagar o frete já escolhido.
+    if (clean !== quotedCep.current) {
+      setShippingOptions([]);
+      setSelectedShipping(null);
+    }
     if (showStatus) setShippingStatus(`CEP encontrado: ${found.city}/${found.state}. Agora calcule o frete.`);
     return found;
   }, []);
@@ -216,6 +223,7 @@ export function useCart(storeId: string, products: Product[]) {
       if (!r.ok) throw new Error(data.error || "Não foi possível calcular o frete.");
       const options: ShippingOption[] = Array.isArray(data.options) ? data.options : [];
       setShippingOptions(options);
+      quotedCep.current = cep;
       const reasons: string[] = Array.isArray(data.unavailable) ? data.unavailable : [];
       setShippingStatus(options.length
         ? "Escolha uma opção de envio:"

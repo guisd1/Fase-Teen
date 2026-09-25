@@ -140,7 +140,7 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
     e.preventDefault();
     if (delivery) {
       if (!cart.selectedShipping) {
-        cart.setShippingStatus("Selecione o frete antes de enviar o pedido.");
+        cart.setShippingStatus("Calcule e escolha o frete para este CEP antes de enviar o pedido.");
         onBackToCart();
         return;
       }
