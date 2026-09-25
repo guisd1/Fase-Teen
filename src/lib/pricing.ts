@@ -3,8 +3,8 @@
   O administrador cadastra quanto quer RECEBER por produto; o site mostra o
   preço já com a taxa, de modo que, depois que o Mercado Pago desconta a
   tarifa, sobra exatamente o valor cadastrado:
-    preço = valor a receber ÷ (1 − taxa)
-  Ex.: R$ 100 com 4,98% no cartão → R$ 105,25; com 0,99% no Pix → R$ 101,00.
+    preço = valor a receber ÷ (1 − taxa), arredondado para cima até ,99
+  Ex.: R$ 100 com 4,98% no cartão → R$ 105,25 → R$ 105,99; com 0,99% no Pix → R$ 101,00 → R$ 101,99.
 */
 
 export interface PaymentFees {
@@ -26,13 +26,19 @@ export function withFee(net: number, percent: number) {
   return Math.ceil(net / (1 - percent / 100) * 100 - 1e-6) / 100;
 }
 
-export const cardPrice = (net: number, fees: PaymentFees) => withFee(net, fees.cardPercent);
 /** Sobe para o próximo valor terminado em ,99 (R$ 242,42 → R$ 242,99). */
 export const endIn99 = (value: number) => Math.round((Math.floor(value + 1e-6) + 0.99) * 100) / 100;
 
 /**
+ * Preço no cartão (e o preço mostrado no site): valor a receber + taxa do cartão, até ,99.
+ * Sem taxa (loja sem Mercado Pago), o preço fica exatamente como foi cadastrado.
+ */
+export const cardPrice = (net: number, fees: PaymentFees) =>
+  fees.cardPercent ? endIn99(withFee(net, fees.cardPercent)) : withFee(net, 0);
+
+/**
  * Preço no Pix: valor a receber + taxa do Pix, arredondado para cima até ,99.
- * Nunca passa do preço no cartão (em peças baratas o arredondamento poderia passar).
+ * Nunca passa do preço no cartão.
  */
 export const pixPrice = (net: number, fees: PaymentFees) =>
   Math.min(endIn99(withFee(net, fees.pixPercent)), cardPrice(net, fees));
