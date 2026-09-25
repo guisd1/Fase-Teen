@@ -1,4 +1,4 @@
-import { randomInt } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb, hasDatabase } from "./client";
 import { orders, products, type NewOrderRow, type OrderRow } from "./schema";
@@ -15,11 +15,11 @@ const isUniqueViolation = (error: unknown) => {
 };
 
 /** Grava o pedido com um código aleatório de 6 dígitos (tenta outro se já existir). */
-export async function createOrder(data: Omit<NewOrderRow, "code">) {
+export async function createOrder(data: Omit<NewOrderRow, "code" | "publicToken">) {
   for (let attempt = 0; ; attempt++) {
     try {
-      const [row] = await getDb().insert(orders).values({ ...data, code: randomCode() })
-        .returning({ id: orders.id, code: orders.code });
+      const [row] = await getDb().insert(orders).values({ ...data, code: randomCode(), publicToken: randomBytes(16).toString("hex") })
+        .returning({ id: orders.id, code: orders.code, publicToken: orders.publicToken });
       return row;
     } catch (error) {
       if (!isUniqueViolation(error) || attempt >= 5) throw error;
@@ -89,4 +89,47 @@ export async function adminDeleteOrder(id: number) {
   if (!order) return;
   if (order.stockApplied) await moveStock(order, 1);
   await getDb().delete(orders).where(eq(orders.id, id));
+}
+
+// ---- Pagamento online (Mercado Pago) ----
+
+export async function getOrderByToken(token: string): Promise<OrderRow | null> {
+  if (!hasDatabase() || !/^[0-9a-f]{32,64}$/.test(token)) return null;
+  const [row] = await getDb().select().from(orders).where(eq(orders.publicToken, token));
+  return row ?? null;
+}
+
+export async function getOrderByCode(code: string): Promise<OrderRow | null> {
+  if (!hasDatabase()) return null;
+  const [row] = await getDb().select().from(orders).where(eq(orders.code, code));
+  return row ?? null;
+}
+
+export async function setOrderPayment(id: number, data: Pick<NewOrderRow, "paymentId" | "paymentStatus" | "paymentData">) {
+  await getDb().update(orders).set(data).where(eq(orders.id, id));
+}
+
+/**
+ * Registra o status de um pagamento lido da API do Mercado Pago.
+ * Aprovado (com o valor certo) marca o pedido como pago e, se ainda estava
+ * aguardando, passa para "Em preparação" (o que baixa o estoque).
+ * Devolve verdadeiro quando o pedido acabou de ser pago.
+ */
+export async function applyPayment(order: OrderRow, payment: { id: string; status: string; amount: number }) {
+  if (order.paidAt) return false;
+  const approved = payment.status === "approved" && payment.amount >= order.total - 0.01;
+  await getDb().update(orders)
+    .set({ paymentId: payment.id, paymentStatus: payment.status, ...(approved ? { paidAt: new Date() } : {}) })
+    .where(eq(orders.id, order.id));
+  if (!approved) {
+    if (payment.status === "approved") console.error(`Pagamento ${payment.id} aprovado com valor menor que o pedido ${order.code}.`);
+    return false;
+  }
+  if (order.status === "pendente") await adminSetOrderStatus(order.id, "preparacao");
+  return true;
+}
+
+/** Apaga um pedido que nem chegou a existir para o cliente (ex.: falhou ao criar o pagamento). */
+export async function discardOrder(id: number) {
+  await getDb().delete(orders).where(and(eq(orders.id, id), eq(orders.stockApplied, false)));
 }

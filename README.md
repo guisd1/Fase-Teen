@@ -77,6 +77,15 @@ No aplicativo do Melhor Envio, cadastre o callback `https://<dominio-da-loja>/ap
 
 Limite padrão: 10.000 unidades por dia, e cada envio gasta 1.600, ou seja, cerca de 6 vídeos por dia. Capas personalizadas exigem canal verificado por telefone.
 
+### Mercado Pago (Pix e cartão)
+1. Em mercadopago.com.br/developers, **Suas integrações → Criar aplicação** (Checkout Pro / pagamentos online).
+2. Copie o **Access Token** (de teste, que começa com `TEST-`, ou de produção) e cadastre `MERCADO_PAGO_ACCESS_TOKEN` na Vercel. Faça um Redeploy.
+3. A conta precisa ter uma **chave Pix** cadastrada para gerar QR Codes.
+4. Desconto do Pix e parcelas: `pixDiscountPercent` e `installments` em `src/stores/<loja>.ts`. Parcelamento sem juros para o cliente é configurado na conta do Mercado Pago.
+
+O site avisa o Mercado Pago do endereço de notificação a cada pagamento (`/api/mercado-pago/webhook`) e também confere o pagamento quando o cliente está na tela, então não precisa configurar Webhooks. Se configurar, cadastre a assinatura secreta como `MERCADO_PAGO_WEBHOOK_SECRET`.
+Pedido pago vai sozinho para "Em preparação" (baixando o estoque). O cliente acompanha em `/pedido/<token>`.
+
 ### Newsletter (Brevo)
 Crie uma conta em brevo.com, crie uma lista em *Contatos → Listas* e anote o ID. Gere uma API Key (v3) em *SMTP e API*. Cadastre `BREVO_API_KEY` e `BREVO_LIST_ID` na Vercel.
 

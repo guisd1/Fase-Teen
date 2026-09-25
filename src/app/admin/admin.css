@@ -154,3 +154,4 @@
 .admin-review-images img { width: 90px; height: 90px; object-fit: cover; border-radius: 10px; }
 .admin-search { display: flex; gap: 8px; margin-bottom: 12px; max-width: 520px; }
 .admin-search input { flex: 1; }
+.admin-paid { color: #1f7a3d !important; font-weight: 700; }

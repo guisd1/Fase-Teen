@@ -1,4 +1,5 @@
 import { boolean, index, integer, jsonb, numeric, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { OrderStatus } from "@/lib/order-status";
 
 export interface ProductImage {
@@ -78,6 +79,19 @@ export interface OrderAddress {
   state: string;
 }
 
+export type PaymentMethod = "whatsapp" | "pix" | "card";
+
+export interface OrderPaymentData {
+  /** Pix: código "copia e cola". */
+  pixCode?: string;
+  /** Pix: imagem do QR Code em base64 (PNG). */
+  pixQrBase64?: string;
+  /** Pix: quando o código deixa de valer (ISO). */
+  pixExpiresAt?: string;
+  /** Cartão: link do checkout do Mercado Pago. */
+  checkoutUrl?: string;
+}
+
 export interface OrderShipping {
   company: string;
   service: string;
@@ -111,6 +125,22 @@ export const orders = pgTable("orders", {
   /** Anotações internas do administrador (não aparecem para o cliente). */
   adminNotes: text("admin_notes"),
   trackingCode: text("tracking_code"),
+  /** Como o cliente escolheu pagar. */
+  paymentMethod: text("payment_method").$type<PaymentMethod>().notNull().default("whatsapp"),
+  /** Desconto do Pix (além do cupom), já abatido do total. */
+  paymentDiscount: numeric("payment_discount", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+  /** Status no Mercado Pago: pending, approved, rejected, cancelled, refunded... */
+  paymentStatus: text("payment_status"),
+  /** Id do pagamento no Mercado Pago. */
+  paymentId: text("payment_id"),
+  /** Dados para mostrar de novo o Pix (QR Code) ou reabrir o checkout do cartão. */
+  paymentData: jsonb("payment_data").$type<OrderPaymentData>(),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  /**
+   * Chave secreta do link de acompanhamento do pedido (/pedido/<token>).
+   * O número do pedido é curto e dá para chutar; o token não.
+   */
+  publicToken: text("public_token").notNull().unique().default(sql`md5(random()::text || clock_timestamp()::text)`),
   /** Verdadeiro enquanto o estoque deste pedido estiver descontado dos produtos. */
   stockApplied: boolean("stock_applied").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -41,7 +41,8 @@ const faseTeen: StoreConfig = {
   },
 
   commerce: {
-    installments: 3
+    installments: 3,
+    pixDiscountPercent: 5
   },
 
   texts: {

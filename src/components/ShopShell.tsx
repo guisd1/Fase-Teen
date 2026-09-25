@@ -28,9 +28,11 @@ export function useShop() {
 }
 
 /** Cabeçalho, rodapé, carrinho e checkout, compartilhados por todas as páginas da loja. */
-export default function ShopShell({ store, products, children }: {
+export default function ShopShell({ store, products, onlinePayments, children }: {
   store: StoreConfig;
   products: Product[];
+  /** Mercado Pago configurado: o checkout oferece Pix e cartão. */
+  onlinePayments: boolean;
   children: ReactNode;
 }) {
   const t = store.texts;
@@ -122,6 +124,7 @@ export default function ShopShell({ store, products, children }: {
         <CheckoutModal
           store={store}
           cart={cart}
+          onlinePayments={onlinePayments}
           onClose={() => setCheckoutOpen(false)}
           onBackToCart={() => { setCheckoutOpen(false); setCartOpen(true); }}
         />

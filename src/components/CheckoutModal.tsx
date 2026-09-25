@@ -5,6 +5,7 @@ import type { StoreConfig } from "@/stores/types";
 import { cleanCep, formatCep, money } from "@/lib/format";
 import { hasWhatsapp, whatsappUrl } from "@/lib/whatsapp";
 import type { Address, Cart } from "./useCart";
+import PixPayment, { useOrderStatus, type PixData } from "./PixPayment";
 
 interface FormData {
   name: string;
@@ -40,22 +41,44 @@ interface Registered {
   couponError: string | null;
 }
 
+const orderBody = (cart: Cart, data: FormData, paymentMethod: PaymentChoice) => JSON.stringify({
+  paymentMethod,
+  customer: { name: data.name, phone: data.phone, email: data.email },
+  items: cart.items.map(x => ({ id: x.id, size: x.size, color: x.color, qty: x.qty })),
+  deliveryMode: cart.deliveryMode,
+  address: { ...data, cep: cleanCep(data.cep) },
+  shipping: cart.selectedShipping,
+  couponCode: cart.discount > 0 ? cart.coupon?.code : undefined,
+  notes: data.notes
+});
+
+type PaymentChoice = "pix" | "card" | "whatsapp";
+
+/** Pedido pago online, já criado no Mercado Pago. */
+interface OnlineOrder {
+  code: string;
+  token: string;
+  total: number;
+  pix?: PixData;
+  checkoutUrl?: string;
+}
+
+/** Cria o pedido e a cobrança (Pix ou cartão). Em caso de erro, devolve a mensagem. */
+async function startOnlinePayment(cart: Cart, data: FormData, method: "pix" | "card"): Promise<OnlineOrder | { error: string; shippingChanged?: boolean }> {
+  try {
+    const r = await fetch("/api/pedidos", { method: "POST", headers: { "Content-Type": "application/json" }, body: orderBody(cart, data, method) });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok || typeof json.token !== "string") return { error: json.error || "Não foi possível iniciar o pagamento.", shippingChanged: json.shippingChanged };
+    return { code: json.code, token: json.token, total: Number(json.total), pix: json.pix, checkoutUrl: json.checkoutUrl };
+  } catch {
+    return { error: "Sem conexão. Confira a internet e tente de novo." };
+  }
+}
+
 /** Registra o pedido no painel. Devolve null se não deu para gravar. */
 async function registerOrder(cart: Cart, data: FormData): Promise<Registered | null> {
   try {
-    const r = await fetch("/api/pedidos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customer: { name: data.name, phone: data.phone, email: data.email },
-        items: cart.items.map(x => ({ id: x.id, size: x.size, color: x.color, qty: x.qty })),
-        deliveryMode: cart.deliveryMode,
-        address: { ...data, cep: cleanCep(data.cep) },
-        shipping: cart.selectedShipping,
-        couponCode: cart.discount > 0 ? cart.coupon?.code : undefined,
-        notes: data.notes
-      })
-    });
+    const r = await fetch("/api/pedidos", { method: "POST", headers: { "Content-Type": "application/json" }, body: orderBody(cart, data, "whatsapp") });
     const json = await r.json().catch(() => ({}));
     if (!r.ok || typeof json.code !== "string") return null;
     return { code: json.code, discount: Number(json.discount) || 0, couponCode: json.couponCode ?? null, couponError: json.couponError ?? null };
@@ -95,9 +118,11 @@ function orderMessage(store: StoreConfig, cart: Cart, data: FormData, order: Reg
 }
 
 
-export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
+export default function CheckoutModal({ store, cart, onlinePayments, onClose, onBackToCart }: {
   store: StoreConfig;
   cart: Cart;
+  /** Mercado Pago configurado: oferece Pix e cartão. */
+  onlinePayments: boolean;
   onClose: () => void;
   onBackToCart: () => void;
 }) {
@@ -105,6 +130,11 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
   const [addressNote, setAddressNote] = useState("");
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
+  const [method, setMethod] = useState<PaymentChoice>(onlinePayments ? "pix" : "whatsapp");
+  const [pixOrder, setPixOrder] = useState<OnlineOrder | null>(null);
+  const pixStatus = useOrderStatus(pixOrder?.token ?? "", Boolean(pixOrder), () => cart.clearCart());
+  const pixPercent = store.commerce.pixDiscountPercent;
+  const pixDiscount = Math.round((cart.subtotal - cart.discount) * pixPercent) / 100;
   const [registered, setRegistered] = useState<{ key: string; order: Registered | null; url: string } | null>(null);
   const delivery = cart.deliveryMode === "delivery";
   // Mudar qualquer dado depois de registrar pede um novo registro (e uma nova mensagem).
@@ -150,15 +180,40 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
         return;
       }
     }
-    if (!hasWhatsapp(store)) {
-      setNote(`Configure o WhatsApp em src/stores/${store.id}.ts antes de usar esta etapa.`);
-      return;
-    }
     if (!form.name || !form.phone || !form.email) {
       setNote("Preencha nome, WhatsApp e e-mail.");
       return;
     }
     if (sending) return;
+
+    if (method !== "whatsapp") {
+      setSending(true);
+      setNote(method === "pix" ? "Gerando o Pix..." : "Abrindo o pagamento seguro do Mercado Pago...");
+      const result = await startOnlinePayment(cart, form, method);
+      if ("error" in result) {
+        setSending(false);
+        setNote(result.error);
+        if (result.shippingChanged) {
+          cart.setShippingStatus(result.error);
+          onBackToCart();
+        }
+        return;
+      }
+      if (result.checkoutUrl) {
+        // Mesma aba (não é pop-up): o cliente paga no Mercado Pago e volta para /pedido/<token>.
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+      setSending(false);
+      setNote("");
+      setPixOrder(result);
+      return;
+    }
+
+    if (!hasWhatsapp(store)) {
+      setNote(`Configure o WhatsApp em src/stores/${store.id}.ts antes de usar esta etapa.`);
+      return;
+    }
     /*
       Abrir o WhatsApp sozinho depois de gravar o pedido é bloqueado como pop-up
       em vários navegadores. Por isso o clique só grava, e o botão vira um link
@@ -177,6 +232,28 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
     <div className="checkout-modal" role="dialog" aria-modal="true" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="checkout-card">
         <button className="modal-close" type="button" onClick={onClose}>×</button>
+        {pixOrder ? (
+          <>
+            <p className="eyebrow">PEDIDO Nº {pixOrder.code}</p>
+            {pixStatus?.paid ? (
+              <div className="pix-paid">
+                <h2>Pagamento aprovado! 🎉</h2>
+                <p>Obrigado! Seu pedido já está em preparação. A gente te avisa pelo WhatsApp a cada etapa.</p>
+                <a className="btn btn-dark full" href={`/pedido/${pixOrder.token}`}>Ver meu pedido</a>
+              </div>
+            ) : (
+              <>
+                <h2>Pague com Pix</h2>
+                {pixOrder.pix && <PixPayment pix={pixOrder.pix} total={pixOrder.total} />}
+                <p className="pix-later">
+                  Pode fechar esta janela: o pagamento continua valendo e você acompanha em{" "}
+                  <a href={`/pedido/${pixOrder.token}`}>seu pedido</a>.
+                </p>
+              </>
+            )}
+          </>
+        ) : (
+        <>
         <p className="eyebrow">FINALIZAR PEDIDO</p>
         <h2>Quase lá ✨</h2>
         <p className="checkout-intro">{store.texts.checkout.intro}</p>
@@ -239,7 +316,32 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
           <label>Observações
             <textarea name="notes" rows={3} placeholder="Deixar na portaria, tocar a campainha, preferência de entrega" value={form.notes} onChange={set("notes")} />
           </label>
-          {ready ? (
+
+          {onlinePayments && (
+            <>
+              <div className="checkout-section-title">Pagamento</div>
+              <div className="pay-options" role="radiogroup" aria-label="Forma de pagamento">
+                <button type="button" role="radio" aria-checked={method === "pix"} className={`pay-option ${method === "pix" ? "active" : ""}`} onClick={() => setMethod("pix")}>
+                  <span><strong>Pix</strong>{pixPercent > 0 && <em>{pixPercent}% off nos produtos</em>}</span>
+                  <b>{money(cart.total - pixDiscount)}</b>
+                </button>
+                <button type="button" role="radio" aria-checked={method === "card"} className={`pay-option ${method === "card" ? "active" : ""}`} onClick={() => setMethod("card")}>
+                  <span><strong>Cartão de crédito</strong>{store.commerce.installments > 1 && <em>em até {store.commerce.installments}x</em>}</span>
+                  <b>{money(cart.total)}</b>
+                </button>
+                <button type="button" role="radio" aria-checked={method === "whatsapp"} className={`pay-option ${method === "whatsapp" ? "active" : ""}`} onClick={() => setMethod("whatsapp")}>
+                  <span><strong>Combinar pelo WhatsApp</strong><em>pagamento combinado na conversa</em></span>
+                  <b>{money(cart.total)}</b>
+                </button>
+              </div>
+            </>
+          )}
+
+          {method !== "whatsapp" ? (
+            <button className="btn btn-dark full" type="submit" disabled={sending}>
+              {sending ? "Aguarde..." : method === "pix" ? `Gerar Pix de ${money(cart.total - pixDiscount)}` : "Pagar com cartão"}
+            </button>
+          ) : ready ? (
             <div className="checkout-ready">
               {ready.order ? (
                 <p>Pedido <strong>nº {ready.order.code}</strong> registrado! ✨ Agora é só enviar a mensagem:</p>
@@ -256,6 +358,8 @@ export default function CheckoutModal({ store, cart, onClose, onBackToCart }: {
           )}
           <p className="form-note">{note}</p>
         </form>
+        </>
+        )}
       </div>
     </div>
   );

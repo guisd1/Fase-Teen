@@ -2,6 +2,7 @@ import Link from "next/link";
 import { adminListOrders } from "@/db/orders";
 import { ORDER_STATUSES, STATUS_LABELS, isOrderStatus } from "@/lib/order-status";
 import { money } from "@/lib/format";
+import { paymentSummary } from "@/lib/payment-labels";
 
 const dateTime = (d: Date) => d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 
@@ -61,7 +62,10 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                   <td>{o.items.reduce((s, i) => s + i.qty, 0)} un.<small>{o.items.map(i => i.name).join(", ").slice(0, 60)}</small></td>
                   <td>{money(o.total)}</td>
                   <td>{o.deliveryMode === "pickup" ? "Retirada" : `${o.address?.city ?? ""}/${o.address?.state ?? ""}`}</td>
-                  <td><span className={`admin-status status-${o.status}`}>{STATUS_LABELS[o.status]}</span></td>
+                  <td>
+                    <span className={`admin-status status-${o.status}`}>{STATUS_LABELS[o.status]}</span>
+                    {o.paymentMethod !== "whatsapp" && <small className={paymentSummary(o).ok ? "admin-paid" : ""}>{o.paymentMethod === "pix" ? "Pix" : "Cartão"}: {paymentSummary(o).label}</small>}
+                  </td>
                 </tr>
               ))}
             </tbody>

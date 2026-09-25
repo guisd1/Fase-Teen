@@ -177,6 +177,13 @@ export function useCart(storeId: string, products: Product[]) {
 
   const clearAddress = () => setAddress(null);
 
+  /** Esvazia o carrinho depois de um pedido pago. */
+  const clearCart = () => {
+    setCart([]);
+    setCoupon(null);
+    resetShipping();
+  };
+
   const applyCoupon = async (code: string) => {
     const clean = normalizeCode(code);
     if (!clean) return;
@@ -237,7 +244,7 @@ export function useCart(storeId: string, products: Product[]) {
 
   return {
     items, count, subtotal, freight, discount, total,
-    coupon, couponStatus, applyCoupon, removeCoupon,
+    coupon, couponStatus, applyCoupon, removeCoupon, clearCart,
     addToCart, changeQty, canIncrease, removeItem,
     deliveryMode, setDeliveryMode,
     cep, setCep, address, lookupCep, clearAddress,

@@ -1,6 +1,7 @@
 import { getStore } from "@/stores";
 import { blobMode } from "@/lib/blob";
 import { melhorEnvioStatus } from "@/lib/melhor-envio";
+import { mercadoPagoConfigured, mercadoPagoTestMode, webhookUrl } from "@/lib/mercado-pago";
 import { getYoutubeRedirectUri, youtubeClientIdLooksValid, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
 import { disconnectYoutubeAction } from "../../actions";
 
@@ -21,6 +22,8 @@ export default async function IntegrationsPage({ searchParams }: {
   const [me, yt] = await Promise.all([melhorEnvioStatus(), youtubeConnected()]);
   const ytReady = youtubeConfigured();
   const blobReady = blobMode() !== null;
+  const mpReady = mercadoPagoConfigured();
+  const mpTest = mercadoPagoTestMode();
 
   const meLabel = { connected: "Conectado", expired: "Autorização expirada", disconnected: "Não conectado", "no-redis": "Redis não configurado" }[me];
 
@@ -81,12 +84,36 @@ export default async function IntegrationsPage({ searchParams }: {
         {!blobReady && <p className="admin-alert">Na Vercel: Storage → Create → Blob, e conecte ao projeto da loja.</p>}
       </section>
 
-      <section className="admin-card admin-muted">
+      <section className="admin-card">
         <div className="admin-integration-head">
           <h2>💳 Mercado Pago</h2>
-          <span className="admin-status">Em breve</span>
+          <span className={`admin-status ${mpReady && !mpTest ? "ok" : ""}`}>
+            {!mpReady ? "Não configurado" : mpTest ? "Modo de teste" : "Ativo"}
+          </span>
         </div>
-        <p>Pagamento por Pix (com QR Code e desconto) e cartão de crédito.</p>
+        <p>
+          Pix com QR Code ({store.commerce.pixDiscountPercent}% de desconto nos produtos) e cartão de crédito em até{" "}
+          {store.commerce.installments}x. Pedido pago vai sozinho para &quot;Em preparação&quot;.
+        </p>
+        {!mpReady ? (
+          <div className="admin-alert">
+            <strong>Configuração pendente.</strong> No Mercado Pago, abra <em>Suas integrações → Criar aplicação</em> e copie o{" "}
+            <em>Access Token</em> em <em>Credenciais de produção</em> (ou o de teste, que começa com <code>TEST-</code>). Cadastre na Vercel como{" "}
+            <code>MERCADO_PAGO_ACCESS_TOKEN</code> e faça um Redeploy. Sem ele, o checkout continua só com o WhatsApp.
+          </div>
+        ) : (
+          <>
+            {mpTest && <p className="admin-alert">Usando credenciais de <strong>teste</strong>: nenhum pagamento é real. Troque pelo Access Token de produção para vender.</p>}
+            <p className="admin-hint">
+              Notificações: o site já avisa o Mercado Pago a cada pagamento. Se quiser configurar em <em>Suas integrações → Webhooks</em>, use{" "}
+              <code>{webhookUrl()}</code> com o evento <em>Pagamentos</em> e cadastre a assinatura secreta como <code>MERCADO_PAGO_WEBHOOK_SECRET</code>.
+            </p>
+          </>
+        )}
+        <p className="admin-hint">
+          O desconto do Pix e o número de parcelas ficam em <code>src/stores/{store.id}.ts</code> (<code>pixDiscountPercent</code> e <code>installments</code>).
+          Parcelas sem juros para o cliente precisam ser ativadas na conta do Mercado Pago.
+        </p>
       </section>
     </>
   );

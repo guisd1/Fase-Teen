@@ -45,3 +45,10 @@ export async function adminSetCouponActive(id: number, active: boolean) {
 export async function adminDeleteCoupon(id: number) {
   await getDb().delete(coupons).where(eq(coupons.id, id));
 }
+
+/** Devolve um uso (pedido desfeito antes de ser concluído). */
+export async function releaseCoupon(code: string) {
+  await getDb().update(coupons)
+    .set({ uses: sql`greatest(${coupons.uses} - 1, 0)` })
+    .where(eq(coupons.code, code));
+}

@@ -5,6 +5,7 @@ import { getStore } from "@/stores";
 import { formatCep, money } from "@/lib/format";
 import { STATUS_LABELS } from "@/lib/order-status";
 import { customerWhatsapp, statusMessage, trackingUrl } from "@/lib/order-messages";
+import { METHOD_LABELS, paymentSummary } from "@/lib/payment-labels";
 import OrderStatusPanel from "@/components/admin/OrderStatusPanel";
 import DeleteButton from "@/components/admin/DeleteButton";
 import { deleteOrder, saveOrderNotes } from "../../../actions";
@@ -16,6 +17,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const store = getStore();
   const phone = customerWhatsapp(order.customerPhone);
   const notifyUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(statusMessage(store, order))}` : null;
+  const payment = paymentSummary(order);
   const a = order.address;
   const s = order.shipping;
 
@@ -61,6 +63,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         <dl className="admin-totals">
           <dt>Subtotal</dt><dd>{money(order.subtotal)}</dd>
           {order.discount > 0 && <><dt>Desconto{order.couponCode ? ` (${order.couponCode})` : ""}</dt><dd>− {money(order.discount)}</dd></>}
+          {order.paymentDiscount > 0 && <><dt>Desconto do Pix</dt><dd>− {money(order.paymentDiscount)}</dd></>}
           <dt>Frete</dt><dd>{money(order.freight)}</dd>
           <dt><strong>Total</strong></dt><dd><strong>{money(order.total)}</strong></dd>
         </dl>
@@ -68,7 +71,22 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
       <div className="admin-grid-2">
         <section className="admin-card">
-          <h2>Cliente</h2>
+          <h2>Pagamento</h2>
+          <p>
+            <strong>{METHOD_LABELS[order.paymentMethod]}</strong>{" "}
+            <span className={`admin-status ${payment.ok ? "ok" : ""}`}>{payment.label}</span>
+          </p>
+          {order.paidAt && <p>Pago em {order.paidAt.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })}</p>}
+          {order.paymentId && (
+            <p className="admin-hint">
+              Id no Mercado Pago: <code>{order.paymentId}</code> —{" "}
+              <a href={`https://www.mercadopago.com.br/activities?q=${order.paymentId}`} target="_blank" rel="noopener">ver no Mercado Pago ↗</a>
+            </p>
+          )}
+          {order.paymentMethod !== "whatsapp" && !order.paidAt && (
+            <p className="admin-hint">Pedido pago online só entra em preparação sozinho quando o Mercado Pago aprova. Se o cliente não pagar, cancele.</p>
+          )}
+          <h2 style={{ marginTop: 18 }}>Cliente</h2>
           <p><strong>{order.customerName}</strong></p>
           <p>WhatsApp: {phone ? <a href={`https://wa.me/${phone}`} target="_blank" rel="noopener">{order.customerPhone}</a> : order.customerPhone}</p>
           {order.customerEmail && <p>E-mail: <a href={`mailto:${order.customerEmail}`}>{order.customerEmail}</a></p>}
