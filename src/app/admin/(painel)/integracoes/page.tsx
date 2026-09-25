@@ -1,7 +1,7 @@
 import { getStore } from "@/stores";
 import { blobMode } from "@/lib/blob";
 import { melhorEnvioStatus } from "@/lib/melhor-envio";
-import { getYoutubeRedirectUri, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
+import { getYoutubeRedirectUri, youtubeClientIdLooksValid, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
 import { disconnectYoutubeAction } from "../../actions";
 
 const ME_TOKENS_URL = "https://melhorenvio.com.br/painel/gerenciar/tokens";
@@ -54,6 +54,11 @@ export default async function IntegrationsPage({ searchParams }: {
             <strong>Configuração pendente.</strong> Crie as credenciais no Google Cloud e cadastre{" "}
             <code>GOOGLE_CLIENT_ID</code> e <code>GOOGLE_CLIENT_SECRET</code> na Vercel. URI de redirecionamento autorizado:{" "}
             <code>{getYoutubeRedirectUri()}</code>
+          </div>
+        ) : !youtubeClientIdLooksValid() ? (
+          <div className="admin-alert">
+            <strong>O GOOGLE_CLIENT_ID parece errado.</strong> Ele deve terminar em <code>.apps.googleusercontent.com</code>.
+            Confira na Vercel se não foi colada a chave secreta no lugar do ID e faça um Redeploy.
           </div>
         ) : (
           <div className="admin-row">

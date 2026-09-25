@@ -11,6 +11,14 @@ import { getRedis, storeKey } from "./redis";
 */
 
 const SCOPE = "https://www.googleapis.com/auth/youtube.upload";
+
+/** Lê a variável tolerando espaços, aspas e o nome colado junto (ex.: "GOOGLE_CLIENT_ID=123..."). */
+function googleEnv(name: "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET") {
+  const unquote = (v: string) => v.trim().replace(/^["']+|["']+$/g, "").trim();
+  return unquote(unquote(process.env[name] ?? "").replace(new RegExp(`^${name}\\s*=`), ""));
+}
+const clientId = () => googleEnv("GOOGLE_CLIENT_ID");
+const clientSecret = () => googleEnv("GOOGLE_CLIENT_SECRET");
 const tokenKey = () => storeKey("youtube:tokens");
 const statePrefix = () => storeKey("youtube:oauth-state:");
 
@@ -21,7 +29,12 @@ interface SavedTokens {
 }
 
 export function youtubeConfigured() {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  return Boolean(clientId() && clientSecret());
+}
+
+/** Falso quando o GOOGLE_CLIENT_ID não parece um ID de cliente OAuth (ex.: colaram a chave secreta no lugar). */
+export function youtubeClientIdLooksValid() {
+  return clientId().endsWith(".apps.googleusercontent.com");
 }
 
 export function getYoutubeRedirectUri() {
@@ -32,12 +45,13 @@ export async function youtubeAuthorizeUrl() {
   const state = crypto.randomBytes(24).toString("hex");
   await getRedis().set(`${statePrefix()}${state}`, "1", { ex: 600 });
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
+    client_id: clientId(),
     redirect_uri: getYoutubeRedirectUri(),
     response_type: "code",
     scope: SCOPE,
     access_type: "offline",
-    prompt: "consent",
+    // Sempre mostra a escolha de conta: quem tem várias contas Google escolhe a do canal da loja.
+    prompt: "select_account consent",
     include_granted_scopes: "true",
     state
   });
@@ -59,8 +73,8 @@ async function requestToken(body: Record<string, string>) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       ...body,
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!
+      client_id: clientId(),
+      client_secret: clientSecret()
     })
   });
   const data = await response.json().catch(() => ({}));
