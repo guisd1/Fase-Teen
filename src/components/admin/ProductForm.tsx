@@ -125,13 +125,18 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
     }
     setForm(f => ({ ...f, images: [...f.images, ...uploaded] }));
   };
-  const movePhoto = (i: number, delta: number) => {
-    const j = i + delta;
-    if (j < 0 || j >= form.images.length) return;
+  const movePhotoTo = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= form.images.length) return;
     const images = [...form.images];
-    [images[i], images[j]] = [images[j], images[i]];
+    const [moved] = images.splice(from, 1);
+    images.splice(to, 0, moved);
     set("images", images);
   };
+  const movePhoto = (i: number, delta: number) => movePhotoTo(i, i + delta);
+  // Arrastar e soltar: a foto arrastada vai para a posição onde for solta.
+  const [dragging, setDragging] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+  const endDrag = () => { setDragging(null); setDragOver(null); };
   const removePhoto = (i: number) => set("images", form.images.filter((_, idx) => idx !== i));
   const setPhotoColor = (i: number, color: string) =>
     set("images", form.images.map((img, idx) => (idx === i ? { ...img, color: color || null } : img)));
@@ -320,7 +325,7 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
       <section className="admin-card">
         <h2>Fotos</h2>
         <p className="admin-hint">
-          A primeira foto é a capa. Use as setas para mudar a ordem. Marque a cor de cada foto: na página do
+          A primeira foto é a capa. Arraste as fotos (ou use as setas) para mudar a ordem. Marque a cor de cada foto: na página do
           produto, ao escolher a cor, o cliente vê as fotos dela. Fotos em &quot;Todas as cores&quot; aparecem sempre.
         </p>
         {!blobConfigured && (
@@ -339,8 +344,17 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
         )}
         <div className="admin-photos">
           {form.images.map((img, i) => (
-            <div className="admin-photo" key={img.src}>
-              <img src={img.src} alt="" />
+            <div
+              className={`admin-photo ${dragging === i ? "is-dragging" : ""} ${dragOver === i && dragging !== i ? "is-drop-target" : ""}`}
+              key={img.src}
+              draggable
+              onDragStart={e => { setDragging(i); e.dataTransfer.effectAllowed = "move"; }}
+              onDragOver={e => { if (dragging === null) return; e.preventDefault(); setDragOver(i); }}
+              onDrop={e => { e.preventDefault(); if (dragging !== null) movePhotoTo(dragging, i); endDrag(); }}
+              onDragEnd={endDrag}
+              title="Arraste para mudar a ordem"
+            >
+              <img src={img.src} alt="" draggable={false} />
               {colorList.length > 0 && (
                 <select className="admin-photo-color" value={img.color ?? ""} onChange={e => setPhotoColor(i, e.target.value)}>
                   <option value="">Todas as cores</option>

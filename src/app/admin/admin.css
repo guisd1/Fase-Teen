@@ -174,3 +174,8 @@
 .admin .admin-chart input:not([type=checkbox]) { width: 92px; padding: 8px 10px; }
 .admin-chart th .admin-icon-btn { margin-left: 2px; width: 30px; height: 30px; }
 .admin .admin-chart th input:not([type=checkbox]) { width: 120px; }
+
+/* Fotos: arrastar e soltar para reordenar */
+.admin-photo[draggable="true"] { cursor: grab; }
+.admin-photo.is-dragging { opacity: .4; }
+.admin-photo.is-drop-target { outline: 3px dashed var(--primary); outline-offset: 3px; }
