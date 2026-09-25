@@ -7,7 +7,7 @@ import { rateLimited } from "@/lib/redis";
 import { checkCoupon, redeemCoupon, releaseCoupon } from "@/db/coupons";
 import { couponDiscount } from "@/lib/coupon";
 import { QuoteError, quoteShipping } from "@/lib/shipping-quote";
-import { createCardCheckout, createPixPayment, mercadoPagoConfigured } from "@/lib/mercado-pago";
+import { createCardCheckout, createPixPayment, mercadoPagoConfigured, saveLastError } from "@/lib/mercado-pago";
 import { getStore } from "@/stores";
 
 export const dynamic = "force-dynamic";
@@ -157,6 +157,8 @@ export async function POST(request: Request) {
     return reply(200, { ...result, checkoutUrl: card.checkoutUrl });
   } catch (error) {
     console.error("Falha ao criar pagamento no Mercado Pago:", error);
+    const reason = error instanceof Error ? error.message : String(error);
+    await saveLastError(`${paymentMethod === "pix" ? "Pix" : "Cartão"}: ${reason}`);
     await discardOrder(order.id).catch(() => {});
     if (couponCode) await releaseCoupon(couponCode).catch(() => {});
     return reply(502, { error: "Não foi possível iniciar o pagamento agora. Tente de novo ou finalize pelo WhatsApp." });

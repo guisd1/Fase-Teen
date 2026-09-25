@@ -1,7 +1,7 @@
 import { getStore } from "@/stores";
 import { blobMode } from "@/lib/blob";
 import { melhorEnvioStatus } from "@/lib/melhor-envio";
-import { mercadoPagoConfigured, mercadoPagoTestMode, webhookUrl } from "@/lib/mercado-pago";
+import { checkCredentials, getLastError, mercadoPagoConfigured, mercadoPagoTestMode, webhookUrl } from "@/lib/mercado-pago";
 import { getYoutubeRedirectUri, youtubeClientIdLooksValid, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
 import { disconnectYoutubeAction } from "../../actions";
 
@@ -24,6 +24,7 @@ export default async function IntegrationsPage({ searchParams }: {
   const blobReady = blobMode() !== null;
   const mpReady = mercadoPagoConfigured();
   const mpTest = mercadoPagoTestMode();
+  const [mpCheck, mpLastError] = mpReady ? await Promise.all([checkCredentials(), getLastError()]) : [null, null];
 
   const meLabel = { connected: "Conectado", expired: "Autorização expirada", disconnected: "Não conectado", "no-redis": "Redis não configurado" }[me];
 
@@ -103,6 +104,17 @@ export default async function IntegrationsPage({ searchParams }: {
           </div>
         ) : (
           <>
+            {mpCheck?.ok ? (
+              <p className="admin-ok">Token válido — conta: {mpCheck.account}</p>
+            ) : mpCheck && (
+              <p className="admin-alert"><strong>O Mercado Pago recusou o token:</strong> {mpCheck.error}</p>
+            )}
+            {mpLastError && (
+              <p className="admin-hint">
+                Último erro ao criar uma cobrança ({new Date(mpLastError.at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })}):{" "}
+                <code>{mpLastError.message}</code>
+              </p>
+            )}
             {mpTest && <p className="admin-alert">Usando credenciais de <strong>teste</strong>: nenhum pagamento é real. Troque pelo Access Token de produção para vender.</p>}
             <p className="admin-hint">
               Notificações: o site já avisa o Mercado Pago a cada pagamento. Se quiser configurar em <em>Suas integrações → Webhooks</em>, use{" "}

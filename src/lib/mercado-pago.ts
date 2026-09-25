@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { getStore } from "@/stores";
+import { getRedis, storeKey } from "./redis";
 
 /*
   Pagamentos pelo Mercado Pago. Variáveis na Vercel (cada loja com a própria conta):
@@ -148,4 +149,37 @@ export function validWebhookSignature(request: Request, dataId: string) {
   const a = Buffer.from(expected);
   const b = Buffer.from(parts.v1);
   return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// ---- Diagnóstico (aba Integrações) ----
+
+/** Confere o Access Token: devolve a conta do Mercado Pago ou o erro. */
+export async function checkCredentials(): Promise<{ ok: true; account: string; test: boolean } | { ok: false; error: string }> {
+  const token = accessToken();
+  if (/^APP_USR-[0-9a-f]{8}-[0-9a-f]{4}-/i.test(token) && token.length < 60) {
+    return { ok: false, error: "Isso parece a Public Key, não o Access Token. Copie o Access Token (é bem maior) em Credenciais." };
+  }
+  try {
+    const me = await mp<{ id: number; nickname?: string; email?: string; site_id?: string }>("/users/me");
+    return { ok: true, account: [me.nickname, me.email, `id ${me.id}`].filter(Boolean).join(" • "), test: mercadoPagoTestMode() };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Falha ao falar com o Mercado Pago." };
+  }
+}
+
+const lastErrorKey = () => storeKey("mercado-pago:last-error");
+
+/** Guarda o último erro ao criar uma cobrança, para aparecer no painel. */
+export async function saveLastError(message: string) {
+  try {
+    await getRedis().set(lastErrorKey(), { message, at: new Date().toISOString() }, { ex: 7 * 24 * 60 * 60 });
+  } catch { /* sem Redis: fica só no log da Vercel */ }
+}
+
+export async function getLastError(): Promise<{ message: string; at: string } | null> {
+  try {
+    return await getRedis().get(lastErrorKey());
+  } catch {
+    return null;
+  }
 }
