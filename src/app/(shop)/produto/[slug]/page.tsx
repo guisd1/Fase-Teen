@@ -9,6 +9,7 @@ import { blobMode } from "@/lib/blob";
 import { hasRedis } from "@/lib/redis";
 import { getProductReviews } from "@/db/reviews";
 import ProductReviews from "@/components/ProductReviews";
+import { jsonLdScript, productJsonLd } from "@/lib/structured-data";
 
 export const revalidate = 60;
 
@@ -44,6 +45,7 @@ export default async function ProductPage({ params }: Props) {
   const { reviews, summary } = await getProductReviews(product.id);
   return (
     <ProductDetail product={product} reviewSummary={summary}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(product, summary, reviews, getStore())) }} />
       <ProductReviews productId={product.id} reviews={reviews} summary={summary} blobMode={hasRedis() ? blobMode() : null} />
     </ProductDetail>
   );
