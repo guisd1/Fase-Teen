@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { upload, uploadPresigned } from "@vercel/blob/client";
 import type { BlobMode } from "@/lib/blob";
@@ -8,10 +8,18 @@ import type { ProductImage, ProductRow, ProductSize } from "@/db/schema";
 import { saveProduct, type ProductInput } from "@/app/admin/actions";
 import { youtubeId } from "@/lib/youtube-id";
 import YoutubeUploader from "./YoutubeUploader";
-import { cardPrice, pixPrice, type PaymentFees } from "@/lib/pricing";
+import { cardPrice, pixPrice, priceFromMarkup, type MarkupType, type PaymentFees } from "@/lib/pricing";
 import { money } from "@/lib/format";
 
 const num = (v: number | null | undefined) => (v === null || v === undefined ? "" : String(v).replace(".", ","));
+
+/** "89,90", "89.90" ou "1.299,90" → número; vazio ou inválido → null. */
+function parseMoney(value: string) {
+  const v = value.trim();
+  if (!v) return null;
+  const n = Number(v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
 
 function initialInput(p: ProductRow | null): ProductInput {
   return {
@@ -21,6 +29,9 @@ function initialInput(p: ProductRow | null): ProductInput {
     description: p?.description ?? "",
     composition: p?.composition ?? "",
     price: num(p?.price),
+    costPrice: num(p?.costPrice),
+    markupType: p?.markupType ?? "percent",
+    markupValue: num(p?.markupValue),
     oldPrice: num(p?.oldPrice),
     badge: p?.badge ?? "",
     featured: p?.featured ?? false,
@@ -120,12 +131,17 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
   };
 
   const videoId = youtubeId(form.youtubeUrl);
-  const noPrice = !form.price.trim();
-  const netPrice = (() => {
-    const v = form.price.trim();
-    const n = Number(v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v);
-    return Number.isFinite(n) && n > 0 ? n : null;
-  })();
+  // ---- Preço: custo + mark-up calculam o valor a receber ----
+  const cost = parseMoney(form.costPrice);
+  const markup = parseMoney(form.markupValue);
+  const fromMarkup = cost !== null && markup !== null ? priceFromMarkup(cost, form.markupType, markup) : null;
+  const netPrice = fromMarkup ?? parseMoney(form.price);
+  const noPrice = !netPrice;
+  const profit = netPrice && cost !== null ? netPrice - cost : null;
+  // Guarda o último valor calculado: apagando o custo, o campo manual já começa com ele.
+  useEffect(() => {
+    if (fromMarkup !== null) setForm(f => ({ ...f, price: num(fromMarkup) }));
+  }, [fromMarkup]);
 
   return (
     <form className="admin-form product-form" onSubmit={submit}>
@@ -154,9 +170,33 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
       <section className="admin-card">
         <h2>Preço</h2>
         <div className="admin-grid-3">
-          <label>Quanto quer receber (R$)
-            <input inputMode="decimal" {...field("price")} placeholder="89,90" />
+          <label>Custo da peça (R$) <small>só você vê</small>
+            <input inputMode="decimal" {...field("costPrice")} placeholder="80,00" />
           </label>
+          <label>Mark-up <small>sobre o custo</small>
+            <span className="admin-markup">
+              <input inputMode="decimal" {...field("markupValue")} placeholder={form.markupType === "percent" ? "100" : "70,00"} />
+              <select value={form.markupType} onChange={e => set("markupType", e.target.value as MarkupType)} aria-label="Tipo de mark-up">
+                <option value="percent">%</option>
+                <option value="fixed">R$</option>
+              </select>
+            </span>
+          </label>
+          <label>Quanto quer receber (R$)
+            {fromMarkup !== null ? (
+              <input value={num(fromMarkup)} readOnly className="admin-computed" title="Calculado pelo custo + mark-up. Apague o custo para digitar à mão." />
+            ) : (
+              <input inputMode="decimal" {...field("price")} placeholder="89,90" />
+            )}
+          </label>
+        </div>
+        {fromMarkup !== null && cost !== null && markup !== null && (
+          <p className="admin-hint">
+            {money(cost)} {form.markupType === "percent" ? `+ ${String(markup).replace(".", ",")}%` : `+ ${money(markup)}`} = <strong>{money(fromMarkup)}</strong> a receber.
+            {" "}Para digitar o valor à mão, apague o custo.
+          </p>
+        )}
+        <div className="admin-grid-3">
           <label>Preço antigo (R$) <small>promoção, também sem taxa</small>
             <input inputMode="decimal" {...field("oldPrice")} placeholder="119,90" />
           </label>
@@ -165,11 +205,22 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
           </label>
         </div>
         {noPrice && <p className="admin-hint">Sem preço, o produto fica como <strong>rascunho</strong> e não aparece no site.</p>}
-        {!noPrice && netPrice !== null && (fees.cardPercent > 0 || fees.pixPercent > 0) && (
-          <p className="admin-hint">
-            No site: <strong>{money(cardPrice(netPrice, fees))}</strong> no cartão e <strong>{money(pixPrice(netPrice, fees))}</strong> no Pix
-            {" "}(com as taxas do Mercado Pago de {String(fees.cardPercent).replace(".", ",")}% e {String(fees.pixPercent).replace(".", ",")}%, ajustáveis em Integrações).
-          </p>
+        {netPrice && (
+          <div className="admin-price-summary">
+            {(fees.cardPercent > 0 || fees.pixPercent > 0) ? (
+              <span>
+                No site: <strong>{money(cardPrice(netPrice, fees))}</strong> no cartão e <strong>{money(pixPrice(netPrice, fees))}</strong> no Pix
+                <small> (taxas do Mercado Pago de {String(fees.cardPercent).replace(".", ",")}% e {String(fees.pixPercent).replace(".", ",")}%, ajustáveis em Integrações)</small>
+              </span>
+            ) : (
+              <span>No site: <strong>{money(netPrice)}</strong></span>
+            )}
+            {profit !== null && (
+              <span className={profit < 0 ? "admin-error" : ""}>
+                Lucro por peça: <strong>{money(profit)}</strong> ({Math.round(profit / netPrice * 100)}% do valor recebido)
+              </span>
+            )}
+          </div>
         )}
       </section>
 

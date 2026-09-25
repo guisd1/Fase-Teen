@@ -11,7 +11,7 @@ import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
 import { normalizeCode } from "@/lib/coupon";
 import { savePaymentFees } from "@/db/settings";
-import { parseFee } from "@/lib/pricing";
+import { parseFee, priceFromMarkup, type MarkupType } from "@/lib/pricing";
 import type { NewProductRow, ProductImage, ProductSize } from "@/db/schema";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 
@@ -49,6 +49,9 @@ export interface ProductInput {
   description: string;
   composition: string;
   price: string;
+  costPrice: string;
+  markupType: MarkupType;
+  markupValue: string;
   oldPrice: string;
   badge: string;
   featured: boolean;
@@ -85,6 +88,20 @@ function checkPackage(weightKg: number | null, dims: (number | null)[]) {
   }
 }
 
+/**
+ * Preço a receber: com custo e mark-up preenchidos, é calculado aqui (o que o
+ * navegador mostrou é só prévia); sem custo, vale o preço digitado.
+ */
+function pricing(input: ProductInput) {
+  const costPrice = toNumber(input.costPrice, "Custo da peça");
+  const markupType: MarkupType = input.markupType === "fixed" ? "fixed" : "percent";
+  const markupValue = toNumber(input.markupValue, "Mark-up");
+  if (costPrice !== null && markupValue !== null) {
+    return { costPrice, markupType, markupValue, price: priceFromMarkup(costPrice, markupType, markupValue) };
+  }
+  return { costPrice, markupType, markupValue, price: toNumber(input.price, "Preço") };
+}
+
 function toRow(input: ProductInput): NewProductRow {
   const name = input.name.trim();
   if (!name) throw new Error("O nome do produto é obrigatório.");
@@ -104,7 +121,7 @@ function toRow(input: ProductInput): NewProductRow {
     category: text(input.category),
     description: input.description.trim(),
     composition: text(input.composition),
-    price: toNumber(input.price, "Preço"),
+    ...pricing(input),
     oldPrice: toNumber(input.oldPrice, "Preço antigo"),
     badge: text(input.badge)?.toUpperCase() ?? null,
     featured: input.featured,

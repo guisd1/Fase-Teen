@@ -35,3 +35,15 @@ export function parseFee(value: string, label: string) {
   if (!Number.isFinite(n) || n < 0 || n >= 30) throw new Error(`${label}: informe uma porcentagem entre 0 e 30.`);
   return Math.round(n * 100) / 100;
 }
+
+export type MarkupType = "percent" | "fixed";
+
+/**
+ * Valor a receber a partir do custo da peça e do mark-up:
+ *   percent: custo × (1 + mark-up / 100)   ex.: 80 com 100% → 160
+ *   fixed:   custo + mark-up               ex.: 80 + 70     → 150
+ */
+export function priceFromMarkup(cost: number, type: MarkupType, markup: number) {
+  const value = type === "percent" ? cost * (1 + markup / 100) : cost + markup;
+  return Math.round(value * 100) / 100;
+}

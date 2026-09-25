@@ -25,7 +25,12 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   category: text("category"),
+  /** Quanto a loja quer receber (o site soma as taxas do Mercado Pago). */
   price: numeric("price", { precision: 10, scale: 2, mode: "number" }),
+  /** Custo da peça e mark-up (só no painel). Preenchidos, calculam o price. */
+  costPrice: numeric("cost_price", { precision: 10, scale: 2, mode: "number" }),
+  markupType: text("markup_type").$type<"percent" | "fixed">().notNull().default("percent"),
+  markupValue: numeric("markup_value", { precision: 10, scale: 2, mode: "number" }),
   oldPrice: numeric("old_price", { precision: 10, scale: 2, mode: "number" }),
   sizes: jsonb("sizes").$type<ProductSize[]>().notNull().default([]),
   colors: text("colors").array().notNull().default([]),

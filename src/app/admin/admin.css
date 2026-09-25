@@ -155,3 +155,11 @@
 .admin-search { display: flex; gap: 8px; margin-bottom: 12px; max-width: 520px; }
 .admin-search input { flex: 1; }
 .admin-paid { color: #1f7a3d !important; font-weight: 700; }
+
+/* Preço: custo + mark-up */
+.admin-markup { display: flex; gap: 6px; margin-top: 6px; }
+.admin-markup input { flex: 1; min-width: 0; margin-top: 0 !important; }
+.admin-markup select { width: 72px !important; margin-top: 0 !important; }
+.admin .admin-computed { background: #f3eef1 !important; font-weight: 700 !important; color: var(--ink); }
+.admin-price-summary { display: grid; gap: 4px; background: #f7f3f5; border-radius: 12px; padding: 12px 14px; font-size: 13px; }
+.admin-price-summary small { color: var(--muted); }
