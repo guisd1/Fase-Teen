@@ -41,7 +41,9 @@ const faseTeen: StoreConfig = {
   },
 
   commerce: {
-    installments: 3
+    installments: 3,
+    shippingNote: "Enviado em até 1 dia útil. Pedidos feitos depois das 16h são postados no próximo dia útil.",
+    returnDays: 7
   },
 
   texts: {
@@ -95,8 +97,14 @@ const faseTeen: StoreConfig = {
 
   pages: {
     trocas: {
-      title: "Trocas e devoluções",
-      paragraphs: ["EDITE: descreva aqui a política de trocas e devoluções da Fase Teen."]
+      title: "Trocas, devoluções e envio",
+      paragraphs: [
+        "PRAZO DE ENVIO: os pedidos são postados em até 1 dia útil após a confirmação do pagamento. Pedidos confirmados depois das 16h são postados no próximo dia útil. O prazo de entrega da transportadora começa a contar a partir da postagem e aparece no cálculo do frete.",
+        "TROCAS POR TAMANHO: não fazemos trocas por tamanho, modelo ou cor. Por isso, cada peça tem uma tabela de medidas na página do produto: confira as medidas antes de finalizar a compra. Em caso de dúvida, fale com a gente pelo WhatsApp antes de comprar.",
+        "DIREITO DE DESISTÊNCIA: como toda compra pela internet (art. 49 do Código de Defesa do Consumidor), você pode desistir da compra em até 7 dias corridos após o recebimento. A peça deve voltar sem uso, sem lavagem e com a etiqueta. O frete de devolução é por conta da cliente. Depois que recebermos e conferirmos a peça, devolvemos o valor pago pela mesma forma de pagamento.",
+        "DEFEITO DE FABRICAÇÃO: se a peça chegar com defeito, avise-nos pelo WhatsApp em até 90 dias após o recebimento, com fotos. Nesse caso, a Fase Teen paga o frete e faz a troca pela mesma peça ou devolve o valor pago.",
+        "Para desistência ou defeito, entre em contato pelo WhatsApp informando o número do pedido."
+      ]
     },
     privacidade: {
       title: "Política de privacidade",

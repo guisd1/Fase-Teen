@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { upload, uploadPresigned } from "@vercel/blob/client";
 import type { BlobMode } from "@/lib/blob";
-import type { ProductImage, ProductRow, ProductSize } from "@/db/schema";
+import type { ProductImage, ProductRow, ProductSize, SizeChart } from "@/db/schema";
 import { saveProduct, type ProductInput } from "@/app/admin/actions";
 import { youtubeId } from "@/lib/youtube-id";
 import YoutubeUploader from "./YoutubeUploader";
@@ -37,6 +37,7 @@ function initialInput(p: ProductRow | null): ProductInput {
     featured: p?.featured ?? false,
     active: p?.active ?? true,
     sizes: p?.sizes ?? [],
+    sizeChart: p?.sizeChart ?? null,
     colors: p?.colors ?? [],
     images: p?.images ?? [],
     youtubeUrl: p?.youtubeUrl ?? "",
@@ -79,6 +80,27 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
   const addSize = () => set("sizes", [...form.sizes, { size: "", stock: 0 }]);
   const removeSize = (i: number) => set("sizes", form.sizes.filter((_, idx) => idx !== i));
 
+  // ---- Tabela de medidas: uma linha por tamanho cadastrado ----
+  const chartSizes = form.sizes.map(s => s.size.trim()).filter(Boolean);
+  const chartRows = chartSizes.length ? chartSizes : ["Único"];
+  const chart = form.sizeChart;
+  const chartValue = (size: string, col: number) => chart?.rows.find(r => r.size === size)?.values[col] ?? "";
+  const setChart = (next: SizeChart | null) => set("sizeChart", next);
+  const startChart = () => setChart({ columns: ["Busto", "Cintura", "Comprimento"], rows: [], note: "Medidas da peça em centímetros." });
+  const setColumn = (i: number, name: string) => chart && setChart({ ...chart, columns: chart.columns.map((c, idx) => (idx === i ? name : c)) });
+  const addColumn = () => chart && setChart({ ...chart, columns: [...chart.columns, ""] });
+  const removeColumn = (i: number) => chart && setChart({
+    ...chart,
+    columns: chart.columns.filter((_, idx) => idx !== i),
+    rows: chart.rows.map(r => ({ ...r, values: r.values.filter((_, idx) => idx !== i) }))
+  });
+  const setCell = (size: string, col: number, value: string) => {
+    if (!chart) return;
+    const row = chart.rows.find(r => r.size === size) ?? { size, values: [] };
+    const values = chart.columns.map((_, idx) => (idx === col ? value : row.values[idx] ?? ""));
+    setChart({ ...chart, rows: [...chart.rows.filter(r => r.size !== size), { size, values }] });
+  };
+
   // ---- Fotos (Vercel Blob) ----
   const addPhotos = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -117,7 +139,11 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
-    const input = { ...form, colors: colorsText.split(",") };
+    const input = {
+      ...form,
+      colors: colorsText.split(","),
+      sizeChart: chart && { ...chart, rows: chartRows.map(size => ({ size, values: chart.columns.map((_, i) => chartValue(size, i)) })) }
+    };
     startSaving(async () => {
       const result = await saveProduct(id, input);
       if (result.error) {
@@ -238,6 +264,57 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
         <label>Cores <small>separadas por vírgula</small>
           <input value={colorsText} onChange={e => setColorsText(e.target.value)} placeholder="Rosa, Jeans, Branco" />
         </label>
+      </section>
+
+      <section className="admin-card">
+        <h2>Tabela de medidas <small>aparece na página do produto</small></h2>
+        {!chart ? (
+          <>
+            <p className="admin-hint">Como a loja não faz troca por tamanho, a tabela ajuda a cliente a escolher certo.</p>
+            <button type="button" className="btn btn-light" onClick={startChart}>+ Criar tabela de medidas</button>
+          </>
+        ) : (
+          <>
+            <p className="admin-hint">
+              Dê nome às medidas (colunas) e preencha os valores de cada tamanho. As linhas seguem os tamanhos
+              cadastrados acima. Coluna sem nome e tamanho sem valores não aparecem no site.
+            </p>
+            <div className="admin-chart-wrap">
+              <table className="admin-chart">
+                <thead>
+                  <tr>
+                    <th>Tamanho</th>
+                    {chart.columns.map((c, i) => (
+                      <th key={i}>
+                        <input value={c} onChange={e => setColumn(i, e.target.value)} placeholder="Medida" aria-label={`Nome da coluna ${i + 1}`} />
+                        <button type="button" className="admin-icon-btn" onClick={() => removeColumn(i)} aria-label="Remover coluna">✕</button>
+                      </th>
+                    ))}
+                    {chart.columns.length < 8 && (
+                      <th><button type="button" className="admin-link-btn" onClick={addColumn}>+ Coluna</button></th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {chartRows.map(size => (
+                    <tr key={size}>
+                      <td>{size}</td>
+                      {chart.columns.map((_, i) => (
+                        <td key={i}>
+                          <input value={chartValue(size, i)} onChange={e => setCell(size, i, e.target.value)} placeholder="ex.: 62" aria-label={`${chart.columns[i] || "Medida"} do tamanho ${size}`} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <label>Observação <small>abaixo da tabela</small>
+              <input value={chart.note ?? ""} onChange={e => setChart({ ...chart, note: e.target.value })} placeholder="Medidas da peça em centímetros." />
+            </label>
+            <button type="button" className="admin-link-btn" onClick={() => setChart(null)}>Remover tabela de medidas</button>
+          </>
+        )}
       </section>
 
       <section className="admin-card">

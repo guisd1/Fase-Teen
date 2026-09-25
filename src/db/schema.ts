@@ -15,6 +15,17 @@ export interface ProductSize {
   stock: number;
 }
 
+/**
+ * Tabela de medidas da peça: uma coluna por medida (Busto, Cintura...) e uma
+ * linha por tamanho, com os valores na ordem das colunas.
+ */
+export interface SizeChart {
+  columns: string[];
+  rows: { size: string; values: string[] }[];
+  /** Observação abaixo da tabela (ex.: "Medidas da peça em cm, deitada"). */
+  note?: string;
+}
+
 /*
   Cada loja tem o próprio banco (DATABASE_URL diferente em cada projeto
   da Vercel), então não existe coluna de "loja" aqui.
@@ -34,6 +45,7 @@ export const products = pgTable("products", {
   oldPrice: numeric("old_price", { precision: 10, scale: 2, mode: "number" }),
   sizes: jsonb("sizes").$type<ProductSize[]>().notNull().default([]),
   colors: text("colors").array().notNull().default([]),
+  sizeChart: jsonb("size_chart").$type<SizeChart>(),
   /** Fotos do carrossel, na ordem de exibição. */
   images: jsonb("media").$type<ProductImage[]>().notNull().default([]),
   /** Vídeo do YouTube, sempre exibido por último no carrossel. */

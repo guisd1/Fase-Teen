@@ -12,7 +12,7 @@ import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db
 import { normalizeCode } from "@/lib/coupon";
 import { savePaymentFees } from "@/db/settings";
 import { parseFee, priceFromMarkup, type MarkupType } from "@/lib/pricing";
-import type { NewProductRow, ProductImage, ProductSize } from "@/db/schema";
+import type { NewProductRow, ProductImage, ProductSize, SizeChart } from "@/db/schema";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 
 // ---- Login ----
@@ -57,6 +57,7 @@ export interface ProductInput {
   featured: boolean;
   active: boolean;
   sizes: ProductSize[];
+  sizeChart: SizeChart | null;
   colors: string[];
   images: ProductImage[];
   youtubeUrl: string;
@@ -102,6 +103,20 @@ function pricing(input: ProductInput) {
   return { costPrice, markupType, markupValue, price: toNumber(input.price, "Preço") };
 }
 
+/** Limpa a tabela de medidas: tira colunas sem nome e devolve null se não sobrar nenhum valor. */
+function cleanSizeChart(chart: SizeChart | null): SizeChart | null {
+  if (!chart) return null;
+  const cut = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+  const keep = chart.columns.map((c, i) => ({ name: cut(c, 30), i })).filter(c => c.name).slice(0, 8);
+  const rows = chart.rows
+    .map(r => ({ size: cut(r.size, 20), values: keep.map(c => cut(r.values?.[c.i], 20)) }))
+    .filter(r => r.size && r.values.some(Boolean))
+    .slice(0, 30);
+  if (!keep.length || !rows.length) return null;
+  const note = cut(chart.note, 200);
+  return { columns: keep.map(c => c.name), rows, ...(note && { note }) };
+}
+
 function toRow(input: ProductInput): NewProductRow {
   const name = input.name.trim();
   if (!name) throw new Error("O nome do produto é obrigatório.");
@@ -127,6 +142,7 @@ function toRow(input: ProductInput): NewProductRow {
     featured: input.featured,
     active: input.active,
     sizes,
+    sizeChart: cleanSizeChart(input.sizeChart),
     colors,
     // Foto marcada com uma cor que não existe mais volta a valer para todas.
     images: input.images.filter(i => i.src).map(i => ({ src: i.src, color: i.color && colors.includes(i.color) ? i.color : null })),

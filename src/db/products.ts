@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { getDb, hasDatabase } from "./client";
-import { products, type NewProductRow, type ProductImage, type ProductRow, type ProductSize } from "./schema";
+import { products, type NewProductRow, type ProductImage, type ProductRow, type ProductSize, type SizeChart } from "./schema";
 import { getPaymentFees } from "./settings";
 import { cardPrice, pixPrice, type PaymentFees } from "@/lib/pricing";
 
@@ -17,6 +17,8 @@ export interface Product {
   pixPrice: number;
   oldPrice: number | null;
   sizes: ProductSize[];
+  /** Tabela de medidas (null = sem tabela). */
+  sizeChart: SizeChart | null;
   colors: string[];
   images: ProductImage[];
   youtubeUrl: string | null;
@@ -75,6 +77,7 @@ function toPublic(row: ProductRow, fees: PaymentFees): Product {
     pixPrice: pixPrice(net, fees),
     oldPrice: row.oldPrice === null ? null : cardPrice(row.oldPrice, fees),
     sizes: row.sizes,
+    sizeChart: row.sizeChart,
     colors: row.colors,
     images: row.images,
     youtubeUrl: row.youtubeUrl,

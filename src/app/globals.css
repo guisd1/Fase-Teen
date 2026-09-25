@@ -555,3 +555,16 @@ img { max-width: 100%; display: block; }
 .order-actions .btn, .order-card > .btn { text-align: center; }
 @media (max-width: 760px) { .order-card { padding: 22px 18px; } .order-card h1 { font-size: 26px; } }
 .pix-price { font-size: 13px; color: #1f7a3d; margin-top: 2px; } .pix-price strong { font-weight: 800; }
+
+/* Tabela de medidas e prazo de envio (página do produto) */
+.size-chart { margin: -6px 0 18px; }
+.size-chart .text-link { background: none; border: 0; padding: 0; cursor: pointer; color: var(--primary-dark, var(--ink)); text-decoration: underline; font-family: inherit; }
+.size-chart-box { margin-top: 10px; border: 1px solid var(--line); border-radius: 14px; padding: 12px; font-size: 13px; }
+.size-chart-scroll { overflow-x: auto; }
+.size-chart table { width: 100%; border-collapse: collapse; text-align: center; }
+.size-chart th, .size-chart td { padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.size-chart th { font-size: 12px; font-weight: 800; }
+.size-chart td:first-child, .size-chart th:first-child { text-align: left; font-weight: 800; }
+.size-chart tr.active td { background: var(--primary-soft, #f7f3f5); }
+.size-chart-box p { margin: 10px 0 0; color: var(--muted); line-height: 1.5; }
+.shipping-note { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }

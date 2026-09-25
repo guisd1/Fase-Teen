@@ -25,7 +25,18 @@ export function productJsonLd(product: Product, summary: ReviewSummary, reviews:
       // Preço do site (cartão); o Pix, mais barato, fica na página.
       price: product.price.toFixed(2),
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition"
+      itemCondition: "https://schema.org/NewCondition",
+      // Desistência (art. 49 do CDC): devolução pelo correio, frete de volta pago pela cliente.
+      ...(store.commerce.returnDays && {
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "BR",
+          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: store.commerce.returnDays,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/ReturnFeesCustomerResponsibility"
+        }
+      })
     },
     ...(summary.total > 0 && {
       aggregateRating: {

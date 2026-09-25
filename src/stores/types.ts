@@ -80,6 +80,10 @@ export interface StoreConfig {
   commerce: {
     /** Número de parcelas exibido no card do produto ("ou 3x de ..."). */
     installments: number;
+    /** Prazo de postagem mostrado na página do produto. */
+    shippingNote?: string;
+    /** Dias para desistir da compra (art. 49 do CDC: mínimo 7). Vai para o Google. */
+    returnDays?: number;
   };
 
   texts: {

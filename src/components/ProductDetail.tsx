@@ -21,6 +21,8 @@ export default function ProductDetail({ product, reviewSummary, children }: {
   const [size, setSize] = useState(firstAvailable);
   const [color, setColor] = useState(product.colors[0] ?? "");
   const [shared, setShared] = useState(false);
+  const [chartOpen, setChartOpen] = useState(false);
+  const chart = product.sizeChart;
   const outOfStock = soldOut(product);
   const installments = store.commerce.installments;
 
@@ -76,6 +78,31 @@ export default function ProductDetail({ product, reviewSummary, children }: {
               </div>
             </div>
           )}
+          {chart && (
+            <div className="size-chart">
+              <button type="button" className="text-link" aria-expanded={chartOpen} onClick={() => setChartOpen(o => !o)}>
+                {chartOpen ? "Esconder tabela de medidas" : "Ver tabela de medidas"}
+              </button>
+              {chartOpen && (
+                <div className="size-chart-box">
+                  <div className="size-chart-scroll">
+                    <table>
+                      <thead><tr><th>Tamanho</th>{chart.columns.map(c => <th key={c}>{c}</th>)}</tr></thead>
+                      <tbody>
+                        {chart.rows.map(r => (
+                          <tr key={r.size} className={r.size === size ? "active" : ""}>
+                            <td>{r.size}</td>{r.values.map((v, i) => <td key={i}>{v || "–"}</td>)}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {chart.note && <p>{chart.note}</p>}
+                  <p><strong>Não fazemos troca por tamanho.</strong> Confira as medidas antes de comprar.</p>
+                </div>
+              )}
+            </div>
+          )}
           {product.colors.length > 0 && (
             <div className="option-row">
               <span>COR</span>
@@ -103,6 +130,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
           <button className="btn btn-light share-btn" type="button" onClick={share}>
             {shared ? "Link copiado!" : "Compartilhar produto"}
           </button>
+          {store.commerce.shippingNote && <p className="shipping-note">{store.commerce.shippingNote}</p>}
         </div>
       </div>
       {children}
