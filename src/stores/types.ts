@@ -5,6 +5,7 @@
 */
 
 export interface Benefit {
+  /** Ícone de src/components/Icons.tsx: truck, lock, chat, hanger, store, heart, ruler. */
   icon: string;
   title: string;
   text: string;
@@ -40,6 +41,8 @@ export interface StoreConfig {
     primaryLight: string;
     /** Cor secundária de destaque (segunda parte do logo em texto). */
     accent: string;
+    /** Cor da segunda parte do logo em texto (padrão: accent). */
+    logoSubText?: string;
     /** Cor da parte principal do logo em texto. */
     logoText: string;
     /** Cor de texto e fundos escuros. */
@@ -55,6 +58,8 @@ export interface StoreConfig {
       googleFontsUrl: string;
       heading: string;
       body: string;
+      /** Fonte do logo em texto (padrão: heading). */
+      logo?: string;
     };
   };
 
@@ -65,6 +70,10 @@ export interface StoreConfig {
     main: string;
     /** Parte menor, abaixo da principal. */
     sub: string;
+    /** "right": segunda parte embaixo e alinhada à direita da principal (como na marca da Fase Teen). */
+    subAlign?: "left" | "right";
+    /** Ícone da aba do navegador (dentro de public/). */
+    icon?: string;
     /** Sigla usada no bloco "Sobre". */
     monogram: string;
   };

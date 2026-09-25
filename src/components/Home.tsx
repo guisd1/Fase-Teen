@@ -5,6 +5,7 @@ import type { Product } from "@/db/products";
 import NewsletterForm from "./NewsletterForm";
 import ProductCard from "./ProductCard";
 import { useShop } from "./ShopShell";
+import { Icon } from "./Icons";
 
 type Sort = "featured" | "price-low" | "price-high" | "name";
 
@@ -53,7 +54,7 @@ export default function Home() {
           {t.hero.image ? (
             <img className="hero-card hero-image" src={t.hero.image} alt={store.name} />
           ) : (
-            <div className="hero-card card-front">
+            <div className={`hero-card card-front ${store.logo.subAlign === "right" ? "logo-sub-right" : ""}`}>
               <span>{t.hero.cardTop}</span>
               <strong>{t.hero.cardBottom}</strong>
               <small>{t.hero.cardCaption}</small>
@@ -64,7 +65,7 @@ export default function Home() {
 
       <section className="benefits" aria-label="Benefícios">
         {t.benefits.map(b => (
-          <div key={b.title}><span>{b.icon}</span><div><strong>{b.title}</strong><small>{b.text}</small></div></div>
+          <div key={b.title}><span><Icon name={b.icon} /></span><div><strong>{b.title}</strong><small>{b.text}</small></div></div>
         ))}
       </section>
 
@@ -123,7 +124,7 @@ export default function Home() {
         <div className="product-grid">{filtered.map(card)}</div>
         {filtered.length === 0 && (
           <div className="empty-state">
-            <div>{products.length ? "🔎" : "🛍"}</div>
+            <div><Icon name={products.length ? "search" : "bag"} /></div>
             <h3>{products.length ? "Nenhum produto encontrado" : "Novidades chegando em breve"}</h3>
             <p>{products.length ? "Tente outra busca ou categoria." : "Estamos preparando a coleção. Volte logo!"}</p>
           </div>

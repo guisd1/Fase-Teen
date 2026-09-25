@@ -55,7 +55,7 @@ export default function YoutubeUploader({ connected, defaultTitle, defaultDescri
         setTitle(defaultTitle);
         setDescription(defaultDescription);
         setOpen(true);
-      }}>▶ Enviar vídeo para o YouTube</button>
+      }}>Enviar vídeo para o YouTube</button>
     );
   }
 

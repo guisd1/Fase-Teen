@@ -67,10 +67,10 @@ const cirandaCirandinha: StoreConfig = {
       cardCaption: "Moda infantil"
     },
     benefits: [
-      { icon: "🏬", title: "Loja física", text: "Retire seu pedido na loja sem custo." },
-      { icon: "🚚", title: "Envio para todo o Brasil", text: "Escolha a melhor opção de entrega no checkout." },
-      { icon: "💬", title: "Atendimento rápido", text: "Fale com a gente pelo WhatsApp." },
-      { icon: "🧸", title: "Feito para brincar", text: "Tecidos macios e confortáveis." }
+      { icon: "store", title: "Loja física", text: "Retire seu pedido na loja sem custo." },
+      { icon: "truck", title: "Envio para todo o Brasil", text: "Escolha a melhor opção de entrega no checkout." },
+      { icon: "chat", title: "Atendimento rápido", text: "Fale com a gente pelo WhatsApp." },
+      { icon: "heart", title: "Feito para brincar", text: "Tecidos macios e confortáveis." }
     ],
     featured: { eyebrow: "PARA COMEÇAR", title: "Novidades que chegaram", link: "Ver coleção →" },
     banner: {

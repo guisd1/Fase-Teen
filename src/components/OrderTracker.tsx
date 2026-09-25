@@ -38,7 +38,7 @@ export default function OrderTracker({ token, order }: { token: string; order: T
     if (paid) cart.clearCart();
   }, [paid]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const talk = whatsappUrl(store, `Olá! Fiz o pedido nº ${order.code} no site${paid ? " e o pagamento já foi aprovado" : ""}. 😊`);
+  const talk = whatsappUrl(store, `Olá! Fiz o pedido nº ${order.code} no site${paid ? " e o pagamento já foi aprovado" : ""}.`);
 
   return (
     <main className="product-page order-page">
@@ -46,7 +46,7 @@ export default function OrderTracker({ token, order }: { token: string; order: T
         <p className="eyebrow">PEDIDO Nº {order.code}</p>
         {paid ? (
           <>
-            <h1>Pagamento aprovado! 🎉</h1>
+            <h1>Pagamento aprovado!</h1>
             <p className="order-lead">Obrigado, {order.firstName}! Seu pedido já está {order.pickup ? "sendo separado para retirada" : "em preparação para envio"}. A gente te avisa pelo WhatsApp a cada etapa.</p>
           </>
         ) : order.paymentMethod === "pix" ? (

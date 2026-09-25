@@ -20,6 +20,7 @@ export function generateMetadata(): Metadata {
     title: store.meta.title,
     description: store.meta.description,
     metadataBase: new URL(store.siteUrl),
+    ...(store.logo.icon ? { icons: { icon: store.logo.icon, apple: store.logo.icon } } : {}),
     ...(google ? { verification: { google } } : {})
   };
 }
@@ -36,6 +37,8 @@ function themeVars(theme: StoreConfig["theme"]): CSSProperties {
     "--primary-light": theme.primaryLight,
     "--accent": theme.accent,
     "--logo-text": theme.logoText,
+    "--logo-sub": theme.logoSubText ?? theme.accent,
+    "--font-logo": theme.fonts.logo ?? theme.fonts.heading,
     "--ink": theme.ink,
     "--hero-1": theme.heroGradient[0],
     "--hero-2": theme.heroGradient[1],

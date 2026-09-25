@@ -17,12 +17,12 @@ export function statusMessage(store: StoreConfig, order: Pick<OrderRow, "code" |
   const n = `seu pedido nº ${order.code} na *${store.name}*`;
   const texts: Record<OrderStatus, string> = {
     pendente: `Olá, ${name}! Recebemos ${n}. Já vamos conferir o estoque e te passar os dados para pagamento.`,
-    preparacao: `Olá, ${name}! O pagamento de ${n} foi confirmado e ele já está em preparação. 💕`,
+    preparacao: `Olá, ${name}! O pagamento de ${n} foi confirmado e ele já está em preparação.`,
     enviado: order.deliveryMode === "pickup"
-      ? `Olá, ${name}! ${capitalize(n)} está pronto para retirada na loja. 🛍`
-      : `Olá, ${name}! ${capitalize(n)} foi enviado! 📦` +
+      ? `Olá, ${name}! ${capitalize(n)} está pronto para retirada na loja.`
+      : `Olá, ${name}! ${capitalize(n)} foi enviado!` +
         (order.trackingCode ? `\nCódigo de rastreio: ${order.trackingCode}\nAcompanhe: ${trackingUrl(order.trackingCode)}` : ""),
-    entregue: `Olá, ${name}! ${capitalize(n)} foi entregue. Esperamos que você ame! Se puder, conta pra gente o que achou avaliando o produto no site. 💖`,
+    entregue: `Olá, ${name}! ${capitalize(n)} foi entregue. Esperamos que você ame! Se puder, conta pra gente o que achou avaliando o produto no site.`,
     cancelado: `Olá, ${name}. ${capitalize(n)} foi cancelado. Se tiver qualquer dúvida, é só chamar por aqui.`
   };
   return texts[order.status];

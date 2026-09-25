@@ -79,7 +79,7 @@ export default function PixPayment({ pix, total }: { pix: PixData; total: number
       {pix.pixQrBase64 && <img className="pix-qr" src={`data:image/png;base64,${pix.pixQrBase64}`} alt="QR Code do Pix" />}
       <p className="pix-hint">Abra o app do seu banco, escolha <strong>Pix → Ler QR Code</strong> ou use o código abaixo em <strong>Pix copia e cola</strong>.</p>
       <textarea id="pix-code" className="pix-code" readOnly rows={3} value={pix.pixCode ?? ""} onFocus={e => e.target.select()} />
-      <button className="btn btn-dark full" type="button" onClick={copy}>{copied ? "Código copiado! ✓" : "Copiar código Pix"}</button>
+      <button className="btn btn-dark full" type="button" onClick={copy}>{copied ? "Código copiado!" : "Copiar código Pix"}</button>
       <p className="pix-waiting"><span className="pix-dot" /> Aguardando o pagamento{countdown ? ` • expira em ${countdown.text}` : ""}</p>
     </div>
   );

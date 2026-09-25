@@ -38,7 +38,7 @@ export default async function IntegrationsPage({ searchParams }: {
 
       <section className="admin-card">
         <div className="admin-integration-head">
-          <h2>🚚 Melhor Envio</h2>
+          <h2>Melhor Envio</h2>
           <span className={`admin-status ${me === "connected" ? "ok" : ""}`}>{meLabel}</span>
         </div>
         <Notice value={query.melhorenvio} />
@@ -52,7 +52,7 @@ export default async function IntegrationsPage({ searchParams }: {
 
       <section className="admin-card">
         <div className="admin-integration-head">
-          <h2>▶ YouTube</h2>
+          <h2>YouTube</h2>
           <span className={`admin-status ${yt ? "ok" : ""}`}>{yt ? "Conectado" : "Não conectado"}</span>
         </div>
         <Notice value={query.youtube} />
@@ -82,7 +82,7 @@ export default async function IntegrationsPage({ searchParams }: {
 
       <section className="admin-card">
         <div className="admin-integration-head">
-          <h2>🖼 Fotos (Vercel Blob)</h2>
+          <h2>Fotos (Vercel Blob)</h2>
           <span className={`admin-status ${blobReady ? "ok" : ""}`}>{blobReady ? "Configurado" : "Não configurado"}</span>
         </div>
         <p>Armazena as fotos dos produtos (1 GB grátis). Fotos removidas de um produto são apagadas automaticamente.</p>
@@ -91,7 +91,7 @@ export default async function IntegrationsPage({ searchParams }: {
 
       <section className="admin-card" id="mercado-pago">
         <div className="admin-integration-head">
-          <h2>💳 Mercado Pago</h2>
+          <h2>Mercado Pago</h2>
           <span className={`admin-status ${mpReady && !mpTest ? "ok" : ""}`}>
             {!mpReady ? "Não configurado" : mpTest ? "Modo de teste" : "Ativo"}
           </span>

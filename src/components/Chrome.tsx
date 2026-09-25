@@ -3,7 +3,7 @@ import { whatsappUrl } from "@/lib/whatsapp";
 
 export function Logo({ store, href, className = "" }: { store: StoreConfig; href: string; className?: string }) {
   return (
-    <a className={`logo ${className}`.trim()} href={href} aria-label={store.name}>
+    <a className={`logo ${store.logo.subAlign === "right" ? "logo-sub-right" : ""} ${className}`.trim()} href={href} aria-label={store.name}>
       {store.logo.image
         ? <img className="logo-image" src={store.logo.image} alt={store.name} />
         : <><span className="logo-main">{store.logo.main}</span><span className="logo-sub">{store.logo.sub}</span></>}

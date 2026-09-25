@@ -141,7 +141,7 @@ export default function ProductReviews({ productId, reviews, summary, blobMode }
         {!writing && !sent && <button className="btn btn-light" type="button" onClick={() => setWriting(true)}>Escrever avaliação</button>}
       </div>
 
-      {sent && <p className="reviews-thanks">Obrigado pela avaliação! 💖 Ela vai aparecer aqui depois de aprovada.</p>}
+      {sent && <p className="reviews-thanks">Obrigado pela avaliação! Ela vai aparecer aqui depois de aprovada.</p>}
       {writing && <ReviewForm productId={productId} blobMode={blobMode} onDone={() => { setWriting(false); setSent(true); }} />}
 
       <div className="reviews-list">

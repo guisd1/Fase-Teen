@@ -5,6 +5,7 @@ import { formatCep, money } from "@/lib/format";
 import type { Cart } from "./useCart";
 import { mainImage } from "@/lib/product-media";
 import { couponLabel } from "@/lib/coupon";
+import { Icon } from "./Icons";
 
 function CouponBox({ cart }: { cart: Cart }) {
   const [code, setCode] = useState("");
@@ -14,7 +15,7 @@ function CouponBox({ cart }: { cart: Cart }) {
     return (
       <div className="coupon-box">
         <div className="coupon-applied">
-          <span>🏷 <strong>{coupon.code}</strong> • {couponLabel(coupon)}</span>
+          <span><strong>{coupon.code}</strong> • {couponLabel(coupon)}</span>
           <button type="button" className="remove-btn" onClick={cart.removeCoupon}>Remover</button>
         </div>
         {belowMin && <p className="shipping-status">Vale para compras a partir de {money(coupon.minSubtotal)} em produtos.</p>}
@@ -72,7 +73,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
 
         {items.length === 0 ? (
           <div className="cart-empty">
-            <div className="empty-icon">🛍</div>
+            <div className="empty-icon"><Icon name="bag" /></div>
             <p>Seu carrinho está vazio.</p>
             <button className="btn btn-dark" type="button" onClick={onClose}>Continuar comprando</button>
           </div>

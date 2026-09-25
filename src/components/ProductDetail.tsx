@@ -6,7 +6,7 @@ import type { Product } from "@/db/products";
 import type { ReviewSummary } from "@/db/reviews";
 import { Stars } from "./ProductReviews";
 import { money } from "@/lib/format";
-import MediaCarousel from "./MediaCarousel";
+import ProductGallery from "./ProductGallery";
 import { PixPrice, PriceRow, soldOut } from "./ProductCard";
 import { useShop } from "./ShopShell";
 
@@ -41,7 +41,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
       </nav>
       <div className="quick-product">
         {/* key: volta para a primeira foto ao trocar de cor */}
-        <MediaCarousel key={color} product={product} color={color} className="modal-media" playVideo zoom />
+        <ProductGallery key={color} product={product} color={color} />
         <div className="quick-info">
           {product.category && <div className="product-category">{product.category}</div>}
           <h1>{product.name}</h1>

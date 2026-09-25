@@ -237,7 +237,7 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
             <p className="eyebrow">PEDIDO Nº {pixOrder.code}</p>
             {pixStatus?.paid ? (
               <div className="pix-paid">
-                <h2>Pagamento aprovado! 🎉</h2>
+                <h2>Pagamento aprovado!</h2>
                 <p>Obrigado! Seu pedido já está em preparação. A gente te avisa pelo WhatsApp a cada etapa.</p>
                 <a className="btn btn-dark full" href={`/pedido/${pixOrder.token}`}>Ver meu pedido</a>
               </div>
@@ -255,7 +255,7 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
         ) : (
         <>
         <p className="eyebrow">FINALIZAR PEDIDO</p>
-        <h2>Quase lá ✨</h2>
+        <h2>Quase lá</h2>
         <p className="checkout-intro">{store.texts.checkout.intro}</p>
         <form onSubmit={submit}>
           <div className="checkout-section-title">Dados do cliente</div>
@@ -344,7 +344,7 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
           ) : ready ? (
             <div className="checkout-ready">
               {ready.order ? (
-                <p>Pedido <strong>nº {ready.order.code}</strong> registrado! ✨ Agora é só enviar a mensagem:</p>
+                <p>Pedido <strong>nº {ready.order.code}</strong> registrado! Agora é só enviar a mensagem:</p>
               ) : (
                 <p>Não conseguimos registrar o pedido agora, mas você pode enviá-lo pelo WhatsApp do mesmo jeito.</p>
               )}

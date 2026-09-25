@@ -10,27 +10,32 @@ const faseTeen: StoreConfig = {
     description: "Fase Teen — moda infantil feminina para meninas que estão vivendo cada fase com estilo."
   },
 
+  // Cores tiradas da marca oficial: roxo do nome, laranja do F, lilás do T e rosas do fundo.
   theme: {
-    primary: "#d94f86",
-    primaryDark: "#b83d6d",
-    primarySoft: "#f8e9ef",
-    primaryLight: "#f6aac6",
-    accent: "#d94f86",
-    logoText: "#171317",
-    ink: "#171317",
-    heroGradient: ["#f7dce7", "#f7e9ee", "#f5d3e1"],
-    cardGradient: ["#cf6a95", "#b74676"],
-    cardBackGradient: ["#f0bdd1", "#e4d8ed"],
+    primary: "#9a4ea6",
+    primaryDark: "#7a3d8c",
+    primarySoft: "#f8eef6",
+    primaryLight: "#ebb8d6",
+    accent: "#f08a3c",
+    logoText: "#7a3d8c",
+    logoSubText: "#7a3d8c",
+    ink: "#2e1b35",
+    heroGradient: ["#fde6d6", "#f9e8f1", "#ecdcf3"],
+    cardGradient: ["#f39a58", "#a256ad"],
+    cardBackGradient: ["#f7c7aa", "#dcc2ea"],
     fonts: {
-      googleFontsUrl: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap",
-      heading: "\"Playfair Display\", Georgia, serif",
-      body: "\"DM Sans\", Arial, sans-serif"
+      googleFontsUrl: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lato:wght@700;900&family=Nunito:wght@700;800;900&display=swap",
+      heading: "\"Nunito\", \"DM Sans\", Arial, sans-serif",
+      body: "\"DM Sans\", Arial, sans-serif",
+      logo: "\"Lato\", \"DM Sans\", Arial, sans-serif"
     }
   },
 
   logo: {
-    main: "Fase",
-    sub: "TEEN",
+    main: "FASE",
+    sub: "teen",
+    subAlign: "right",
+    icon: "/brand/fase-teen-icon.svg",
     monogram: "FT"
   },
 
@@ -57,14 +62,14 @@ const faseTeen: StoreConfig = {
       secondaryCta: "Ver novidades",
       pill: "NEW",
       cardTop: "FASE",
-      cardBottom: "TEEN",
+      cardBottom: "teen",
       cardCaption: "Moda infantil feminina"
     },
     benefits: [
-      { icon: "🚚", title: "Envio para todo o Brasil", text: "Escolha a melhor opção de entrega no checkout." },
-      { icon: "🔒", title: "Compra segura", text: "Seus dados são tratados com cuidado." },
-      { icon: "💬", title: "Atendimento rápido", text: "Fale com a gente pelo WhatsApp." },
-      { icon: "✨", title: "Peças selecionadas", text: "Moda feminina pensada para cada fase." }
+      { icon: "truck", title: "Envio para todo o Brasil", text: "Escolha a melhor opção de entrega no checkout." },
+      { icon: "lock", title: "Compra segura", text: "Seus dados são tratados com cuidado." },
+      { icon: "chat", title: "Atendimento rápido", text: "Fale com a gente pelo WhatsApp." },
+      { icon: "hanger", title: "Peças selecionadas", text: "Moda feminina pensada para cada fase." }
     ],
     featured: { eyebrow: "PARA COMEÇAR", title: "Novidades que chegaram", link: "Ver coleção →" },
     banner: {

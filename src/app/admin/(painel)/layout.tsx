@@ -23,11 +23,11 @@ export default async function PanelLayout({ children }: { children: ReactNode })
           <small>Painel</small>
         </div>
         <nav>
-          <Link href="/admin/produtos">📦 Produtos</Link>
-          <Link href="/admin/integracoes">🔌 Integrações</Link>
-          <Link href="/admin/pedidos">🧾 Pedidos {pending > 0 && <em className="admin-badge">{pending}</em>}</Link>
-          <Link href="/admin/cupons">🏷 Cupons</Link>
-          <Link href="/admin/avaliacoes">⭐ Avaliações {pendingReviews > 0 && <em className="admin-badge">{pendingReviews}</em>}</Link>
+          <Link href="/admin/produtos">Produtos</Link>
+          <Link href="/admin/integracoes">Integrações</Link>
+          <Link href="/admin/pedidos">Pedidos {pending > 0 && <em className="admin-badge">{pending}</em>}</Link>
+          <Link href="/admin/cupons">Cupons</Link>
+          <Link href="/admin/avaliacoes">Avaliações {pendingReviews > 0 && <em className="admin-badge">{pendingReviews}</em>}</Link>
         </nav>
         <div className="admin-side-foot">
           <a href="/" target="_blank" rel="noopener">Ver loja ↗</a>

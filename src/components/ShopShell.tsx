@@ -10,6 +10,7 @@ import { Footer, Logo } from "./Chrome";
 import CartDrawer from "./CartDrawer";
 import CheckoutModal from "./CheckoutModal";
 import { useCart, type Cart } from "./useCart";
+import { Icon, WhatsappIcon } from "./Icons";
 
 interface Shop {
   store: StoreConfig;
@@ -79,7 +80,7 @@ export default function ShopShell({ store, products, onlinePayments, children }:
 
       <header className="header">
         <div className="header-inner">
-          <button className="icon-btn mobile-menu-btn" type="button" aria-label="Abrir menu" onClick={() => setMenuOpen(o => !o)}>☰</button>
+          <button className="icon-btn mobile-menu-btn" type="button" aria-label="Abrir menu" onClick={() => setMenuOpen(o => !o)}><Icon name="menu" /></button>
           <Logo store={store} href="/" />
           <nav className={`nav ${menuOpen ? "open" : ""}`}>
             <Link href="/#inicio" onClick={closeMenu}>{t.nav.home}</Link>
@@ -88,9 +89,9 @@ export default function ShopShell({ store, products, onlinePayments, children }:
             <Link href="/#sobre" onClick={closeMenu}>{t.nav.about}</Link>
           </nav>
           <div className="header-actions">
-            <button className="icon-btn" type="button" aria-label="Pesquisar" onClick={() => setSearchOpen(o => !o)}>⌕</button>
+            <button className="icon-btn" type="button" aria-label="Pesquisar" onClick={() => setSearchOpen(o => !o)}><Icon name="search" /></button>
             <button className="icon-btn bag-btn" type="button" aria-label="Abrir carrinho" onClick={() => setCartOpen(true)}>
-              🛍<span className="cart-count">{cart.count}</span>
+              <Icon name="bag" /><span className="cart-count">{cart.count}</span>
             </button>
           </div>
         </div>
@@ -110,7 +111,7 @@ export default function ShopShell({ store, products, onlinePayments, children }:
 
       <Footer store={store} />
 
-      <a className="floating-whatsapp" href={whatsappUrl(store, t.whatsappGreeting)} target="_blank" rel="noopener" aria-label="Falar no WhatsApp">☏</a>
+      <a className="floating-whatsapp" href={whatsappUrl(store, t.whatsappGreeting)} target="_blank" rel="noopener" aria-label="Falar no WhatsApp"><WhatsappIcon /></a>
 
       <CartDrawer
         cart={cart}

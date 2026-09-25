@@ -58,7 +58,7 @@ img { max-width: 100%; display: block; }
 }
 .logo { display: flex; flex-direction: column; line-height: .85; }
 .logo-main {
-  font-family: var(--font-heading);
+  font-family: var(--font-logo);
   font-size: 31px;
   font-weight: 700;
   letter-spacing: -.03em;
@@ -68,9 +68,19 @@ img { max-width: 100%; display: block; }
   font-size: 10px;
   letter-spacing: .56em;
   margin-left: 4px;
-  color: var(--accent);
+  color: var(--logo-sub);
   font-weight: 800;
 }
+/* Marca Fase Teen: FASE grande e "teen" embaixo, encostado à direita */
+.logo.logo-sub-right { align-items: stretch; line-height: .9; }
+.logo-sub-right .logo-main { letter-spacing: .02em; }
+.logo-sub-right .logo-sub {
+  align-self: flex-end; font-family: var(--font-logo); font-size: 17px; letter-spacing: .01em;
+  margin: 0; font-weight: 700;
+}
+.card-front.logo-sub-right span { font-family: var(--font-logo); font-weight: 700; line-height: .9; }
+.card-front.logo-sub-right strong { align-self: flex-end; letter-spacing: .01em; margin: 0; font-size: 34px; font-family: var(--font-logo); line-height: 1; }
+.card-front.logo-sub-right { align-items: flex-start; }
 .nav { display: flex; gap: 30px; align-items: center; font-size: 14px; font-weight: 600; }
 .nav a { position: relative; padding: 8px 0; }
 .nav a::after {
@@ -274,6 +284,7 @@ img { max-width: 100%; display: block; }
 .footer-inner {
   max-width: 1220px; margin:auto; padding: 55px 22px; display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 40px;
 }
+.footer .logo { display: inline-flex; flex-direction: column; }
 .footer-logo .logo-main { color:white; }
 .footer-logo .logo-sub { color:var(--primary-light); }
 .footer p { color:#bcb1b7; font-size: 13px; margin-top: 9px; }
@@ -442,7 +453,38 @@ img { max-width: 100%; display: block; }
 .breadcrumb span { color: var(--ink); }
 .product-page .quick-product { background: white; border: 1px solid var(--line); border-radius: 25px; overflow: hidden; }
 .product-page .quick-info h1 { font-family: var(--font-heading); font-size: 40px; line-height: 1.03; margin: 5px 0 15px; }
-.product-page .quick-product .product-image-wrap.modal-media { min-height: 560px; }
+/* Galeria (como no Mercado Livre): miniaturas, foto inteira num quadro e zoom ao lado */
+.product-page .quick-product { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+.gallery { position: relative; display: flex; gap: 12px; padding: 24px 0 24px 24px; }
+.gallery-thumbs { display: flex; flex-direction: column; gap: 8px; width: 58px; flex-shrink: 0; }
+.gallery-thumbs button {
+  position: relative; width: 58px; height: 58px; padding: 3px; border: 1px solid var(--line); border-radius: 10px;
+  background: white; overflow: hidden;
+}
+.gallery-thumbs button.active { border: 2px solid var(--primary); padding: 2px; }
+.gallery-thumbs img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; }
+.gallery-play {
+  position: absolute; inset: 0; display: grid; place-items: center; color: white; font-size: 18px;
+  background: rgba(46, 27, 53, .35);
+}
+.gallery-frame {
+  position: relative; width: min(480px, 38vw); height: 540px; display: grid; place-items: center;
+  background: var(--cream); border-radius: 16px; overflow: hidden;
+}
+.gallery-frame iframe { width: 100%; height: 100%; border: 0; background: #000; }
+.gallery-photo { position: relative; max-width: 100%; max-height: 100%; }
+.gallery-photo img { display: block; max-width: 100%; max-height: 540px; width: auto; height: auto; cursor: crosshair; }
+.gallery-lens {
+  position: absolute; pointer-events: none; background: rgba(154, 78, 166, .18);
+  border: 1px solid rgba(122, 61, 140, .45);
+}
+.gallery-zoom {
+  position: absolute; z-index: 6; top: 24px; left: calc(100% + 12px); height: 540px; max-width: 640px;
+  background-color: white; background-repeat: no-repeat; border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow); pointer-events: none;
+}
+.gallery-dots { display: none; }
+.gallery-empty { color: var(--muted); font-size: 13px; }
 .share-btn { width: 100%; margin-top: 10px; }
 .option-chip:disabled { opacity: .35; text-decoration: line-through; cursor: not-allowed; }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -462,7 +504,13 @@ img { max-width: 100%; display: block; }
 @media (max-width: 760px) {
   .product-page { padding: 16px 12px 30px; }
   .product-page .quick-info h1 { font-size: 32px; }
-  .product-page .quick-product .product-image-wrap.modal-media { min-height: 380px; max-height: 480px; }
+  .product-page .quick-product { grid-template-columns: 1fr; }
+  .gallery { flex-direction: column-reverse; padding: 12px 12px 0; }
+  .gallery-thumbs { flex-direction: row; width: auto; overflow-x: auto; }
+  .gallery-thumbs button { flex-shrink: 0; }
+  .gallery-frame { width: 100%; height: 400px; }
+  .gallery-photo img { max-height: 400px; cursor: default; }
+  .gallery-zoom, .gallery-lens { display: none; }
 }
 .color-chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 4px; }
 .color-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
@@ -569,9 +617,3 @@ img { max-width: 100%; display: block; }
 .size-chart-box p { margin: 10px 0 0; color: var(--muted); line-height: 1.5; }
 .shipping-note { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
-/* Zoom da foto ao passar o mouse (página do produto, só em telas com mouse) */
-@media (hover: hover) and (pointer: fine) {
-  .zoomable .media-slide { overflow: hidden; }
-  .zoomable .media-slide > img { cursor: zoom-in; transition: transform .2s ease; }
-  .zoomable .media-slide > img:hover { transform: scale(2.2); }
-}
