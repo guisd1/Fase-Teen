@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { adminProductReport, adminTrafficReport, todayBR, type ProductReportRow } from "@/db/stats";
+import { adminDailyStats, adminProductReport, adminTrafficReport, todayBR, type ProductReportRow } from "@/db/stats";
+import ReportDashboard from "@/components/admin/ReportDashboard";
 import { SOURCE_LABELS } from "@/lib/traffic-source";
 import { productSlug } from "@/db/products";
 import { money } from "@/lib/format";
@@ -43,7 +44,11 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
   const query = await searchParams;
   const period = PERIODS.find(p => p.key === query.periodo) ?? PERIODS[2];
   const sort: SortKey = COLUMNS.some(c => c.key === query.ordem) ? (query.ordem as SortKey) : "views";
-  const [report, traffic] = await Promise.all([adminProductReport(fromDay(period.days)), adminTrafficReport(fromDay(period.days))]);
+  const [report, traffic, daily] = await Promise.all([
+    adminProductReport(fromDay(period.days)),
+    adminTrafficReport(fromDay(period.days)),
+    adminDailyStats(fromDay(period.days))
+  ]);
   traffic.sort((a, b) => b.visits - a.visits || b.orders - a.orders);
   const rows = report.sort((a, b) => b[sort] - a[sort] || b.views - a.views);
   const total = (k: keyof ProductReportRow) => rows.reduce((sum, r) => sum + (r[k] as number), 0);
@@ -55,7 +60,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
       <div className="admin-head">
         <div>
           <h1>Relatório de produtos</h1>
-          <p>Quais peças chamam mais atenção e quais vendem. Clique no nome de uma coluna para ordenar.</p>
+          <p>Quais peças chamam mais atenção e quais vendem. Clique nos quadrinhos para ligar ou desligar as linhas do gráfico, e no nome de uma coluna da tabela para ordenar.</p>
         </div>
       </div>
 
@@ -63,12 +68,14 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
         {PERIODS.map(p => <Link key={p.key} className={p.key === period.key ? "active" : ""} href={link(p.key, sort)}>{p.label}</Link>)}
       </div>
 
-      <div className="admin-report-totals">
-        {COLUMNS.map(c => (
-          <div key={c.key}><small>{c.label} <InfoTip label={c.label} text={c.hint} /></small><strong>{fmt(c.key, total(c.key))}</strong></div>
-        ))}
-        <div><small>Visualização → carrinho <InfoTip label="Visualização → carrinho" text={CONVERSION_HINT} /></small><strong>{pct(total("carts"), total("views"))}</strong></div>
-      </div>
+      <ReportDashboard
+        daily={daily}
+        cards={COLUMNS.filter(c => c.key !== "revenue").map(c => ({ key: c.key, label: c.label, hint: c.hint, value: fmt(c.key, total(c.key)) }))}
+        extraCards={[
+          { key: "revenue", label: "Faturado", hint: COLUMNS.find(c => c.key === "revenue")!.hint + " Por ser um valor em reais, não entra no gráfico (as linhas são quantidades).", value: money(total("revenue")) },
+          { key: "conversion", label: "Visualização → carrinho", hint: CONVERSION_HINT, value: pct(total("carts"), total("views")) }
+        ]}
+      />
 
       <div className="admin-table-wrap">
         <table className="admin-table admin-report">

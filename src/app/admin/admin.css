@@ -213,3 +213,27 @@
 .admin-report-product { min-width: 200px; }
 .admin-report th { white-space: normal; line-height: 1.35; }
 .admin-report thead th { vertical-align: top; }
+
+/* Gráfico por dia do relatório */
+.report-card { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; text-align: left; font: inherit; color: var(--ink); }
+.report-card[role="button"] { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.report-card[role="button"]:hover { border-color: #cfc3ca; }
+.report-card.on { border-width: 2px; padding: 11px 13px; box-shadow: 0 4px 14px rgba(46, 27, 53, .08); }
+.report-card small { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
+.report-card strong { display: block; font-size: 22px; }
+.report-key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; background: #ddd4d9; margin-right: 2px; }
+.report-chart { position: relative; background: white; border: 1px solid var(--line); border-radius: 18px; padding: 8px 4px; margin-bottom: 18px; min-height: 120px; }
+.report-chart svg { display: block; }
+.report-grid { stroke: #efe9ec; stroke-width: 1; }
+.report-axis { fill: #8a8288; font-size: 11px; font-variant-numeric: tabular-nums; }
+.report-crosshair { stroke: #b9aeb4; stroke-width: 1; }
+.report-chart-empty { padding: 40px 20px; text-align: center; color: var(--muted); }
+.report-tooltip {
+  position: absolute; pointer-events: none; width: 180px; background: white; border: 1px solid var(--line);
+  border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.12); padding: 10px 12px; font-size: 12.5px;
+}
+.report-tooltip-day { color: var(--muted); font-size: 11.5px; margin-bottom: 6px; }
+.report-tooltip-row { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
+.report-tooltip-row i { width: 12px; height: 2.5px; border-radius: 2px; flex-shrink: 0; }
+.report-tooltip-row strong { font-variant-numeric: tabular-nums; min-width: 22px; }
+.report-tooltip-row span { color: var(--muted); }

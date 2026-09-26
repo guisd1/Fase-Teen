@@ -148,3 +148,61 @@ export async function adminTrafficReport(fromDay: string | null): Promise<Traffi
   }
   return [...rows.values()];
 }
+
+// ---- Evolução por dia (gráfico do relatório) ----
+
+export interface DailyStat {
+  day: string;
+  views: number;
+  clicks: number;
+  carts: number;
+  shares: number;
+  linkOpens: number;
+  adOpens: number;
+  sold: number;
+}
+
+/** Números da loja inteira por dia, de `fromDay` até hoje (dias sem movimento vêm zerados). */
+export async function adminDailyStats(fromDay: string | null): Promise<DailyStat[]> {
+  if (!hasDatabase()) return [];
+  const db = getDb();
+  const [stats, confirmed] = await Promise.all([
+    db.select({
+      day: productStats.day,
+      views: sql<number>`sum(${productStats.views})::int`,
+      clicks: sql<number>`sum(${productStats.clicks})::int`,
+      carts: sql<number>`sum(${productStats.carts})::int`,
+      shares: sql<number>`sum(${productStats.shares})::int`,
+      linkOpens: sql<number>`sum(${productStats.linkOpens})::int`,
+      adOpens: sql<number>`sum(${productStats.adOpens})::int`
+    }).from(productStats)
+      .where(fromDay ? gte(productStats.day, fromDay) : undefined)
+      .groupBy(productStats.day),
+    db.select({ createdAt: orders.createdAt, items: orders.items }).from(orders).where(and(
+      inArray(orders.status, ["preparacao", "enviado", "entregue"]),
+      fromDay ? gte(orders.createdAt, new Date(`${fromDay}T00:00:00-03:00`)) : undefined
+    ))
+  ]);
+  const dayOf = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const soldByDay = new Map<string, number>();
+  for (const o of confirmed) {
+    const d = dayOf(o.createdAt);
+    soldByDay.set(d, (soldByDay.get(d) ?? 0) + o.items.reduce((n, i) => n + i.qty, 0));
+  }
+  const byDay = new Map(stats.map(s => [s.day, s]));
+  // "Tudo": começa no primeiro dia com algum número.
+  const first = fromDay ?? [...byDay.keys(), ...soldByDay.keys()].sort()[0] ?? todayBR();
+  const out: DailyStat[] = [];
+  for (let d = new Date(`${first}T12:00:00Z`); ; d.setUTCDate(d.getUTCDate() + 1)) {
+    const day = d.toISOString().slice(0, 10);
+    if (day > todayBR()) break;
+    const s = byDay.get(day);
+    out.push({
+      day,
+      views: s?.views ?? 0, clicks: s?.clicks ?? 0, carts: s?.carts ?? 0,
+      shares: s?.shares ?? 0, linkOpens: s?.linkOpens ?? 0, adOpens: s?.adOpens ?? 0,
+      sold: soldByDay.get(day) ?? 0
+    });
+  }
+  return out;
+}
