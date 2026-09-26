@@ -1,4 +1,4 @@
-import { boolean, index, integer, jsonb, numeric, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, date, index, integer, jsonb, numeric, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { OrderStatus } from "@/lib/order-status";
 
@@ -219,3 +219,18 @@ export const settings = pgTable("settings", {
   value: jsonb("value").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date())
 });
+
+/*
+  Números de cada produto por dia (horário de Brasília), para o relatório do
+  painel. Só contadores: nada de IP ou dado de quem visitou.
+*/
+export const productStats = pgTable("product_stats", {
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  day: date("day", { mode: "string" }).notNull(),
+  /** Aberturas da página do produto. */
+  views: integer("views").notNull().default(0),
+  /** Cliques no produto na vitrine (página inicial). */
+  clicks: integer("clicks").notNull().default(0),
+  /** Cliques em "Adicionar ao carrinho". */
+  carts: integer("carts").notNull().default(0)
+}, t => [primaryKey({ columns: [t.productId, t.day] })]);

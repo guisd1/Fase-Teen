@@ -179,3 +179,15 @@
 .admin-photo[draggable="true"] { cursor: grab; }
 .admin-photo.is-dragging { opacity: .4; }
 .admin-photo.is-drop-target { outline: 3px dashed var(--primary); outline-offset: 3px; }
+
+/* Relatório de produtos */
+.admin-report-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.admin-report-totals > div { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.admin-report-totals small { display: block; color: var(--muted); font-size: 12px; }
+.admin-report-totals strong { font-size: 22px; }
+.admin-report th a { color: var(--muted); text-decoration: none; }
+.admin-report th a.active { color: var(--ink); }
+.admin-report td:not(:first-child), .admin-report th:not(:first-child) { text-align: right; white-space: nowrap; }
+.admin-report-product { display: flex; gap: 10px; align-items: center; }
+.admin-report-product img, .admin-report-product > span { width: 40px; height: 48px; border-radius: 8px; object-fit: cover; background: #f7f4f5; flex-shrink: 0; }
+.admin-report + .admin-hint, .admin-table-wrap + .admin-hint { margin-top: 12px; }

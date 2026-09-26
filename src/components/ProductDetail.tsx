@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { Product } from "@/db/products";
 import type { ReviewSummary } from "@/db/reviews";
@@ -9,6 +9,7 @@ import { money } from "@/lib/format";
 import ProductGallery from "./ProductGallery";
 import { PixPrice, PriceRow, soldOut } from "./ProductCard";
 import { useShop } from "./ShopShell";
+import { track } from "@/lib/track";
 
 export default function ProductDetail({ product, reviewSummary, children }: {
   product: Product;
@@ -23,6 +24,8 @@ export default function ProductDetail({ product, reviewSummary, children }: {
   const [shared, setShared] = useState(false);
   const [chartOpen, setChartOpen] = useState(false);
   const chart = product.sizeChart;
+
+  useEffect(() => { track("view", product.id); }, [product.id]);
   const outOfStock = soldOut(product);
   const installments = store.commerce.installments;
 
@@ -123,7 +126,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
             className="btn btn-dark quick-buy"
             type="button"
             disabled={outOfStock}
-            onClick={() => { cart.addToCart({ id: product.id, size, color, qty: 1 }); openCart(); }}
+            onClick={() => { cart.addToCart({ id: product.id, size, color, qty: 1 }); track("cart", product.id); openCart(); }}
           >
             {outOfStock ? "Esgotado" : "Adicionar ao carrinho"}
           </button>

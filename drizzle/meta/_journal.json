@@ -57,6 +57,13 @@
       "when": 1790367853963,
       "tag": "0007_tabela-medidas",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790435766187,
+      "tag": "0008_estatisticas-produtos",
+      "breakpoints": true
     }
   ]
 }
