@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/db/products";
 import { cleanCep, formatCep } from "@/lib/format";
 import type { ShippingOption } from "@/lib/shipping";
-import { couponDiscount, normalizeCode, type CouponRule } from "@/lib/coupon";
+import { couponDiscount, normalizeCode, type CouponRule } from "@/lib/coupon";
+import { isFreeShippingOption } from "@/lib/promotions";
 
 export interface CartItem {
   id: number;
@@ -104,7 +105,7 @@ export function useCart(storeId: string, products: Product[], freeShippingMin: n
   // Frete grátis a partir do valor definido no painel (a opção de envio ainda é escolhida, mas sai por R$ 0).
   const freeShipping = deliveryMode === "delivery" && freeShippingMin !== null && subtotal >= freeShippingMin - 0.001;
   const missingForFreeShipping = freeShippingMin !== null && !freeShipping ? Math.max(0, freeShippingMin - subtotal) : 0;
-  const freight = deliveryMode === "pickup" ? 0 : (selectedShipping ? (freeShipping ? 0 : Number(selectedShipping.price)) : null);
+  const freight = deliveryMode === "pickup" ? 0 : (selectedShipping ? (freeShipping && isFreeShippingOption(selectedShipping) ? 0 : Number(selectedShipping.price)) : null);
   const discount = coupon ? couponDiscount(coupon, subtotal) : 0;
   const total = subtotal - discount + (freight ?? 0);
   // Total pagando no Pix: produtos pelo preço do Pix; o cupom vale sobre esse valor (como no servidor).

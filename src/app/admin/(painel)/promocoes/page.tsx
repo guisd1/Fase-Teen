@@ -32,7 +32,7 @@ export default async function PromotionsPage({ searchParams }: { searchParams: P
           <label>A partir de (R$ em produtos)
             <input name="freeShippingMin" inputMode="decimal" defaultValue={promo.freeShippingMin !== null ? String(promo.freeShippingMin).replace(".", ",") : "299"} />
           </label>
-          <p className="admin-hint">A loja paga o frete dos pedidos com entrega a partir desse valor. O carrinho mostra uma barrinha com quanto falta para ganhar.</p>
+          <p className="admin-hint">A loja paga o frete pelo PAC dos Correios dos pedidos a partir desse valor (as outras opções continuam cobradas). O carrinho mostra uma barrinha com quanto falta para ganhar.</p>
         </section>
 
         <section className="admin-card">

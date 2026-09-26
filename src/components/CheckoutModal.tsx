@@ -94,7 +94,7 @@ function orderMessage(store: StoreConfig, cart: Cart, data: FormData, order: Reg
   const s = cart.selectedShipping;
   const delivery = cart.deliveryMode === "pickup" || !s
     ? "Retirada na loja física — frete R$ 0,00"
-    : `${s.company}${s.service ? ` • ${s.service}` : ""} — ${cart.freeShipping ? "frete grátis" : money(s.price)}${s.deliveryTime ? ` — prazo estimado: ${s.deliveryTime} dias úteis` : ""}`;
+    : `${s.company}${s.service ? ` • ${s.service}` : ""} — ${cart.freight === 0 ? "frete grátis" : money(s.price)}${s.deliveryTime ? ` — prazo estimado: ${s.deliveryTime} dias úteis` : ""}`;
   const addressLines = cart.deliveryMode === "pickup" ? [] : [
     `*Endereço:* ${data.address}, ${data.number}`,
     `*Complemento:* ${data.complement || "Não informado"}`,

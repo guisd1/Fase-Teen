@@ -10,6 +10,10 @@ export interface Promotions {
 
 export const DEFAULT_PROMOTIONS: Promotions = { freeShippingMin: 299, welcomeCoupon: "BEMVINDA10", launch: null };
 
-/** O pedido ganha frete grátis? (entrega pelo correio e produtos a partir do mínimo) */
+/** Frete grátis vale só para o PAC dos Correios; as outras opções são cobradas normalmente. */
+export const isFreeShippingOption = (option: { company?: string | null; service?: string | null } | null | undefined) =>
+  Boolean(option && /\bpac\b/i.test(`${option.service ?? ""} ${option.company ?? ""}`));
+
+/** O pedido alcança o valor do frete grátis? (entrega e produtos a partir do mínimo; o frete só zera no PAC) */
 export const hasFreeShipping = (promo: Pick<Promotions, "freeShippingMin">, productsTotal: number) =>
   promo.freeShippingMin !== null && productsTotal >= promo.freeShippingMin - 0.001;
