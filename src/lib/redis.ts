@@ -21,8 +21,9 @@ export const storeKey = (key: string) => `${getStore().id}:${key}`;
 /**
  * Limita quantas vezes o mesmo IP pode usar uma rota pública (ex.: 10 pedidos por hora).
  * Devolve true quando o limite foi passado. Sem Redis, `failClosed` decide: bloquear ou deixar passar.
+ * Aceita um Request ou só os cabeçalhos (ex.: `{ headers: await headers() }` numa server action).
  */
-export async function rateLimited(request: Request, name: string, max: number, windowSeconds: number, failClosed = false) {
+export async function rateLimited(request: { headers: { get(name: string): string | null } }, name: string, max: number, windowSeconds: number, failClosed = false) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   try {
     const redis = getRedis();

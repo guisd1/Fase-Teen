@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { rateLimited } from "@/lib/redis";
 import { del } from "@vercel/blob";
 import { checkCredentials, endSession, requireAdmin, startSession } from "@/lib/auth";
 import { disconnectYoutube } from "@/lib/youtube";
@@ -26,6 +28,10 @@ export interface LoginState {
 export async function login(_: LoginState | null, form: FormData): Promise<LoginState> {
   const email = String(form.get("email") || "");
   const password = String(form.get("password") || "");
+  // Contra tentativas de senha em massa: no máximo 10 tentativas a cada 15 minutos por internet.
+  if (await rateLimited({ headers: await headers() }, "admin-login", 10, 15 * 60)) {
+    return { error: "Muitas tentativas de login. Aguarde 15 minutos e tente de novo.", email };
+  }
   if (!checkCredentials(email, password)) {
     // Atraso fixo para dificultar tentativas em massa.
     await new Promise(r => setTimeout(r, 800));

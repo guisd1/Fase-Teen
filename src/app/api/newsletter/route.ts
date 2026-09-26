@@ -1,3 +1,5 @@
+import { rateLimited } from "@/lib/redis";
+
 const BREVO_URL = "https://api.brevo.com/v3/contacts";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -7,6 +9,8 @@ const reply = (status: number, body: unknown) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function POST(request: Request) {
+  // Evita encher a lista da Brevo com e-mails falsos.
+  if (await rateLimited(request, "newsletter", 5, 60 * 60)) return reply(429, { error: "Muitos cadastros em pouco tempo. Tente mais tarde." });
   const apiKey = process.env.BREVO_API_KEY;
   const listId = Number(process.env.BREVO_LIST_ID);
   if (!apiKey) return reply(500, { error: "Newsletter ainda não configurada: BREVO_API_KEY ausente." });
