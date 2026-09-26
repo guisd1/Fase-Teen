@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { getStore, type StoreConfig } from "@/stores";
 import "./globals.css";
 
@@ -61,7 +62,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="stylesheet" href={theme.fonts.googleFontsUrl} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
