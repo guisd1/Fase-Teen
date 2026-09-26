@@ -93,12 +93,12 @@ export async function POST(request: Request) {
       }
       if (!option) return reply(409, { error: "A opção de frete mudou. Calcule o frete de novo no carrinho.", shippingChanged: true });
       freight = round(option.price);
-      shipping = { company: option.company, service: option.service, deliveryTime: option.deliveryTime };
+      shipping = { company: option.company, service: option.service, deliveryTime: option.deliveryTime, price: round(option.price) };
     } else {
       const price = Number(s.price);
       freight = Number.isFinite(price) && price >= 0 && price < 10000 ? round(price) : 0;
       const days = Number(s.deliveryTime);
-      shipping = { company: str(s.company, 80), service: str(s.service, 80), deliveryTime: Number.isFinite(days) && days > 0 ? days : null };
+      shipping = { company: str(s.company, 80), service: str(s.service, 80), deliveryTime: Number.isFinite(days) && days > 0 ? days : null, price: freight };
     }
   }
 

@@ -113,6 +113,8 @@ export interface OrderShipping {
   company: string;
   service: string;
   deliveryTime: number | null;
+  /** Valor cotado do frete (a loja paga quando o pedido tem frete grátis). */
+  price?: number;
 }
 
 /*

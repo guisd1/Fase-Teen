@@ -237,3 +237,37 @@
 .report-tooltip-row i { width: 12px; height: 2.5px; border-radius: 2px; flex-shrink: 0; }
 .report-tooltip-row strong { font-variant-numeric: tabular-nums; min-width: 22px; }
 .report-tooltip-row span { color: var(--muted); }
+.admin-head-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Ordem da vitrine */
+.admin-order { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 8px; max-width: 720px; }
+.admin-order li { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; cursor: grab; }
+.admin-order li.is-dragging { opacity: .4; }
+.admin-order li.is-drop-target { outline: 3px dashed var(--primary); outline-offset: 2px; }
+.admin-order img, .admin-order-noimg { width: 44px; height: 54px; border-radius: 8px; object-fit: cover; background: #f7f4f5; }
+.admin-order-pos { width: 24px; text-align: center; color: var(--muted); font-weight: 700; }
+.admin-order small { color: var(--muted); }
+.admin-order-arrows { margin-left: auto; display: flex; gap: 4px; }
+.admin-order-arrows button { width: 32px; height: 32px; border: 1px solid var(--line); background: white; border-radius: 8px; }
+
+/* Estoque em massa */
+.admin-stock-sizes { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-stock-sizes label { display: grid; gap: 3px; margin: 0 !important; font-size: 11px; text-align: center; }
+.admin .admin-stock-sizes input:not([type=checkbox]) { width: 64px; padding: 7px 8px; text-align: center; }
+.admin-stock-sizes label.low input { border-color: #f0a35b !important; background: #fff6ec !important; }
+.admin-stock-sizes label.out input { border-color: #e06a6a !important; background: #fff0f0 !important; }
+.admin-stock tr.is-changed td { background: #fbf7fb; }
+
+/* Resumo */
+.summary-periods { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.summary-numbers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.summary-numbers small { display: flex; align-items: center; gap: 2px; color: var(--muted); font-size: 12px; }
+.summary-numbers strong { font-size: 20px; }
+.summary-tasks { margin-bottom: 14px; border-color: #ecd6e6; background: #fdf8fc; }
+.summary-tasks ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.summary-list { margin: 0 0 12px; padding: 0; list-style: none; display: grid; gap: 8px; }
+ol.summary-list { counter-reset: top; }
+.summary-list li { display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 7px; }
+ol.summary-list li::before { counter-increment: top; content: counter(top) "."; color: var(--muted); font-weight: 700; }
+.summary-list li span { flex: 1; }
+.summary-list li small { color: var(--muted); }

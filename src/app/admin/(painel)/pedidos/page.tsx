@@ -27,6 +27,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           <h1>Pedidos</h1>
           <p>Registrados quando o cliente envia o pedido pelo WhatsApp. O estoque é baixado ao confirmar o pedido.</p>
         </div>
+        <a className="btn btn-light" href="/admin/exportar/pedidos">Baixar planilha (Excel)</a>
       </div>
 
       <form className="admin-search" action="/admin/pedidos">

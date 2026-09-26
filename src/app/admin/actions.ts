@@ -7,7 +7,7 @@ import { rateLimited } from "@/lib/redis";
 import { del } from "@vercel/blob";
 import { checkCredentials, endSession, requireAdmin, startSession } from "@/lib/auth";
 import { disconnectYoutube } from "@/lib/youtube";
-import { adminCreateProduct, adminDeleteProduct, adminGetProduct, adminUpdateProduct } from "@/db/products";
+import { adminCreateProduct, adminDeleteProduct, adminDuplicateProduct, adminGetProduct, adminListProducts, adminSetProductOrder, adminSetStock, adminUpdateProduct, allProductImageUrls } from "@/db/products";
 import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/orders";
 import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
@@ -38,7 +38,7 @@ export async function login(_: LoginState | null, form: FormData): Promise<Login
     return { error: "E-mail ou senha incorretos.", email };
   }
   await startSession();
-  redirect("/admin/produtos");
+  redirect("/admin");
 }
 
 export async function logout() {
@@ -159,7 +159,10 @@ function toRow(input: ProductInput): NewProductRow {
 
 /** Apaga do Vercel Blob as fotos que não são mais usadas (economiza o limite de 1 GB). */
 async function deleteBlobs(urls: string[]) {
-  const blobUrls = urls.filter(u => u.includes(".blob.vercel-storage.com/"));
+  // Foto ainda usada por outro produto (ex.: uma cópia) ou pela página inicial fica no Blob.
+  const [inProducts, home] = await Promise.all([allProductImageUrls(), getHomeImages()]);
+  const inUse = new Set([...inProducts, ...home.hero, home.banner, home.about]);
+  const blobUrls = urls.filter(u => u.includes(".blob.vercel-storage.com/") && !inUse.has(u));
   if (!blobUrls.length) return;
   try {
     await del(blobUrls);
@@ -200,6 +203,40 @@ export async function deleteProduct(id: number) {
   if (removed) await deleteBlobs([...removed.images.map(i => i.src), ...reviewPhotos]);
   refreshSite();
   redirect("/admin/produtos");
+}
+
+export async function duplicateProduct(id: number) {
+  await requireAdmin();
+  const newId = await adminDuplicateProduct(id);
+  revalidatePath("/admin/produtos");
+  redirect(newId ? `/admin/produtos/${newId}?copia=1` : "/admin/produtos");
+}
+
+/** Ordem da vitrine (arrastar na lista de produtos). */
+export async function saveProductOrder(ids: number[]): Promise<{ error?: string }> {
+  await requireAdmin();
+  const clean = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+  if (!clean.length) return { error: "Lista vazia." };
+  await adminSetProductOrder(clean);
+  refreshSite();
+  revalidatePath("/admin/produtos");
+  return {};
+}
+
+/** Estoque de vários produtos de uma vez (aba Estoque). */
+export async function saveStock(changes: { id: number; stock: Record<string, number> }[]): Promise<{ error?: string }> {
+  await requireAdmin();
+  const current = new Map((await adminListProducts()).map(p => [p.id, p]));
+  const updates = changes.flatMap(c => {
+    const p = current.get(Number(c.id));
+    if (!p) return [];
+    const sizes = p.sizes.map(s => ({ ...s, stock: Math.max(0, Math.floor(Number(c.stock?.[s.size] ?? s.stock) || 0)) }));
+    return [{ id: p.id, sizes }];
+  });
+  await adminSetStock(updates);
+  refreshSite();
+  revalidatePath("/admin/estoque");
+  return {};
 }
 
 export async function setProductActive(id: number, active: boolean) {

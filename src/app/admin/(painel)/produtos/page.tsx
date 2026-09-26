@@ -4,7 +4,7 @@ import { money } from "@/lib/format";
 import { getPaymentFees } from "@/db/settings";
 import { cardPrice } from "@/lib/pricing";
 import { mainImage } from "@/lib/product-media";
-import { setProductActive } from "../../actions";
+import { duplicateProduct, setProductActive } from "../../actions";
 
 export default async function ProductsPage() {
   const [products, fees] = await Promise.all([adminListProducts(), getPaymentFees()]);
@@ -16,7 +16,11 @@ export default async function ProductsPage() {
           <h1>Produtos</h1>
           <p>{products.length} produto(s) cadastrado(s)</p>
         </div>
-        <Link className="btn btn-dark" href="/admin/produtos/novo">+ Novo produto</Link>
+        <div className="admin-head-actions">
+          <Link className="btn btn-light" href="/admin/produtos/ordem">Ordem da vitrine</Link>
+          <Link className="btn btn-light" href="/admin/estoque">Editar estoque</Link>
+          <Link className="btn btn-dark" href="/admin/produtos/novo">+ Novo produto</Link>
+        </div>
       </div>
 
       {products.length === 0 ? (
@@ -53,6 +57,7 @@ export default async function ProductsPage() {
                     <td className="admin-row-actions">
                       <Link href={`/admin/produtos/${p.id}`}>Editar</Link>
                       {p.active && p.price !== null && <a href={`/produto/${productSlug(p)}`} target="_blank" rel="noopener">Ver</a>}
+                      <form action={duplicateProduct.bind(null, p.id)}><button type="submit">Duplicar</button></form>
                       <form action={setProductActive.bind(null, p.id, !p.active)}>
                         <button type="submit">{p.active ? "Desativar" : "Ativar"}</button>
                       </form>

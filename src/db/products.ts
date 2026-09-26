@@ -153,3 +153,30 @@ export async function adminDeleteProduct(id: number) {
   const [row] = await getDb().delete(products).where(eq(products.id, id)).returning();
   return row ?? null;
 }
+
+/** URLs de todas as fotos em uso nos produtos (para não apagar do Blob foto usada por uma cópia). */
+export async function allProductImageUrls(): Promise<Set<string>> {
+  if (noDatabase()) return new Set();
+  const rows = await getDb().select({ images: products.images }).from(products);
+  return new Set(rows.flatMap(r => r.images.map(i => i.src)));
+}
+
+/** Cria uma cópia do produto (inativa, com as mesmas fotos) e devolve o id novo. */
+export async function adminDuplicateProduct(id: number): Promise<number | null> {
+  const original = await adminGetProduct(id);
+  if (!original) return null;
+  const { id: _id, createdAt: _c, updatedAt: _u, ...data } = original;
+  return adminCreateProduct({ ...data, name: `${original.name} (cópia)`, active: false, featured: false });
+}
+
+/** Grava a ordem da vitrine: o primeiro id aparece primeiro no site. */
+export async function adminSetProductOrder(ids: number[]) {
+  const db = getDb();
+  await Promise.all(ids.map((id, index) => db.update(products).set({ sortOrder: index }).where(eq(products.id, id))));
+}
+
+/** Atualiza só o estoque dos tamanhos de vários produtos. */
+export async function adminSetStock(changes: { id: number; sizes: ProductSize[] }[]) {
+  const db = getDb();
+  await Promise.all(changes.map(c => db.update(products).set({ sizes: c.sizes }).where(eq(products.id, c.id))));
+}

@@ -1,6 +1,8 @@
 import { and, gte, inArray, sql } from "drizzle-orm";
 import { getDb, hasDatabase } from "./client";
 import { orders, productStats, products, trafficStats } from "./schema";
+import { costMap, itemProfits } from "./insights";
+import { getSavedFees } from "./settings";
 
 export type StatEvent = "view" | "click" | "cart" | "share" | "link" | "ad";
 
@@ -37,13 +39,15 @@ export interface ProductReportRow {
   /** Peças vendidas em pedidos confirmados (em preparação, enviados ou entregues). */
   sold: number;
   revenue: number;
+  /** Lucro estimado das peças vendidas (null = produto sem custo cadastrado). */
+  profit: number | null;
 }
 
 /** Relatório por produto desde `fromDay` (AAAA-MM-DD, horário de Brasília) ou de todo o período. */
 export async function adminProductReport(fromDay: string | null): Promise<ProductReportRow[]> {
   if (!hasDatabase()) return [];
   const db = getDb();
-  const [items, stats, confirmed] = await Promise.all([
+  const [items, stats, confirmed, costs, fees] = await Promise.all([
     db.select({ id: products.id, name: products.name, reference: products.reference, images: products.images, active: products.active }).from(products),
     db.select({
       productId: productStats.productId,
@@ -56,11 +60,21 @@ export async function adminProductReport(fromDay: string | null): Promise<Produc
     }).from(productStats)
       .where(fromDay ? gte(productStats.day, fromDay) : undefined)
       .groupBy(productStats.productId),
-    db.select({ items: orders.items }).from(orders).where(and(
+    db.select().from(orders).where(and(
       inArray(orders.status, ["preparacao", "enviado", "entregue"]),
       fromDay ? gte(orders.createdAt, new Date(`${fromDay}T00:00:00-03:00`)) : undefined
-    ))
+    )),
+    costMap(),
+    getSavedFees()
   ]);
+
+  const profits = new Map<number, number | null>();
+  for (const o of confirmed) {
+    for (const p of itemProfits(o, costs, fees)) {
+      const before = profits.has(p.productId) ? profits.get(p.productId)! : 0;
+      profits.set(p.productId, before === null || p.profit === null ? null : Math.round((before + p.profit) * 100) / 100);
+    }
+  }
 
   const byId = new Map(stats.map(s => [s.productId, s]));
   const sales = new Map<number, { sold: number; revenue: number }>();
@@ -85,7 +99,8 @@ export async function adminProductReport(fromDay: string | null): Promise<Produc
     linkOpens: byId.get(p.id)?.linkOpens ?? 0,
     adOpens: byId.get(p.id)?.adOpens ?? 0,
     sold: sales.get(p.id)?.sold ?? 0,
-    revenue: Math.round((sales.get(p.id)?.revenue ?? 0) * 100) / 100
+    revenue: Math.round((sales.get(p.id)?.revenue ?? 0) * 100) / 100,
+    profit: profits.has(p.id) ? profits.get(p.id)! : (sales.has(p.id) ? null : 0)
   }));
 }
 
