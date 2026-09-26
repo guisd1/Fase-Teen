@@ -58,6 +58,9 @@ export default async function PromotionsPage({ searchParams }: { searchParams: P
               <input type="datetime-local" name="launchDate" defaultValue={promo.launch ? brLocal(promo.launch.date) : ""} />
             </label>
           </div>
+          {promo.launch && new Date(promo.launch.date).getTime() <= Date.now() && (
+            <p className="admin-alert">A data deste lançamento já passou, então a contagem não aparece mais no site. Escolha uma nova data ou apague os dois campos.</p>
+          )}
           <p className="admin-hint">Mostra uma contagem regressiva na página inicial com o convite para entrar na lista VIP (newsletter). Some sozinha quando a data chega. Deixe vazio para não mostrar.</p>
         </section>
 

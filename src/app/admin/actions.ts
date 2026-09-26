@@ -457,7 +457,9 @@ export async function savePromotionsAction(form: FormData) {
   let launch: Promotions["launch"] = null;
   if (title || when) {
     if (!title || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when)) return fail("Para a contagem regressiva, preencha o nome e a data do lançamento.");
-    launch = { title, date: new Date(`${when}:00-03:00`).toISOString() };
+    const date = new Date(`${when}:00-03:00`);
+    if (date.getTime() <= Date.now()) return fail("A data do lançamento já passou. Escolha uma data e hora no futuro para a contagem regressiva aparecer.");
+    launch = { title, date: date.toISOString() };
   }
   await savePromotions({ freeShippingMin, welcomeCoupon, launch });
   refreshSite();

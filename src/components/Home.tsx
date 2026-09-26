@@ -49,9 +49,11 @@ function LaunchCountdown({ title, date }: { title: string; date: string }) {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
-  const left = now === null ? null : new Date(date).getTime() - now;
-  if (left !== null && left <= 0) return null;
-  const p = left === null ? null : {
+  // Só aparece depois de carregar no navegador (evita mostrar uma contagem que já terminou).
+  if (now === null) return null;
+  const left = new Date(date).getTime() - now;
+  if (left <= 0) return null;
+  const p = {
     d: Math.floor(left / 864e5), h: Math.floor(left / 36e5) % 24, m: Math.floor(left / 6e4) % 60, s: Math.floor(left / 1e3) % 60
   };
   return (
@@ -62,7 +64,7 @@ function LaunchCountdown({ title, date }: { title: string; date: string }) {
       </div>
       <div className="launch-clock">
         {(["d", "h", "m", "s"] as const).map(k => (
-          <div key={k}><strong>{p ? String(p[k]).padStart(2, "0") : "--"}</strong><small>{CLOCK_LABELS[k]}</small></div>
+          <div key={k}><strong>{String(p[k]).padStart(2, "0")}</strong><small>{CLOCK_LABELS[k]}</small></div>
         ))}
       </div>
       <a className="btn btn-dark" href="#newsletter">Entrar na lista VIP</a>
