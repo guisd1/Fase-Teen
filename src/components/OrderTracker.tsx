@@ -14,7 +14,7 @@ export interface TrackedOrder {
   status: string;
   paymentMethod: string;
   paid: boolean;
-  items: { name: string; size: string; color: string; qty: number; price: number }[];
+  items: { name: string; reference: string | null; size: string; color: string; qty: number; price: number }[];
   subtotal: number;
   discount: number;
   paymentDiscount: number;
@@ -126,7 +126,7 @@ export default function OrderTracker({ token, order }: { token: string; order: T
         <div className="order-summary">
           {order.items.map((i, idx) => (
             <div key={idx} className="order-line">
-              <span>{i.qty}× {i.name}<small>{[i.size && `Tam. ${i.size}`, i.color].filter(Boolean).join(" • ")}</small></span>
+              <span>{i.qty}× {i.name}<small>{[i.reference && `Ref. ${i.reference}`, i.size && `Tam. ${i.size}`, i.color].filter(Boolean).join(" • ")}</small></span>
               <strong>{money(i.price * i.qty)}</strong>
             </div>
           ))}

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveStock } from "@/app/admin/actions";
 
-export interface StockRow { id: number; name: string; image: string | null; sizes: { size: string; stock: number }[] }
+export interface StockRow { id: number; name: string; reference: string | null; image: string | null; sizes: { size: string; stock: number }[] }
 
 /** Estoque de todos os produtos numa tela só. */
 export default function StockEditor({ initial }: { initial: StockRow[] }) {
@@ -38,7 +38,7 @@ export default function StockEditor({ initial }: { initial: StockRow[] }) {
                 <td>
                   <div className="admin-report-product">
                     {p.image ? <img src={p.image} alt="" /> : <span />}
-                    <strong>{p.name}</strong>
+                    <div><strong>{p.name}</strong>{p.reference && <small>Ref. {p.reference}</small>}</div>
                   </div>
                 </td>
                 <td>

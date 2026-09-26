@@ -1,6 +1,6 @@
 import { adminAbandonedCarts, adminRecoveredCount } from "@/db/recovery";
 import { customerWhatsapp } from "@/lib/order-messages";
-import { money } from "@/lib/format";
+import { money, withRef } from "@/lib/format";
 import { getStore } from "@/stores";
 import { deleteCartAction, markCartContactedAction } from "../../actions";
 
@@ -14,7 +14,7 @@ export default async function AbandonedCartsPage() {
 
   const message = (c: (typeof carts)[number]) => {
     const first = c.name.split(" ")[0];
-    const items = c.items.map(i => `${i.name}${i.size ? ` (tam. ${i.size})` : ""}`).join(", ");
+    const items = c.items.map(i => `${withRef(i.name, i.reference)}${i.size ? ` tam. ${i.size}` : ""}`).join(", ");
     return `Oi, ${first}! Tudo bem? Aqui é da ${store.name}. Vi que você deixou ${items} no carrinho do nosso site. Ficou alguma dúvida sobre tamanho, frete ou pagamento? Posso te ajudar a finalizar! ${store.siteUrl}`;
   };
 
@@ -30,7 +30,7 @@ export default async function AbandonedCartsPage() {
               return (
                 <tr key={c.id}>
                   <td><strong>{c.name}</strong><small>{[c.phone, c.email].filter(Boolean).join(" • ")}</small></td>
-                  <td>{c.items.map((i, idx) => <small key={idx}>{i.qty}× {i.name}{i.size ? ` • ${i.size}` : ""}{i.color ? ` • ${i.color}` : ""}</small>)}</td>
+                  <td>{c.items.map((i, idx) => <small key={idx}>{i.qty}× {withRef(i.name, i.reference)}{i.size ? ` • ${i.size}` : ""}{i.color ? ` • ${i.color}` : ""}</small>)}</td>
                   <td>{money(c.subtotal)}</td>
                   <td>{dateTime(c.updatedAt)}{c.contactedAt && <small>chamada em {dateTime(c.contactedAt)}</small>}</td>
                   <td className="admin-row-actions">

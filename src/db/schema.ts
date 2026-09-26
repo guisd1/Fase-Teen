@@ -263,7 +263,7 @@ export const trafficStats = pgTable("traffic_stats", {
 }, t => [primaryKey({ columns: [t.day, t.source, t.campaign] })]);
 
 /** Item guardado de um carrinho que não virou pedido. */
-export interface CartSnapshotItem { productId: number; name: string; size: string; color: string; qty: number; price: number }
+export interface CartSnapshotItem { productId: number; name: string; reference?: string | null; size: string; color: string; qty: number; price: number }
 
 /*
   Carrinho abandonado: quem preencheu nome e WhatsApp no checkout e não

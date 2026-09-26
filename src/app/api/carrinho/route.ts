@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const i = raw as { id?: unknown; size?: unknown; color?: unknown; qty?: unknown };
     const p = catalog.get(Number(i.id));
     const qty = Math.min(20, Math.max(1, Math.floor(Number(i.qty) || 1)));
-    return p ? [{ productId: p.id, name: p.name, size: str(i.size, 20), color: str(i.color, 40), qty, price: p.price }] : [];
+    return p ? [{ productId: p.id, name: p.name, reference: p.reference, size: str(i.size, 20), color: str(i.color, 40), qty, price: p.price }] : [];
   });
   if (!items.length) return new Response(null, { status: 204 });
   const subtotal = Math.round(items.reduce((s, i) => s + i.price * i.qty, 0) * 100) / 100;

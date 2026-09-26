@@ -14,7 +14,7 @@ export default async function StockPage() {
       </div>
       {products.length === 0
         ? <div className="admin-empty"><p>Nenhum produto com tamanhos cadastrados.</p></div>
-        : <StockEditor initial={products.map(p => ({ id: p.id, name: p.name, image: mainImage(p) || null, sizes: p.sizes }))} />}
+        : <StockEditor initial={products.map(p => ({ id: p.id, name: p.name, reference: p.reference, image: mainImage(p) || null, sizes: p.sizes }))} />}
     </>
   );
 }

@@ -63,7 +63,7 @@ export default async function SummaryPage() {
           {s.topProducts.length === 0 ? <p className="admin-hint">Nenhuma venda confirmada nos últimos 30 dias.</p> : (
             <ol className="summary-list">
               {s.topProducts.map(p => (
-                <li key={p.productId}><span>{p.name}</span><strong>{p.qty} un.</strong><small>{money(p.revenue)}</small></li>
+                <li key={p.productId}><span>{p.name}{p.reference && <small> Ref. {p.reference}</small>}</span><strong>{p.qty} un.</strong><small>{money(p.revenue)}</small></li>
               ))}
             </ol>
           )}
@@ -75,7 +75,7 @@ export default async function SummaryPage() {
             <ul className="summary-list">
               {s.lowStock.slice(0, 12).map(p => (
                 <li key={`${p.id}-${p.size}`}>
-                  <span>{p.name} <small>tam. {p.size}</small></span>
+                  <span>{p.name} <small>{p.reference ? `Ref. ${p.reference} • ` : ""}tam. {p.size}</small></span>
                   <strong className={p.stock === 0 ? "admin-error" : ""}>{p.stock === 0 ? "esgotado" : `${p.stock} un.`}</strong>
                 </li>
               ))}

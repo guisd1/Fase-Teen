@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveProductOrder } from "@/app/admin/actions";
 
-export interface OrderItem { id: number; name: string; image: string | null; active: boolean }
+export interface OrderItem { id: number; name: string; reference: string | null; image: string | null; active: boolean }
 
 /** Arrastar os produtos para definir a ordem em que aparecem no site. */
 export default function ProductOrder({ initial }: { initial: OrderItem[] }) {
@@ -41,7 +41,7 @@ export default function ProductOrder({ initial }: { initial: OrderItem[] }) {
           >
             <span className="admin-order-pos">{i + 1}</span>
             {p.image ? <img src={p.image} alt="" draggable={false} /> : <span className="admin-order-noimg" />}
-            <strong>{p.name}</strong>
+            <span className="admin-order-name"><strong>{p.name}</strong>{p.reference && <small>Ref. {p.reference}</small>}</span>
             {!p.active && <small>inativo</small>}
             <span className="admin-order-arrows">
               <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} aria-label="Subir">↑</button>

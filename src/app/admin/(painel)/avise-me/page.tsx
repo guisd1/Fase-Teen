@@ -2,6 +2,7 @@ import { adminWaitlist } from "@/db/recovery";
 import { productSlug } from "@/db/products";
 import { customerWhatsapp } from "@/lib/order-messages";
 import { getStore } from "@/stores";
+import { withRef } from "@/lib/format";
 import { deleteWaitlistAction, markWaitlistNotifiedAction } from "../../actions";
 
 const date = (d: Date) => d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -22,11 +23,11 @@ export default async function WaitlistPage() {
             {rows.map(w => {
               const wa = customerWhatsapp(w.phone);
               const link = `${store.siteUrl}/produto/${productSlug({ id: w.productId, name: w.productName })}`;
-              const text = `Oi, ${w.name.split(" ")[0]}! Aqui é da ${store.name}. Chegou${w.size ? ` o tamanho ${w.size} do` : " o"} ${w.productName} que você pediu para avisar. Garanta o seu: ${link}`;
+              const text = `Oi, ${w.name.split(" ")[0]}! Aqui é da ${store.name}. Chegou${w.size ? ` o tamanho ${w.size} do` : " o"} ${withRef(w.productName, w.productReference)} que você pediu para avisar. Garanta o seu: ${link}`;
               return (
                 <tr key={w.id}>
                   <td><strong>{w.name}</strong><small>{w.phone}</small></td>
-                  <td>{w.productName}</td>
+                  <td>{w.productName}{w.productReference && <small>Ref. {w.productReference}</small>}</td>
                   <td>{w.size || "–"}</td>
                   <td>{w.stock > 0 ? <strong className="admin-paid">{w.stock} un.</strong> : "esgotado"}</td>
                   <td>{date(w.createdAt)}</td>

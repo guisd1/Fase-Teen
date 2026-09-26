@@ -45,16 +45,16 @@ export async function createReview(data: { productId: number; name: string; rati
 
 // ---- Painel ----
 
-export type AdminReview = ReviewRow & { productName: string };
+export type AdminReview = ReviewRow & { productName: string; productReference: string | null };
 
 export async function adminListReviews(): Promise<AdminReview[]> {
   if (!hasDatabase()) return [];
   const rows = await getDb()
-    .select({ review: reviews, productName: products.name })
+    .select({ review: reviews, productName: products.name, productReference: products.reference })
     .from(reviews).innerJoin(products, eq(products.id, reviews.productId))
     // Pendentes primeiro, depois as mais recentes.
     .orderBy(asc(reviews.approved), desc(reviews.createdAt));
-  return rows.map(r => ({ ...r.review, productName: r.productName }));
+  return rows.map(r => ({ ...r.review, productName: r.productName, productReference: r.productReference }));
 }
 
 export async function adminCountPendingReviews() {
@@ -79,16 +79,16 @@ export async function reviewImagesOf(productId: number) {
 }
 
 /** Fotos de clientes (avaliações aprovadas com foto) para a página inicial. */
-export async function getCustomerPhotos(limit = 8): Promise<{ src: string; name: string; rating: number; productId: number; productName: string }[]> {
+export async function getCustomerPhotos(limit = 8): Promise<{ src: string; name: string; rating: number; productId: number; productName: string; productReference: string | null }[]> {
   if (!hasDatabase()) return [];
   const rows = await getDb().select({
-    images: reviews.images, name: reviews.name, rating: reviews.rating, productId: products.id, productName: products.name
+    images: reviews.images, name: reviews.name, rating: reviews.rating, productId: products.id, productName: products.name, productReference: products.reference
   }).from(reviews)
     .innerJoin(products, eq(products.id, reviews.productId))
     .where(and(eq(reviews.approved, true), eq(products.active, true)))
     .orderBy(desc(reviews.createdAt))
     .limit(40);
   return rows
-    .flatMap(r => r.images.map(src => ({ src, name: r.name.split(" ")[0], rating: r.rating, productId: r.productId, productName: r.productName })))
+    .flatMap(r => r.images.map(src => ({ src, name: r.name.split(" ")[0], rating: r.rating, productId: r.productId, productName: r.productName, productReference: r.productReference })))
     .slice(0, limit);
 }

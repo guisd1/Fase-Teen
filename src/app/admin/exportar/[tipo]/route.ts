@@ -4,6 +4,7 @@ import { adminCustomers } from "@/db/insights";
 import { STATUS_LABELS, isOrderStatus } from "@/lib/order-status";
 import { METHOD_LABELS } from "@/lib/payment-labels";
 import { SOURCE_LABELS } from "@/lib/traffic-source";
+import { withRef } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ tipo: stri
       ...orders.map(o => [
         o.code, dateTime(o.createdAt), isOrderStatus(o.status) ? STATUS_LABELS[o.status] : o.status,
         o.customerName, o.customerPhone, o.customerEmail,
-        o.items.map(i => `${i.qty}x ${i.name}${i.size ? ` (${i.size})` : ""}${i.color ? ` ${i.color}` : ""}`).join(" | "),
+        o.items.map(i => `${i.qty}x ${withRef(i.name, i.reference)}${i.size ? ` (${i.size})` : ""}${i.color ? ` ${i.color}` : ""}`).join(" | "),
         num(o.subtotal), num(o.discount), o.couponCode, num(o.paymentDiscount), num(o.freight), num(o.total),
         METHOD_LABELS[o.paymentMethod] ?? o.paymentMethod, o.paidAt ? dateTime(o.paidAt) : "",
         o.deliveryMode === "pickup" ? "Retirada" : [o.shipping?.company, o.shipping?.service].filter(Boolean).join(" "),

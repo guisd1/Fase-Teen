@@ -28,7 +28,7 @@ export default async function ReviewsPage() {
                 <div>
                   <span className="admin-stars">{stars(r.rating)}</span> <strong>{r.name}</strong>
                   <small className="admin-review-meta">
-                    {" "}em <Link href={`/produto/${productSlug({ id: r.productId, name: r.productName })}#avaliacoes`} target="_blank">{r.productName}</Link>
+                    {" "}em <Link href={`/produto/${productSlug({ id: r.productId, name: r.productName })}#avaliacoes`} target="_blank">{r.productName}</Link>{r.productReference && <small className="admin-inline-ref"> Ref. {r.productReference}</small>}
                     {" • "}{r.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                   </small>
                 </div>

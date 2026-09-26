@@ -7,3 +7,6 @@ export const formatCep = (v: unknown) => {
   const c = cleanCep(v);
   return c.length > 5 ? `${c.slice(0, 5)}-${c.slice(5)}` : c;
 };
+
+/** Nome do produto com a referência, para textos (mensagens, planilhas): "Vestido Floral (Ref. VEST-1001)". */
+export const withRef = (name: string, reference?: string | null) => (reference ? `${name} (Ref. ${reference})` : name);

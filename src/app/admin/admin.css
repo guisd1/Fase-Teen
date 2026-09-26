@@ -276,3 +276,7 @@ ol.summary-list li::before { counter-increment: top; content: counter(top) "."; 
 .admin-promo .admin-grid-3 { margin-top: 10px; }
 .admin-notify-btn { width: 100%; margin-bottom: 10px; padding: 9px 10px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.4); background: transparent; color: #f3d7ec; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .admin-notify-btn:hover { background: rgba(255,255,255,.08); }
+.admin-report-product small, .admin-order-name small { display: block; color: var(--muted); font-size: 12px; }
+.admin-order-name { display: grid; }
+.summary-list li span small { color: var(--muted); }
+.admin-inline-ref { color: var(--muted); }

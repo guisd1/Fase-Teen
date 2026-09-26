@@ -66,8 +66,8 @@ export interface Summary {
   month: PeriodSummary;
   pending: number;
   toShip: number;
-  topProducts: { productId: number; name: string; qty: number; revenue: number }[];
-  lowStock: { id: number; name: string; size: string; stock: number }[];
+  topProducts: { productId: number; name: string; reference: string | null; qty: number; revenue: number }[];
+  lowStock: { id: number; name: string; reference: string | null; size: string; stock: number }[];
 }
 
 export async function adminSummary(): Promise<Summary> {
@@ -93,10 +93,10 @@ export async function adminSummary(): Promise<Summary> {
     return { orders: list.length, revenue, ticket: list.length ? round(revenue / list.length) : 0, profit: round(profit), missingCost };
   };
 
-  const byProduct = new Map<number, { productId: number; name: string; qty: number; revenue: number }>();
+  const byProduct = new Map<number, { productId: number; name: string; reference: string | null; qty: number; revenue: number }>();
   for (const o of confirmed.filter(o => dayOf(o.createdAt) >= last30)) {
     for (const i of o.items) {
-      const t = byProduct.get(i.productId) ?? { productId: i.productId, name: i.name, qty: 0, revenue: 0 };
+      const t = byProduct.get(i.productId) ?? { productId: i.productId, name: i.name, reference: i.reference ?? null, qty: 0, revenue: 0 };
       t.qty += i.qty;
       t.revenue = round(t.revenue + i.qty * i.price);
       byProduct.set(i.productId, t);
@@ -118,7 +118,7 @@ export async function adminSummary(): Promise<Summary> {
 export function lowStock(items: ProductRow[]) {
   return items
     .filter(p => p.active && p.price !== null)
-    .flatMap(p => p.sizes.filter(s => s.stock <= 2).map(s => ({ id: p.id, name: p.name, size: s.size, stock: s.stock })))
+    .flatMap(p => p.sizes.filter(s => s.stock <= 2).map(s => ({ id: p.id, name: p.name, reference: p.reference, size: s.size, stock: s.stock })))
     .sort((a, b) => a.stock - b.stock);
 }
 

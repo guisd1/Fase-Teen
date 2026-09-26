@@ -72,7 +72,7 @@ function LaunchCountdown({ title, date }: { title: string; date: string }) {
   );
 }
 
-export interface CustomerPhoto { src: string; name: string; rating: number; productName: string; href: string }
+export interface CustomerPhoto { src: string; name: string; rating: number; productName: string; productReference: string | null; href: string }
 
 export default function Home({ images = EMPTY_HOME_IMAGES, photos = [], welcome = null }: {
   images?: HomeImages;
@@ -259,7 +259,7 @@ export default function Home({ images = EMPTY_HOME_IMAGES, photos = [], welcome 
             {photos.map((ph, i) => (
               <a key={i} href={ph.href} className="customer-photo">
                 <img {...optimized(ph.src, "(max-width: 760px) 50vw, 25vw")} alt={`${ph.name} usando ${ph.productName}`} loading="lazy" />
-                <span><strong>{ph.name}</strong> {"★".repeat(ph.rating)}<small>{ph.productName}</small></span>
+                <span><strong>{ph.name}</strong> {"★".repeat(ph.rating)}<small>{ph.productName}{ph.productReference ? ` • Ref. ${ph.productReference}` : ""}</small></span>
               </a>
             ))}
           </div>

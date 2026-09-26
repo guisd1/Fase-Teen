@@ -74,7 +74,7 @@ export async function adminWaitlist() {
   if (!hasDatabase()) return [];
   const rows = await getDb().select({
     id: waitlist.id, productId: waitlist.productId, size: waitlist.size, name: waitlist.name, phone: waitlist.phone,
-    createdAt: waitlist.createdAt, productName: products.name, sizes: products.sizes
+    createdAt: waitlist.createdAt, productName: products.name, productReference: products.reference, sizes: products.sizes
   }).from(waitlist)
     .innerJoin(products, eq(products.id, waitlist.productId))
     .where(isNull(waitlist.notifiedAt))

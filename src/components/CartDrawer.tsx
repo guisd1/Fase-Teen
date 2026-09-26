@@ -59,6 +59,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
               <img {...optimized(mainImage(x.product, x.color), "80px")} alt={x.product.name} />
               <div>
                 <h4>{x.product.name}</h4>
+                {x.product.reference && <small className="item-ref">Ref.: {x.product.reference}</small>}
                 <small>Tamanho: {x.size || "-"} • Cor: {x.color || "-"}</small>
                 <div className="cart-item-price">{money(x.product.price)}</div>
                 <div className="qty">

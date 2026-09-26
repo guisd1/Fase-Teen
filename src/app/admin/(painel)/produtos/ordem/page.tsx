@@ -14,7 +14,7 @@ export default async function ProductOrderPage() {
           <p>Arraste os produtos (ou use as setas) para escolher a ordem em que aparecem no site. O primeiro da lista aparece primeiro. Produtos novos entram no topo.</p>
         </div>
       </div>
-      <ProductOrder initial={products.map(p => ({ id: p.id, name: p.name, image: mainImage(p) || null, active: p.active }))} />
+      <ProductOrder initial={products.map(p => ({ id: p.id, name: p.name, reference: p.reference, image: mainImage(p) || null, active: p.active }))} />
     </>
   );
 }

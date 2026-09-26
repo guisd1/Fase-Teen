@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { StoreConfig } from "@/stores/types";
-import { cleanCep, formatCep, money } from "@/lib/format";
+import { cleanCep, formatCep, money, withRef } from "@/lib/format";
 import { hasWhatsapp, whatsappUrl } from "@/lib/whatsapp";
 import type { Address, Cart } from "./useCart";
 import PixPayment, { useOrderStatus, type PixData } from "./PixPayment";
@@ -110,7 +110,7 @@ function orderMessage(store: StoreConfig, cart: Cart, data: FormData, order: Reg
   return [
     `Olá! Quero fazer um pedido na *${store.name}*.`,
     ...(order ? [`*Pedido nº ${order.code}*`] : []), "",
-    "*Produtos:*", ...cart.items.map(x => `• ${x.product.name} | Tam. ${x.size} | Cor: ${x.color} | Qtd: ${x.qty} | ${money(x.product.price * x.qty)}`), "",
+    "*Produtos:*", ...cart.items.map(x => `• ${withRef(x.product.name, x.product.reference)} | Tam. ${x.size} | Cor: ${x.color} | Qtd: ${x.qty} | ${money(x.product.price * x.qty)}`), "",
     `*Subtotal:* ${money(cart.subtotal)}`,
     ...(discount > 0 ? [`*Cupom ${couponCode}:* − ${money(discount)}`] : []),
     `*Entrega:* ${delivery}`, `*TOTAL:* ${money(total)}`, "",

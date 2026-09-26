@@ -22,7 +22,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
         status: order.status,
         paymentMethod: order.paymentMethod,
         paid: Boolean(order.paidAt),
-        items: order.items.map(i => ({ name: i.name, size: i.size, color: i.color, qty: i.qty, price: i.price })),
+        items: order.items.map(i => ({ name: i.name, reference: i.reference ?? null, size: i.size, color: i.color, qty: i.qty, price: i.price })),
         subtotal: order.subtotal,
         discount: order.discount,
         paymentDiscount: order.paymentDiscount,
