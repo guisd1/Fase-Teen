@@ -42,7 +42,7 @@ function readJson<T>(key: string, fallback: T): T {
 const sameLine = (a: CartItem, id: number, size: string, color: string) =>
   a.id === id && a.size === size && a.color === color;
 
-export function useCart(storeId: string, products: Product[]) {
+export function useCart(storeId: string, products: Product[], freeShippingMin: number | null = null) {
   const cartKey = `${storeId}:cart`;
   const checkoutKey = `${storeId}:checkout`;
 
@@ -101,7 +101,10 @@ export function useCart(storeId: string, products: Product[]) {
   );
   const count = cart.reduce((s, x) => s + x.qty, 0);
   const subtotal = items.reduce((s, x) => s + x.product.price * x.qty, 0);
-  const freight = deliveryMode === "pickup" ? 0 : (selectedShipping ? Number(selectedShipping.price) : null);
+  // Frete grátis a partir do valor definido no painel (a opção de envio ainda é escolhida, mas sai por R$ 0).
+  const freeShipping = deliveryMode === "delivery" && freeShippingMin !== null && subtotal >= freeShippingMin - 0.001;
+  const missingForFreeShipping = freeShippingMin !== null && !freeShipping ? Math.max(0, freeShippingMin - subtotal) : 0;
+  const freight = deliveryMode === "pickup" ? 0 : (selectedShipping ? (freeShipping ? 0 : Number(selectedShipping.price)) : null);
   const discount = coupon ? couponDiscount(coupon, subtotal) : 0;
   const total = subtotal - discount + (freight ?? 0);
   // Total pagando no Pix: produtos pelo preço do Pix; o cupom vale sobre esse valor (como no servidor).
@@ -247,7 +250,7 @@ export function useCart(storeId: string, products: Product[]) {
   };
 
   return {
-    items, count, subtotal, freight, discount, total, pixTotal,
+    items, count, subtotal, freight, discount, total, pixTotal, freeShippingMin, freeShipping, missingForFreeShipping,
     coupon, couponStatus, applyCoupon, removeCoupon, clearCart,
     addToCart, changeQty, canIncrease, removeItem,
     deliveryMode, setDeliveryMode,

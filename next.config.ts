@@ -18,6 +18,14 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Fotos do Vercel Blob otimizadas (WebP no tamanho da tela). URLs do Blob nunca mudam de conteúdo,
+  // então o resultado pode ficar em cache por muito tempo.
+  images: {
+    remotePatterns: [new URL("https://*.public.blob.vercel-storage.com/**")],
+    qualities: [75],
+    formats: ["image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 31
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   }

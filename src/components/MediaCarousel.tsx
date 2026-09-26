@@ -5,6 +5,7 @@ import type { Product } from "@/db/products";
 import { youtubeId } from "@/lib/youtube-id";
 import { imagesForColor } from "@/lib/product-media";
 import { Icon } from "./Icons";
+import { optimized } from "@/lib/image";
 
 type Slide = { type: "image"; src: string } | { type: "youtube"; id: string };
 
@@ -40,7 +41,7 @@ export default function MediaCarousel({ product, color, className = "", playVide
       <div className="media-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         {slides.map((s, i) => (
           <div className="media-slide" key={i}>
-            {s.type === "image" && <img src={s.src} alt={product.name} loading="lazy" />}
+            {s.type === "image" && <img {...optimized(s.src, "(max-width: 760px) 50vw, (max-width: 1220px) 25vw, 300px")} alt={product.name} loading="lazy" />}
             {s.type === "youtube" && (playVideo && i === index
               ? <iframe
                   src={`https://www.youtube-nocookie.com/embed/${s.id}?rel=0&playsinline=1`}

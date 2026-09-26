@@ -7,6 +7,7 @@ import NewsletterForm from "./NewsletterForm";
 import ProductCard from "./ProductCard";
 import { useShop } from "./ShopShell";
 import { Icon } from "./Icons";
+import { optimized } from "@/lib/image";
 
 type Sort = "featured" | "price-low" | "price-high" | "name";
 
@@ -20,7 +21,7 @@ function HeroSlides({ images, alt }: { images: string[]; alt: string }) {
   }, [images.length]);
   return (
     <div className="hero-card hero-slides">
-      {images.map((src, i) => <img key={src} src={src} alt={i === index ? alt : ""} className={i === index ? "active" : ""} />)}
+      {images.map((src, i) => <img key={src} {...optimized(src, "(max-width: 760px) 70vw, 380px")} alt={i === index ? alt : ""} className={i === index ? "active" : ""} />)}
       {images.length > 1 && (
         <div className="hero-slides-dots">
           {images.map((_, i) => <button key={i} type="button" className={i === index ? "active" : ""} onClick={() => setIndex(i)} aria-label={`Foto ${i + 1}`} />)}
@@ -113,7 +114,7 @@ export default function Home({ images = EMPTY_HOME_IMAGES }: { images?: HomeImag
           <a className="btn btn-dark" href="#colecao">{t.banner.cta}</a>
         </div>
         {images.banner ? (
-          <img className="banner-photo" src={images.banner} alt="" />
+          <img className="banner-photo" {...optimized(images.banner, "(max-width: 760px) 100vw, 380px")} alt="" loading="lazy" />
         ) : (
           <div className="banner-stickers">
             {t.banner.stickers.map(s => <span key={s}>{s}</span>)}
@@ -160,7 +161,7 @@ export default function Home({ images = EMPTY_HOME_IMAGES }: { images?: HomeImag
 
       <section className="about" id="sobre">
         {images.about
-          ? <img className="about-photo" src={images.about} alt={store.name} />
+          ? <img className="about-photo" {...optimized(images.about, "(max-width: 760px) 90vw, 340px")} alt={store.name} loading="lazy" />
           : <div className="about-mark">{store.logo.icon ? <img src={store.logo.icon} alt="" /> : store.logo.monogram}</div>}
         <div>
           <p className="eyebrow">{t.about.eyebrow}</p>

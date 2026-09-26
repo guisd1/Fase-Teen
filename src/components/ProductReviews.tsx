@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { upload, uploadPresigned } from "@vercel/blob/client";
 import type { BlobMode } from "@/lib/blob";
 import type { Review, ReviewSummary } from "@/db/reviews";
+import { optimized } from "@/lib/image";
 
 const MAX_PHOTOS = 3;
 
@@ -156,7 +157,7 @@ export default function ProductReviews({ productId, reviews, summary, blobMode }
             {r.images.length > 0 && (
               <div className="review-images">
                 {r.images.map(src => (
-                  <button key={src} type="button" onClick={() => setZoom(src)}><img src={src} alt={`Foto de ${r.name}`} loading="lazy" /></button>
+                  <button key={src} type="button" onClick={() => setZoom(src)}><img {...optimized(src, "96px")} alt={`Foto de ${r.name}`} loading="lazy" /></button>
                 ))}
               </div>
             )}

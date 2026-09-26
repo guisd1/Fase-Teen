@@ -114,6 +114,20 @@ const faseTeen: StoreConfig = {
         "Para desistência ou defeito, entre em contato pelo WhatsApp informando o número do pedido."
       ]
     },
+    perguntas: {
+      title: "Perguntas frequentes",
+      paragraphs: ["Separamos as dúvidas mais comuns. Se a sua não estiver aqui, é só chamar a gente no WhatsApp."],
+      faq: [
+        { q: "Qual o prazo de envio?", a: "Os pedidos são postados em até 1 dia útil após a confirmação do pagamento. Pedidos confirmados depois das 16h são postados no próximo dia útil. O prazo de entrega da transportadora aparece quando você calcula o frete no carrinho." },
+        { q: "Quais as formas de pagamento?", a: "Você pode pagar no site pelo Mercado Pago, com Pix (com preço menor) ou cartão de crédito em até 3x. Se preferir, também dá para finalizar pelo WhatsApp e combinar o pagamento com a gente." },
+        { q: "Tem frete grátis?", a: "Sim! Acima de um valor mínimo em produtos o frete sai de graça. O carrinho mostra quanto falta para você ganhar o frete grátis." },
+        { q: "Como escolho o tamanho certo?", a: "Cada peça tem uma tabela de medidas na página do produto. Compare com as medidas de uma roupa que já sirva bem. Ficou na dúvida? Chame a gente no WhatsApp antes de comprar." },
+        { q: "Posso trocar se o tamanho não servir?", a: "Pode. A troca por outro tamanho do mesmo modelo pode ser pedida em até 7 dias após o recebimento, conforme o estoque. A peça deve voltar sem uso, sem lavagem e com a etiqueta, e o frete da troca é por conta da cliente." },
+        { q: "E se eu me arrepender da compra?", a: "Você pode desistir em até 7 dias após o recebimento, como em toda compra pela internet. A peça volta sem uso e com etiqueta, e devolvemos o valor pago pela mesma forma de pagamento. Veja os detalhes em Trocas, devoluções e envio." },
+        { q: "Como acompanho meu pedido?", a: "Clique em Meu pedido, no menu do site, e digite o número do pedido e o e-mail ou telefone usado na compra. Também mandamos o link de acompanhamento pelo WhatsApp a cada etapa." },
+        { q: "Onde uso meu cupom de desconto?", a: "No carrinho, no campo de cupom, antes de finalizar o pedido. O desconto vale sobre os produtos, não sobre o frete." }
+      ]
+    },
     privacidade: {
       title: "Política de privacidade",
       paragraphs: ["EDITE: descreva aqui como a Fase Teen trata os dados dos clientes."]

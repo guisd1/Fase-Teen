@@ -6,6 +6,7 @@ import type { Cart } from "./useCart";
 import { mainImage } from "@/lib/product-media";
 import { couponLabel } from "@/lib/coupon";
 import { Icon } from "./Icons";
+import { optimized } from "@/lib/image";
 
 function CouponBox({ cart }: { cart: Cart }) {
   const [code, setCode] = useState("");
@@ -55,7 +56,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
         <div className="cart-items">
           {items.map(x => (
             <div className="cart-item" key={`${x.id}|${x.size}|${x.color}`}>
-              <img src={mainImage(x.product, x.color)} alt={x.product.name} />
+              <img {...optimized(mainImage(x.product, x.color), "80px")} alt={x.product.name} />
               <div>
                 <h4>{x.product.name}</h4>
                 <small>Tamanho: {x.size || "-"} • Cor: {x.color || "-"}</small>
@@ -79,6 +80,16 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
           </div>
         ) : (
           <div className="cart-footer">
+            {cart.freeShippingMin !== null && (
+              <div className={`free-shipping ${cart.freeShipping ? "done" : ""}`}>
+                <p>
+                  {cart.freeShipping || cart.missingForFreeShipping === 0
+                    ? <><strong>Frete grátis</strong> garantido para este pedido!</>
+                    : <>Faltam <strong>{money(cart.missingForFreeShipping)}</strong> para ganhar <strong>frete grátis</strong></>}
+                </p>
+                <div className="free-shipping-bar"><span style={{ width: `${Math.min(100, (cart.subtotal / cart.freeShippingMin) * 100)}%` }} /></div>
+              </div>
+            )}
             <div className="shipping-box">
               <div className="shipping-title-row">
                 <strong>Como você quer receber?</strong>
@@ -122,7 +133,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
                         <strong>{o.company}{o.service ? ` • ${o.service}` : ""}</strong>
                         <small>{o.deliveryTime ? `Prazo estimado: ${o.deliveryTime} dias úteis` : "Prazo não informado"}</small>
                       </div>
-                      <span className="shipping-price">{money(o.price)}</span>
+                      <span className="shipping-price">{cart.freeShipping ? <><s>{money(o.price)}</s> Grátis</> : money(o.price)}</span>
                     </button>
                   ))}
                 </div>
@@ -135,7 +146,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
             )}
             <div className="totals-row freight-total-row">
               <span>Frete</span>
-              <strong>{cart.freight === null ? "A calcular" : money(cart.freight)}</strong>
+              <strong>{cart.freight === null ? (cart.freeShipping ? "Grátis (escolha o envio)" : "A calcular") : cart.freight === 0 && cart.freeShipping ? "Grátis" : money(cart.freight)}</strong>
             </div>
             <div className="totals-row grand-total-row"><span>Total</span><strong>{money(cart.total)}</strong></div>
             <p className="mini-note">O valor do frete é calculado conforme o CEP e a opção de envio escolhida.</p>

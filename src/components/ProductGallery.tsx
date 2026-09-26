@@ -5,6 +5,7 @@ import type { Product } from "@/db/products";
 import { youtubeId } from "@/lib/youtube-id";
 import { imagesForColor } from "@/lib/product-media";
 import { Icon } from "./Icons";
+import { optimized } from "@/lib/image";
 
 type Slide = { type: "image"; src: string } | { type: "youtube"; id: string };
 
@@ -52,7 +53,7 @@ export default function ProductGallery({ product, color }: { product: Product; c
               onClick={() => setIndex(i)}
               aria-label={s.type === "youtube" ? "Vídeo" : `Foto ${i + 1}`}
             >
-              <img src={s.type === "image" ? s.src : `https://i.ytimg.com/vi/${s.id}/default.jpg`} alt="" />
+              <img {...(s.type === "image" ? optimized(s.src, "64px") : { src: `https://i.ytimg.com/vi/${s.id}/default.jpg` })} alt="" />
               {s.type === "youtube" && <span className="gallery-play"><Icon name="play" /></span>}
             </button>
           ))}
@@ -72,7 +73,7 @@ export default function ProductGallery({ product, color }: { product: Product; c
         {current?.type === "image" && (
           <div className="gallery-photo">
             <img
-              src={current.src}
+              {...optimized(current.src, "(max-width: 760px) 100vw, 480px")}
               alt={product.name}
               onMouseMove={track}
               onMouseLeave={() => setZoom(null)}

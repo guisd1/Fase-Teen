@@ -13,6 +13,7 @@ import { useCart, type Cart } from "./useCart";
 import { Icon, WhatsappIcon } from "./Icons";
 import { startVisit } from "@/lib/traffic-source";
 import { trackVisit } from "@/lib/track";
+import type { Promotions } from "@/lib/promotions";
 
 interface Shop {
   store: StoreConfig;
@@ -20,6 +21,9 @@ interface Shop {
   cart: Cart;
   search: string;
   openCart: () => void;
+  promotions: Promotions;
+  /** Mercado Pago ativo (Pix e cartão no site). */
+  onlinePayments: boolean;
 }
 
 const ShopContext = createContext<Shop | null>(null);
@@ -31,15 +35,17 @@ export function useShop() {
 }
 
 /** Cabeçalho, rodapé, carrinho e checkout, compartilhados por todas as páginas da loja. */
-export default function ShopShell({ store, products, onlinePayments, children }: {
+export default function ShopShell({ store, products, onlinePayments, promotions, children }: {
   store: StoreConfig;
   products: Product[];
   /** Mercado Pago configurado: o checkout oferece Pix e cartão. */
   onlinePayments: boolean;
+  /** Frete grátis, cupom da newsletter e lançamento (painel → Promoções). */
+  promotions: Promotions;
   children: ReactNode;
 }) {
   const t = store.texts;
-  const cart = useCart(store.id, products);
+  const cart = useCart(store.id, products, promotions.freeShippingMin);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -83,7 +89,7 @@ export default function ShopShell({ store, products, onlinePayments, children }:
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <ShopContext.Provider value={{ store, products, cart, search, openCart: () => setCartOpen(true) }}>
+    <ShopContext.Provider value={{ store, products, cart, search, openCart: () => setCartOpen(true), promotions, onlinePayments }}>
       <div className="topbar">{t.topbar}</div>
 
       <header className="header">

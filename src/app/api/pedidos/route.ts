@@ -10,6 +10,8 @@ import { QuoteError, quoteShipping } from "@/lib/shipping-quote";
 import { createCardCheckout, createPixPayment, mercadoPagoConfigured, saveLastError } from "@/lib/mercado-pago";
 import { getStore } from "@/stores";
 import { cleanSource } from "@/lib/traffic-source";
+import { getPromotions } from "@/db/settings";
+import { hasFreeShipping } from "@/lib/promotions";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +103,8 @@ export async function POST(request: Request) {
   }
 
   const subtotal = round(items.reduce((sum, i) => sum + i.price * i.qty, 0));
+  // Frete grátis a partir do valor definido no painel (Promoções): a loja paga o frete.
+  if (!pickup && hasFreeShipping(await getPromotions(), subtotal)) freight = 0;
   // Pix: os produtos saem pelo preço do Pix (só com a taxa do Pix); a diferença aparece como desconto.
   const productsTotal = paymentMethod === "pix" ? round(items.reduce((sum, i, idx) => sum + pixPrices[idx] * i.qty, 0)) : subtotal;
   const paymentDiscount = round(subtotal - productsTotal);

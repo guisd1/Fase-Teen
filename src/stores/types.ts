@@ -15,6 +15,8 @@ export interface InstitutionalPage {
   title: string;
   /** Cada item vira um parágrafo. */
   paragraphs: string[];
+  /** Perguntas e respostas (abrem ao clicar), depois dos parágrafos. */
+  faq?: { q: string; a: string }[];
 }
 
 export interface StoreConfig {

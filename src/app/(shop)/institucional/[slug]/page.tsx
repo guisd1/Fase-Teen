@@ -24,6 +24,16 @@ export default async function InstitutionalPage({ params }: Props) {
     <main className="institutional">
       <h1>{page.title}</h1>
       {page.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+      {page.faq && (
+        <div className="faq">
+          {page.faq.map(item => (
+            <details key={item.q}>
+              <summary>{item.q}</summary>
+              <p>{item.a}</p>
+            </details>
+          ))}
+        </div>
+      )}
       <Link className="text-link" href="/">← Voltar para a loja</Link>
     </main>
   );

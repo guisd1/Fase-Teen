@@ -9,8 +9,11 @@ import { money } from "@/lib/format";
 import ProductGallery from "./ProductGallery";
 import { PixPrice, PriceRow, soldOut } from "./ProductCard";
 import { useShop } from "./ShopShell";
+import { Icon } from "./Icons";
+import RelatedProducts from "./RelatedProducts";
 import { landedFromOutside, track } from "@/lib/track";
 import { detectSource } from "@/lib/traffic-source";
+import { optimized } from "@/lib/image";
 
 export default function ProductDetail({ product, reviewSummary, children }: {
   product: Product;
@@ -18,7 +21,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
   /** Seções abaixo do produto (avaliações). */
   children?: ReactNode;
 }) {
-  const { store, cart, openCart } = useShop();
+  const { store, cart, openCart, promotions, onlinePayments } = useShop();
   const firstAvailable = product.sizes.find(s => s.stock > 0)?.size ?? "";
   const [size, setSize] = useState(firstAvailable);
   const [color, setColor] = useState(product.colors[0] ?? "");
@@ -123,7 +126,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
                   const photo = product.images.find(i => i.color === c);
                   return (
                     <button key={c} type="button" className={`option-chip ${photo ? "color-chip" : ""} ${c === color ? "active" : ""}`} onClick={() => setColor(c)}>
-                      {photo && <img src={photo.src} alt="" />}
+                      {photo && <img {...optimized(photo.src, "32px")} alt="" />}
                       {c}
                     </button>
                   );
@@ -142,9 +145,15 @@ export default function ProductDetail({ product, reviewSummary, children }: {
           <button className="btn btn-light share-btn" type="button" onClick={share}>
             {shared ? "Link copiado!" : "Compartilhar produto"}
           </button>
-          {store.commerce.shippingNote && <p className="shipping-note">{store.commerce.shippingNote}</p>}
+          <ul className="trust-list">
+            {onlinePayments && <li><Icon name="lock" /> Pagamento seguro pelo Mercado Pago: Pix ou cartão{installments > 1 ? ` em até ${installments}x` : ""}</li>}
+            {promotions.freeShippingMin !== null && <li><Icon name="truck" /> Frete grátis nas compras a partir de {money(promotions.freeShippingMin)}</li>}
+            {store.commerce.shippingNote && <li><Icon name="bag" /> {store.commerce.shippingNote}</li>}
+            {chart && <li><Icon name="ruler" /> Tabela de medidas em cada peça</li>}
+          </ul>
         </div>
       </div>
+      <RelatedProducts product={product} />
       {children}
     </main>
   );
