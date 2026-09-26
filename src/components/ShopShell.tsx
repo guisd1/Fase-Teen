@@ -87,6 +87,7 @@ export default function ShopShell({ store, products, onlinePayments, children }:
             <Link href="/#novidades" onClick={closeMenu}>{t.nav.news}</Link>
             <Link href="/#colecao" onClick={closeMenu}>{t.nav.collection}</Link>
             <Link href="/#sobre" onClick={closeMenu}>{t.nav.about}</Link>
+            <Link href="/acompanhar" onClick={closeMenu}>Meu pedido</Link>
           </nav>
           <div className="header-actions">
             <button className="icon-btn" type="button" aria-label="Pesquisar" onClick={() => setSearchOpen(o => !o)}><Icon name="search" /></button>

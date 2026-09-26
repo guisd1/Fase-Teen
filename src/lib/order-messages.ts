@@ -12,7 +12,7 @@ export function customerWhatsapp(phone: string) {
 }
 
 /** Mensagem para avisar o cliente sobre o status atual do pedido. */
-export function statusMessage(store: StoreConfig, order: Pick<OrderRow, "code" | "customerName" | "status" | "trackingCode" | "deliveryMode">) {
+export function statusMessage(store: StoreConfig, order: Pick<OrderRow, "code" | "customerName" | "status" | "trackingCode" | "deliveryMode" | "publicToken">) {
   const name = order.customerName.split(" ")[0];
   const n = `seu pedido nº ${order.code} na *${store.name}*`;
   const texts: Record<OrderStatus, string> = {
@@ -25,7 +25,11 @@ export function statusMessage(store: StoreConfig, order: Pick<OrderRow, "code" |
     entregue: `Olá, ${name}! ${capitalize(n)} foi entregue. Esperamos que você ame! Se puder, conta pra gente o que achou avaliando o produto no site.`,
     cancelado: `Olá, ${name}. ${capitalize(n)} foi cancelado. Se tiver qualquer dúvida, é só chamar por aqui.`
   };
-  return texts[order.status];
+  // Link da página do pedido (status, pagamento e rastreio), menos em pedido cancelado.
+  const link = order.status === "cancelado" ? "" : `
+
+Acompanhe seu pedido: ${store.siteUrl}/pedido/${order.publicToken}`;
+  return texts[order.status] + link;
 }
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

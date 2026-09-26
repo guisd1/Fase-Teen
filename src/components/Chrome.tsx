@@ -22,6 +22,7 @@ export function Footer({ store }: { store: StoreConfig }) {
         </div>
         <div>
           <h4>Atendimento</h4>
+          <p><a href="/acompanhar">Acompanhar meu pedido</a></p>
           <p>WhatsApp: <a href={whatsappUrl(store)} target="_blank" rel="noopener">fale com a gente</a></p>
           {contact.instagramUrl && (
             <p>Instagram: <a href={contact.instagramUrl} target="_blank" rel="noopener">{contact.instagramHandle}</a></p>

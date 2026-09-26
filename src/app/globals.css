@@ -634,3 +634,12 @@ img { max-width: 100%; display: block; }
 @media (max-width: 760px) {
   .banner-photo { width: 100%; aspect-ratio: 4 / 3; }
 }
+
+/* Acompanhar pedido */
+.order-lookup { display: grid; gap: 14px; margin: 26px 0 18px; padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: white; }
+.order-lookup label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; }
+.order-lookup input { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-weight: 400; outline: 0; }
+.order-lookup input:focus { border-color: var(--primary); }
+.order-lookup-error { color: #b42318 !important; font-size: 13px; margin: 0 !important; }
+.order-lookup-help { font-size: 13px; }
+.order-lookup-help a { color: var(--primary-dark); font-weight: 700; text-decoration: underline; }
