@@ -9,7 +9,8 @@ import { money } from "@/lib/format";
 import ProductGallery from "./ProductGallery";
 import { PixPrice, PriceRow, soldOut } from "./ProductCard";
 import { useShop } from "./ShopShell";
-import { track } from "@/lib/track";
+import { landedFromOutside, track } from "@/lib/track";
+import { detectSource } from "@/lib/traffic-source";
 
 export default function ProductDetail({ product, reviewSummary, children }: {
   product: Product;
@@ -25,7 +26,13 @@ export default function ProductDetail({ product, reviewSummary, children }: {
   const [chartOpen, setChartOpen] = useState(false);
   const chart = product.sizeChart;
 
-  useEffect(() => { track("view", product.id); }, [product.id]);
+  useEffect(() => {
+    track("view", product.id);
+    if (landedFromOutside()) {
+      track("link", product.id);
+      if (detectSource().source === "anuncio") track("ad", product.id);
+    }
+  }, [product.id]);
   const outOfStock = soldOut(product);
   const installments = store.commerce.installments;
 
@@ -34,6 +41,8 @@ export default function ProductDetail({ product, reviewSummary, children }: {
     try {
       if (navigator.share) await navigator.share({ title: product.name, url });
       else { await navigator.clipboard.writeText(url); setShared(true); }
+      // Só conta quando o compartilhamento foi até o fim (cancelar cai no catch).
+      track("share", product.id);
     } catch { /* compartilhamento cancelado */ }
   };
 

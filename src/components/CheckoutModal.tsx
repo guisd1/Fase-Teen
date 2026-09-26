@@ -6,6 +6,7 @@ import { cleanCep, formatCep, money } from "@/lib/format";
 import { hasWhatsapp, whatsappUrl } from "@/lib/whatsapp";
 import type { Address, Cart } from "./useCart";
 import PixPayment, { useOrderStatus, type PixData } from "./PixPayment";
+import { orderSource } from "@/lib/traffic-source";
 
 interface FormData {
   name: string;
@@ -49,7 +50,9 @@ const orderBody = (cart: Cart, data: FormData, paymentMethod: PaymentChoice) => 
   address: { ...data, cep: cleanCep(data.cep) },
   shipping: cart.selectedShipping,
   couponCode: cart.discount > 0 ? cart.coupon?.code : undefined,
-  notes: data.notes
+  notes: data.notes,
+  // De onde a cliente veio (anúncio, Instagram...), para o relatório do painel.
+  origin: orderSource()
 });
 
 type PaymentChoice = "pix" | "card" | "whatsapp";

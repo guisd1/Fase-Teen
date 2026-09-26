@@ -9,6 +9,7 @@ import { couponDiscount } from "@/lib/coupon";
 import { QuoteError, quoteShipping } from "@/lib/shipping-quote";
 import { createCardCheckout, createPixPayment, mercadoPagoConfigured, saveLastError } from "@/lib/mercado-pago";
 import { getStore } from "@/stores";
+import { cleanSource } from "@/lib/traffic-source";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +130,8 @@ export async function POST(request: Request) {
 
   const total = round(productsTotal - discount + freight);
 
+  const origin = cleanSource(body?.origin?.source, body?.origin?.campaign);
+
   let order;
   try {
     order = await createOrder({
@@ -136,7 +139,9 @@ export async function POST(request: Request) {
       deliveryMode: pickup ? "pickup" : "delivery",
       address, shipping, items,
       subtotal, freight, discount, couponCode, paymentMethod, paymentDiscount, total,
-      notes: str(body?.notes, 1000) || null
+      notes: str(body?.notes, 1000) || null,
+      source: origin?.source ?? null,
+      campaign: origin?.campaign || null
     });
   } catch (error) {
     console.error("Falha ao gravar pedido:", error);

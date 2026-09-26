@@ -11,6 +11,8 @@ import CartDrawer from "./CartDrawer";
 import CheckoutModal from "./CheckoutModal";
 import { useCart, type Cart } from "./useCart";
 import { Icon, WhatsappIcon } from "./Icons";
+import { startVisit } from "@/lib/traffic-source";
+import { trackVisit } from "@/lib/track";
 
 interface Shop {
   store: StoreConfig;
@@ -48,6 +50,12 @@ export default function ShopShell({ store, products, onlinePayments, children }:
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const cepInputRef = useRef<HTMLInputElement>(null);
+
+  // Uma vez por visita: registra de onde a pessoa veio (anúncio, Instagram, Google...).
+  useEffect(() => {
+    const visit = startVisit();
+    if (visit) trackVisit(visit.source, visit.campaign);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = checkoutOpen ? "hidden" : "";

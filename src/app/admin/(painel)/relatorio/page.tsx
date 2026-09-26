@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { adminProductReport, todayBR, type ProductReportRow } from "@/db/stats";
+import { adminProductReport, adminTrafficReport, todayBR, type ProductReportRow } from "@/db/stats";
+import { SOURCE_LABELS } from "@/lib/traffic-source";
 import { productSlug } from "@/db/products";
 import { money } from "@/lib/format";
+import InfoTip from "@/components/admin/InfoTip";
 
 const PERIODS = [
   { key: "hoje", label: "Hoje", days: 1 },
@@ -12,12 +14,19 @@ const PERIODS = [
 ] as const;
 
 const COLUMNS = [
-  { key: "views", label: "Visualizações", hint: "Vezes que a página do produto foi aberta (uma por visita)" },
-  { key: "clicks", label: "Cliques na vitrine", hint: "Cliques no produto na página inicial" },
-  { key: "carts", label: "No carrinho", hint: "Cliques em Adicionar ao carrinho" },
-  { key: "sold", label: "Vendidos", hint: "Peças em pedidos confirmados (em preparação, enviados ou entregues)" },
-  { key: "revenue", label: "Faturado", hint: "Valor das peças vendidas, sem frete" }
+  { key: "views", label: "Visualizações", hint: "Quantas vezes a página do produto foi aberta. Cada pessoa conta uma vez por visita: recarregar a página ou voltar nela no mesmo acesso não soma de novo. Robôs, como o do Google, não entram." },
+  { key: "clicks", label: "Cliques na vitrine", hint: "Quantas vezes clicaram no produto na página inicial (na foto, no nome ou em Ver produto). Mostra quais peças chamam atenção de quem está olhando a loja." },
+  { key: "carts", label: "No carrinho", hint: "Quantas vezes clicaram em Adicionar ao carrinho na página do produto. Conta mesmo que a pessoa não finalize a compra, então mostra interesse real na peça." },
+  { key: "shares", label: "Compartilhado", hint: "Quantas vezes alguém usou o botão Compartilhar produto e enviou ou copiou o link. Se a pessoa cancelar antes de enviar, não conta." },
+  { key: "linkOpens", label: "Aberto por link", hint: "Visitas que começaram direto na página do produto, vindas de fora do site: um link recebido no WhatsApp, no Instagram, num post ou achado no Google. Quem entrou pela página inicial e navegou até o produto não conta aqui." },
+  { key: "adOpens", label: "Por anúncio", hint: "Das visitas que chegaram direto no produto, quantas vieram de um anúncio (tráfego pago). Só funciona se o anúncio tiver os parâmetros de URL configurados (utm_medium=paid) ou for do Google Ads." },
+  { key: "sold", label: "Vendidos", hint: "Quantidade de peças em pedidos confirmados: em preparação, enviados ou entregues. Pedidos aguardando confirmação ou cancelados não entram. Vale também para pedidos antigos." },
+  { key: "revenue", label: "Faturado", hint: "Soma do valor das peças vendidas nos pedidos confirmados, pelo preço cobrado na compra. Não inclui o frete." }
 ] as const;
+
+const TRAFFIC_HINT = "Mostra de onde veio cada visita: anúncio pago (com o nome da campanha), Instagram, Facebook, Google, WhatsApp, TikTok, outros sites ou direto. Direto é quem digitou o endereço ou abriu um link sem origem, como muitos links abertos pelo app do WhatsApp.";
+
+const CONVERSION_HINT = "De cada 100 visualizações do produto, quantas viraram Adicionar ao carrinho. Ajuda a ver se a página convence: muita visita e pouco carrinho pode indicar preço, fotos ou descrição a melhorar.";
 type SortKey = (typeof COLUMNS)[number]["key"];
 
 /** Primeiro dia do período (AAAA-MM-DD, horário de Brasília). */
@@ -34,7 +43,9 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
   const query = await searchParams;
   const period = PERIODS.find(p => p.key === query.periodo) ?? PERIODS[2];
   const sort: SortKey = COLUMNS.some(c => c.key === query.ordem) ? (query.ordem as SortKey) : "views";
-  const rows = (await adminProductReport(fromDay(period.days))).sort((a, b) => b[sort] - a[sort] || b.views - a.views);
+  const [report, traffic] = await Promise.all([adminProductReport(fromDay(period.days)), adminTrafficReport(fromDay(period.days))]);
+  traffic.sort((a, b) => b.visits - a.visits || b.orders - a.orders);
+  const rows = report.sort((a, b) => b[sort] - a[sort] || b.views - a.views);
   const total = (k: keyof ProductReportRow) => rows.reduce((sum, r) => sum + (r[k] as number), 0);
   const link = (p: string, o: string) => `/admin/relatorio?periodo=${p}&ordem=${o}`;
   const fmt = (k: SortKey, v: number) => (k === "revenue" ? money(v) : v.toLocaleString("pt-BR"));
@@ -54,9 +65,9 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
 
       <div className="admin-report-totals">
         {COLUMNS.map(c => (
-          <div key={c.key}><small>{c.label}</small><strong>{fmt(c.key, total(c.key))}</strong></div>
+          <div key={c.key}><small>{c.label} <InfoTip label={c.label} text={c.hint} /></small><strong>{fmt(c.key, total(c.key))}</strong></div>
         ))}
-        <div><small>Visualização → carrinho</small><strong>{pct(total("carts"), total("views"))}</strong></div>
+        <div><small>Visualização → carrinho <InfoTip label="Visualização → carrinho" text={CONVERSION_HINT} /></small><strong>{pct(total("carts"), total("views"))}</strong></div>
       </div>
 
       <div className="admin-table-wrap">
@@ -65,11 +76,12 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
             <tr>
               <th>Produto</th>
               {COLUMNS.map(c => (
-                <th key={c.key} title={c.hint}>
+                <th key={c.key}>
                   <Link className={sort === c.key ? "active" : ""} href={link(period.key, c.key)}>{c.label}{sort === c.key ? " ↓" : ""}</Link>
+                  <InfoTip label={c.label} text={c.hint} />
                 </th>
               ))}
-              <th title="Quantos dos que viram o produto colocaram no carrinho">Viu → carrinho</th>
+              <th>Viu → carrinho <InfoTip label="Viu → carrinho" text={CONVERSION_HINT} /></th>
             </tr>
           </thead>
           <tbody>
@@ -91,8 +103,48 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
           </tbody>
         </table>
       </div>
+      <h2 className="admin-report-title">
+        De onde vêm as visitas
+        <InfoTip label="De onde vêm as visitas" text={TRAFFIC_HINT} />
+      </h2>
+      <div className="admin-table-wrap">
+        <table className="admin-table admin-report admin-traffic">
+          <thead>
+            <tr>
+              <th>Origem</th>
+              <th>Campanha</th>
+              <th>Visitas <InfoTip label="Visitas" text="Quantas visitas começaram por esta origem. Cada visita conta uma vez, não importa quantas páginas a pessoa abriu." /></th>
+              <th>Pedidos <InfoTip label="Pedidos" text="Pedidos confirmados (em preparação, enviados ou entregues) de quem chegou por esta origem. Vale a última origem da cliente nos 30 dias antes da compra: se ela viu o anúncio e voltou depois digitando o site, o pedido conta para o anúncio." /></th>
+              <th>Valor <InfoTip label="Valor" text="Soma do total desses pedidos, com frete." /></th>
+              <th>Visita → pedido <InfoTip label="Visita → pedido" text="De cada 100 visitas desta origem, quantas viraram pedido confirmado. Compare anúncios entre si: o que traz mais pedidos por visita é o que vale mais o investimento." /></th>
+            </tr>
+          </thead>
+          <tbody>
+            {traffic.length === 0 && <tr><td colSpan={6} className="admin-muted">Nenhuma visita registrada neste período.</td></tr>}
+            {traffic.map(t => (
+              <tr key={`${t.source}|${t.campaign}`}>
+                <td><strong>{SOURCE_LABELS[t.source] ?? (t.source === "sem-registro" ? "Sem registro (pedidos antigos)" : t.source)}</strong></td>
+                <td>{t.campaign || "–"}</td>
+                <td>{t.visits.toLocaleString("pt-BR")}</td>
+                <td>{t.orders.toLocaleString("pt-BR")}</td>
+                <td>{money(t.revenue)}</td>
+                <td>{pct(t.orders, t.visits)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <p className="admin-hint">
-        Os números começam a contar a partir de hoje. Visitas de robôs (Google etc.) não entram, e recarregar a mesma página
+        <strong>Anúncios:</strong> para o site reconhecer o tráfego pago e o nome da campanha, no Meta Ads (Instagram e
+        Facebook) abra o anúncio e, em <em>Rastreamento → Parâmetros de URL</em>, cole:{" "}
+        <code>utm_source=meta&amp;utm_medium=paid&amp;utm_campaign={"{{campaign.name}}"}</code>. No Google Ads, com a
+        marcação automática ligada (padrão), já funciona sozinho.
+      </p>
+      <p className="admin-hint">
+        <strong>Aberto por link</strong> conta quem chegou direto na página do produto vindo de fora do site: um link
+        recebido no WhatsApp, no Instagram, achado no Google etc. Quem navegou pela loja até o produto não entra aí.
+        {" "}Os números começam a contar a partir de hoje. Visitas de robôs (Google etc.) não entram, e recarregar a mesma página
         não conta duas vezes. Nada de quem visitou é guardado, só os totais.
       </p>
     </>

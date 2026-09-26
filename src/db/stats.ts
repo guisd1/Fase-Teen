@@ -1,10 +1,10 @@
 import { and, gte, inArray, sql } from "drizzle-orm";
 import { getDb, hasDatabase } from "./client";
-import { orders, productStats, products } from "./schema";
+import { orders, productStats, products, trafficStats } from "./schema";
 
-export type StatEvent = "view" | "click" | "cart";
+export type StatEvent = "view" | "click" | "cart" | "share" | "link" | "ad";
 
-const COLUMN = { view: "views", click: "clicks", cart: "carts" } as const;
+const COLUMN = { view: "views", click: "clicks", cart: "carts", share: "shares", link: "linkOpens", ad: "adOpens" } as const;
 
 /** Dia de hoje no horário de Brasília (AAAA-MM-DD). */
 export const todayBR = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
@@ -13,7 +13,7 @@ export const todayBR = () => new Date().toLocaleDateString("en-CA", { timeZone: 
 export async function recordEvent(productId: number, event: StatEvent) {
   if (!hasDatabase()) return;
   const column = COLUMN[event];
-  const one = { views: 0, clicks: 0, carts: 0, [column]: 1 };
+  const one = { views: 0, clicks: 0, carts: 0, shares: 0, linkOpens: 0, adOpens: 0, [column]: 1 };
   await getDb().insert(productStats)
     .values({ productId, day: todayBR(), ...one })
     .onConflictDoUpdate({
@@ -31,6 +31,9 @@ export interface ProductReportRow {
   views: number;
   clicks: number;
   carts: number;
+  shares: number;
+  linkOpens: number;
+  adOpens: number;
   /** Peças vendidas em pedidos confirmados (em preparação, enviados ou entregues). */
   sold: number;
   revenue: number;
@@ -46,7 +49,10 @@ export async function adminProductReport(fromDay: string | null): Promise<Produc
       productId: productStats.productId,
       views: sql<number>`sum(${productStats.views})::int`,
       clicks: sql<number>`sum(${productStats.clicks})::int`,
-      carts: sql<number>`sum(${productStats.carts})::int`
+      carts: sql<number>`sum(${productStats.carts})::int`,
+      shares: sql<number>`sum(${productStats.shares})::int`,
+      linkOpens: sql<number>`sum(${productStats.linkOpens})::int`,
+      adOpens: sql<number>`sum(${productStats.adOpens})::int`
     }).from(productStats)
       .where(fromDay ? gte(productStats.day, fromDay) : undefined)
       .groupBy(productStats.productId),
@@ -75,7 +81,70 @@ export async function adminProductReport(fromDay: string | null): Promise<Produc
     views: byId.get(p.id)?.views ?? 0,
     clicks: byId.get(p.id)?.clicks ?? 0,
     carts: byId.get(p.id)?.carts ?? 0,
+    shares: byId.get(p.id)?.shares ?? 0,
+    linkOpens: byId.get(p.id)?.linkOpens ?? 0,
+    adOpens: byId.get(p.id)?.adOpens ?? 0,
     sold: sales.get(p.id)?.sold ?? 0,
     revenue: Math.round((sales.get(p.id)?.revenue ?? 0) * 100) / 100
   }));
+}
+
+// ---- Origem das visitas (tráfego pago, Instagram, Google...) ----
+
+/** Soma 1 visita para a origem/campanha no dia de hoje. */
+export async function recordVisit(source: string, campaign: string) {
+  if (!hasDatabase()) return;
+  await getDb().insert(trafficStats)
+    .values({ day: todayBR(), source, campaign, visits: 1 })
+    .onConflictDoUpdate({
+      target: [trafficStats.day, trafficStats.source, trafficStats.campaign],
+      set: { visits: sql`${trafficStats.visits} + 1` }
+    });
+}
+
+export interface TrafficReportRow {
+  source: string;
+  campaign: string;
+  visits: number;
+  /** Pedidos confirmados (em preparação, enviados ou entregues) vindos desta origem. */
+  orders: number;
+  /** Valor desses pedidos (com frete). */
+  revenue: number;
+}
+
+export async function adminTrafficReport(fromDay: string | null): Promise<TrafficReportRow[]> {
+  if (!hasDatabase()) return [];
+  const db = getDb();
+  const [visits, sales] = await Promise.all([
+    db.select({
+      source: trafficStats.source,
+      campaign: trafficStats.campaign,
+      visits: sql<number>`sum(${trafficStats.visits})::int`
+    }).from(trafficStats)
+      .where(fromDay ? gte(trafficStats.day, fromDay) : undefined)
+      .groupBy(trafficStats.source, trafficStats.campaign),
+    db.select({
+      source: orders.source,
+      campaign: orders.campaign,
+      orders: sql<number>`count(*)::int`,
+      revenue: sql<number>`coalesce(sum(${orders.total}), 0)::float`
+    }).from(orders).where(and(
+      inArray(orders.status, ["preparacao", "enviado", "entregue"]),
+      fromDay ? gte(orders.createdAt, new Date(`${fromDay}T00:00:00-03:00`)) : undefined
+    )).groupBy(orders.source, orders.campaign)
+  ]);
+  const rows = new Map<string, TrafficReportRow>();
+  const row = (source: string, campaign: string) => {
+    const key = `${source}|${campaign}`;
+    if (!rows.has(key)) rows.set(key, { source, campaign, visits: 0, orders: 0, revenue: 0 });
+    return rows.get(key)!;
+  };
+  for (const v of visits) row(v.source, v.campaign).visits += v.visits;
+  // Pedidos de antes deste relatório não têm origem: entram como "sem registro".
+  for (const s of sales) {
+    const r = row(s.source ?? "sem-registro", s.campaign ?? "");
+    r.orders += s.orders;
+    r.revenue = Math.round((r.revenue + s.revenue) * 100) / 100;
+  }
+  return [...rows.values()];
 }

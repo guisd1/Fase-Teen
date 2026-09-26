@@ -64,6 +64,20 @@
       "when": 1790435766187,
       "tag": "0008_estatisticas-produtos",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790436156660,
+      "tag": "0009_compartilhamentos",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790436356217,
+      "tag": "0010_origem-visitas",
+      "breakpoints": true
     }
   ]
 }

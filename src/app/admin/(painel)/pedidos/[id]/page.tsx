@@ -6,6 +6,7 @@ import { formatCep, money } from "@/lib/format";
 import { STATUS_LABELS } from "@/lib/order-status";
 import { customerWhatsapp, statusMessage, trackingUrl } from "@/lib/order-messages";
 import { METHOD_LABELS, paymentSummary } from "@/lib/payment-labels";
+import { SOURCE_LABELS } from "@/lib/traffic-source";
 import OrderStatusPanel from "@/components/admin/OrderStatusPanel";
 import DeleteButton from "@/components/admin/DeleteButton";
 import { deleteOrder, saveOrderNotes } from "../../../actions";
@@ -90,6 +91,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <p><strong>{order.customerName}</strong></p>
           <p>WhatsApp: {phone ? <a href={`https://wa.me/${phone}`} target="_blank" rel="noopener">{order.customerPhone}</a> : order.customerPhone}</p>
           {order.customerEmail && <p>E-mail: <a href={`mailto:${order.customerEmail}`}>{order.customerEmail}</a></p>}
+          {order.source && <p>Veio de: <strong>{SOURCE_LABELS[order.source] ?? order.source}</strong>{order.campaign ? ` — campanha ${order.campaign}` : ""}</p>}
           {order.notes && <p className="admin-alert">Observações: {order.notes}</p>}
         </section>
         <section className="admin-card">

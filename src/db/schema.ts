@@ -141,6 +141,9 @@ export const orders = pgTable("orders", {
   notes: text("notes"),
   /** Anotações internas do administrador (não aparecem para o cliente). */
   adminNotes: text("admin_notes"),
+  /** De onde veio a cliente (anuncio, instagram, google, whatsapp, direto...) e a campanha do anúncio. */
+  source: text("source"),
+  campaign: text("campaign"),
   trackingCode: text("tracking_code"),
   /** Como o cliente escolheu pagar. */
   paymentMethod: text("payment_method").$type<PaymentMethod>().notNull().default("whatsapp"),
@@ -232,5 +235,23 @@ export const productStats = pgTable("product_stats", {
   /** Cliques no produto na vitrine (página inicial). */
   clicks: integer("clicks").notNull().default(0),
   /** Cliques em "Adicionar ao carrinho". */
-  carts: integer("carts").notNull().default(0)
+  carts: integer("carts").notNull().default(0),
+  /** Cliques em "Compartilhar produto". */
+  shares: integer("shares").notNull().default(0),
+  /** Visitas que chegaram direto na página do produto vindas de fora do site (link no WhatsApp, Instagram, Google...). */
+  linkOpens: integer("link_opens").notNull().default(0),
+  /** Das visitas acima, as que vieram de anúncio (tráfego pago). */
+  adOpens: integer("ad_opens").notNull().default(0)
 }, t => [primaryKey({ columns: [t.productId, t.day] })]);
+
+/*
+  Visitas por origem e por dia: anúncio (com o nome da campanha), Instagram,
+  Google, WhatsApp, direto... Conta uma vez por visita, sem dado de quem visitou.
+*/
+export const trafficStats = pgTable("traffic_stats", {
+  day: date("day", { mode: "string" }).notNull(),
+  source: text("source").notNull(),
+  /** Campanha (utm_campaign) quando existir; vazio nas outras origens. */
+  campaign: text("campaign").notNull().default(""),
+  visits: integer("visits").notNull().default(0)
+}, t => [primaryKey({ columns: [t.day, t.source, t.campaign] })]);
