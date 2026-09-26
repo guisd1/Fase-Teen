@@ -91,6 +91,8 @@ export interface StoreConfig {
     installments: number;
     /** Prazo de postagem mostrado na página do produto. */
     shippingNote?: string;
+    /** Aviso embaixo da tabela de medidas (ex.: regra de troca por tamanho). */
+    sizeChartNote?: string;
     /** Dias para desistir da compra (art. 49 do CDC: mínimo 7). Vai para o Google. */
     returnDays?: number;
   };

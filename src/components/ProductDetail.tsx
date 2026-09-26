@@ -110,7 +110,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
                     </table>
                   </div>
                   {chart.note && <p>{chart.note}</p>}
-                  <p><strong>Não fazemos troca por tamanho.</strong> Confira as medidas antes de comprar.</p>
+                  <p>{store.commerce.sizeChartNote ?? "Confira as medidas antes de comprar."}</p>
                 </div>
               )}
             </div>

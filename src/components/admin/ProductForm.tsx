@@ -269,7 +269,7 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
         <h2>Tabela de medidas <small>aparece na página do produto</small></h2>
         {!chart ? (
           <>
-            <p className="admin-hint">Como a loja não faz troca por tamanho, a tabela ajuda a cliente a escolher certo.</p>
+            <p className="admin-hint">A tabela ajuda a cliente a acertar o tamanho de primeira e evita trocas.</p>
             <button type="button" className="btn btn-light" onClick={startChart}>+ Criar tabela de medidas</button>
           </>
         ) : (
