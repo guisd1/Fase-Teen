@@ -4,6 +4,9 @@ import { getDb, hasDatabase } from "./client";
 import { settings } from "./schema";
 import { DEFAULT_FEES, NO_FEES, type PaymentFees } from "@/lib/pricing";
 import { mercadoPagoConfigured } from "@/lib/mercado-pago";
+import { EMPTY_HOME_IMAGES, type HomeImages } from "@/lib/home-images";
+
+export type { HomeImages };
 
 const FEES_KEY = "payment-fees";
 
@@ -26,4 +29,26 @@ export async function getPaymentFees(): Promise<PaymentFees> {
 export async function savePaymentFees(fees: PaymentFees) {
   await getDb().insert(settings).values({ key: FEES_KEY, value: fees })
     .onConflictDoUpdate({ target: settings.key, set: { value: fees } });
+}
+
+// ---- Imagens da página inicial (trocadas no painel, em Página inicial) ----
+
+const HOME_KEY = "home-images";
+
+
+export const getHomeImages = cache(async (): Promise<HomeImages> => {
+  if (!hasDatabase()) return EMPTY_HOME_IMAGES;
+  const [row] = await getDb().select().from(settings).where(eq(settings.key, HOME_KEY));
+  const v = (row?.value ?? {}) as Partial<HomeImages>;
+  const url = (u: unknown) => (typeof u === "string" && u.startsWith("https://") ? u : null);
+  return {
+    hero: Array.isArray(v.hero) ? v.hero.map(url).filter((u): u is string => !!u) : [],
+    banner: url(v.banner),
+    about: url(v.about)
+  };
+});
+
+export async function saveHomeImages(images: HomeImages) {
+  await getDb().insert(settings).values({ key: HOME_KEY, value: images })
+    .onConflictDoUpdate({ target: settings.key, set: { value: images } });
 }

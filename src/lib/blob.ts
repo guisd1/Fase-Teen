@@ -19,10 +19,10 @@ export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif
 
 /**
  * Autoriza o navegador a enviar um arquivo direto para o Vercel Blob,
- * nos dois modos de conexão. Só aceita caminhos que começam com `prefix`.
+ * nos dois modos de conexão. Só aceita caminhos que começam com um dos `prefix`.
  */
 export async function authorizeBlobUpload(request: Request, body: unknown, rules: {
-  prefix: string;
+  prefix: string | string[];
   maxBytes: number;
   allowedContentTypes?: string[];
 }) {
@@ -30,7 +30,8 @@ export async function authorizeBlobUpload(request: Request, body: unknown, rules
   if (!mode) throw new Error("Vercel Blob não conectado ao projeto.");
   const allowedContentTypes = rules.allowedContentTypes ?? IMAGE_TYPES;
   const checkPath = (pathname: string) => {
-    if (!pathname.startsWith(rules.prefix) || pathname.includes("..")) throw new Error("Caminho de envio inválido.");
+    const prefixes = Array.isArray(rules.prefix) ? rules.prefix : [rules.prefix];
+    if (!prefixes.some(p => pathname.startsWith(p)) || pathname.includes("..")) throw new Error("Caminho de envio inválido.");
   };
 
   if (mode === "presigned") {

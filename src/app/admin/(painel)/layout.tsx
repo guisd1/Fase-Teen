@@ -24,6 +24,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
         </div>
         <nav>
           <Link href="/admin/produtos">Produtos</Link>
+          <Link href="/admin/inicio">Página inicial</Link>
           <Link href="/admin/integracoes">Integrações</Link>
           <Link href="/admin/pedidos">Pedidos {pending > 0 && <em className="admin-badge">{pending}</em>}</Link>
           <Link href="/admin/cupons">Cupons</Link>

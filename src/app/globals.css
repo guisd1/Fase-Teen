@@ -618,3 +618,19 @@ img { max-width: 100%; display: block; }
 .size-chart-box p { margin: 10px 0 0; color: var(--muted); line-height: 1.5; }
 .shipping-note { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
+
+/* Fotos da página inicial trocadas pelo painel */
+.hero-slides { overflow: hidden; background: white; }
+.hero-slides img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity .8s ease; border-radius: 18px;
+}
+.hero-slides img.active { opacity: 1; }
+.hero-slides-dots { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 6px; z-index: 2; }
+.hero-slides-dots button { width: 8px; height: 8px; border-radius: 99px; border: 0; padding: 0; background: rgba(255,255,255,.6); }
+.hero-slides-dots button.active { width: 20px; background: white; }
+.banner-photo { width: min(38%, 380px); aspect-ratio: 4 / 5; object-fit: cover; border-radius: 20px; flex-shrink: 0; }
+.about-photo { width: 100%; max-width: 340px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 22px; margin: auto; box-shadow: var(--shadow); }
+@media (max-width: 760px) {
+  .banner-photo { width: 100%; aspect-ratio: 4 / 3; }
+}

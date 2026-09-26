@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { upload, uploadPresigned } from "@vercel/blob/client";
 import type { BlobMode } from "@/lib/blob";
 import type { ProductImage, ProductRow, ProductSize, SizeChart } from "@/db/schema";
 import { saveProduct, type ProductInput } from "@/app/admin/actions";
 import { youtubeId } from "@/lib/youtube-id";
 import YoutubeUploader from "./YoutubeUploader";
+import { uploadImage } from "./upload-image";
 import { cardPrice, pixPrice, priceFromMarkup, type MarkupType, type PaymentFees } from "@/lib/pricing";
 import { money } from "@/lib/format";
 
@@ -110,15 +110,9 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
     const uploaded: ProductImage[] = [];
     for (const file of list) {
       try {
-        const send = blobMode === "presigned" ? uploadPresigned : upload;
-        const blob = await send(`produtos/${file.name}`, file, { access: "public", handleUploadUrl: "/api/admin/upload" });
-        uploaded.push({ src: blob.url, color: uploadColor || null });
+        uploaded.push({ src: await uploadImage(file, "produtos", blobMode), color: uploadColor || null });
       } catch (error) {
-        const raw = error instanceof Error ? error.message : "erro";
-        const text = /client token|presigned/i.test(raw)
-          ? "o envio não foi autorizado. Confira se o Blob está conectado ao projeto na Vercel e faça o Redeploy."
-          : raw;
-        setMessage({ type: "error", text: `Falha ao enviar ${file.name}: ${text}` });
+        setMessage({ type: "error", text: `Falha ao enviar ${file.name}: ${(error as Error).message}` });
       } finally {
         setUploading(n => n - 1);
       }

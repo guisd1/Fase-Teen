@@ -65,7 +65,7 @@
 .admin-photo > div { position: absolute; left: 6px; right: 6px; bottom: 6px; display: flex; justify-content: space-between; }
 .admin-photo > div button { width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); font-weight: 800; }
 .admin-photo > div button:disabled { opacity: .3; }
-.admin-photo:not(.admin-photo-add):first-child::before { content: "CAPA"; position: absolute; top: 6px; left: 6px; background: var(--ink); color: white; font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 99px; letter-spacing: .08em; }
+.product-form .admin-photo:not(.admin-photo-add):first-child::before { content: "CAPA"; position: absolute; top: 6px; left: 6px; background: var(--ink); color: white; font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 99px; letter-spacing: .08em; }
 .admin-photo-add { display: grid !important; place-items: center; border-style: dashed; cursor: pointer; color: var(--muted); font-weight: 700 !important; text-align: center; }
 .admin-photo-add:hover { border-color: var(--primary); color: var(--primary-dark); }
 

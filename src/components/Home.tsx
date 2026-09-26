@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/db/products";
+import { EMPTY_HOME_IMAGES, type HomeImages } from "@/lib/home-images";
 import NewsletterForm from "./NewsletterForm";
 import ProductCard from "./ProductCard";
 import { useShop } from "./ShopShell";
@@ -9,7 +10,27 @@ import { Icon } from "./Icons";
 
 type Sort = "featured" | "price-low" | "price-high" | "name";
 
-export default function Home() {
+/** Fotos do destaque do topo: com mais de uma, troca a cada 5 segundos. */
+function HeroSlides({ images, alt }: { images: string[]; alt: string }) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (images.length < 2) return;
+    const timer = setInterval(() => setIndex(i => (i + 1) % images.length), 5000);
+    return () => clearInterval(timer);
+  }, [images.length]);
+  return (
+    <div className="hero-card hero-slides">
+      {images.map((src, i) => <img key={src} src={src} alt={i === index ? alt : ""} className={i === index ? "active" : ""} />)}
+      {images.length > 1 && (
+        <div className="hero-slides-dots">
+          {images.map((_, i) => <button key={i} type="button" className={i === index ? "active" : ""} onClick={() => setIndex(i)} aria-label={`Foto ${i + 1}`} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Home({ images = EMPTY_HOME_IMAGES }: { images?: HomeImages }) {
   const { store, products, search } = useShop();
   const t = store.texts;
 
@@ -51,7 +72,9 @@ export default function Home() {
         <div className="hero-art">
           <div className="hero-pill">{t.hero.pill}</div>
           <div className="hero-card card-back" />
-          {t.hero.image ? (
+          {images.hero.length > 0 ? (
+            <HeroSlides images={images.hero} alt={store.name} />
+          ) : t.hero.image ? (
             <img className="hero-card hero-image" src={t.hero.image} alt={store.name} />
           ) : (
             <div className={`hero-card card-front ${store.logo.subAlign === "right" ? "logo-sub-right" : ""}`}>
@@ -89,9 +112,13 @@ export default function Home() {
           <p>{t.banner.text}</p>
           <a className="btn btn-dark" href="#colecao">{t.banner.cta}</a>
         </div>
-        <div className="banner-stickers">
-          {t.banner.stickers.map(s => <span key={s}>{s}</span>)}
-        </div>
+        {images.banner ? (
+          <img className="banner-photo" src={images.banner} alt="" />
+        ) : (
+          <div className="banner-stickers">
+            {t.banner.stickers.map(s => <span key={s}>{s}</span>)}
+          </div>
+        )}
       </section>
 
       <section className="section collection-section" id="colecao">
@@ -132,7 +159,9 @@ export default function Home() {
       </section>
 
       <section className="about" id="sobre">
-        <div className="about-mark">{store.logo.icon ? <img src={store.logo.icon} alt="" /> : store.logo.monogram}</div>
+        {images.about
+          ? <img className="about-photo" src={images.about} alt={store.name} />
+          : <div className="about-mark">{store.logo.icon ? <img src={store.logo.icon} alt="" /> : store.logo.monogram}</div>}
         <div>
           <p className="eyebrow">{t.about.eyebrow}</p>
           <h2>{t.about.title}</h2>

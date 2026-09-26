@@ -10,7 +10,7 @@ import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/or
 import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
 import { normalizeCode } from "@/lib/coupon";
-import { savePaymentFees } from "@/db/settings";
+import { getHomeImages, saveHomeImages, savePaymentFees, type HomeImages } from "@/db/settings";
 import { parseFee, priceFromMarkup, type MarkupType } from "@/lib/pricing";
 import type { NewProductRow, ProductImage, ProductSize, SizeChart } from "@/db/schema";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
@@ -322,4 +322,29 @@ export async function savePaymentFeesAction(form: FormData) {
   // Todos os preços do site mudam.
   refreshSite();
   redirect("/admin/integracoes?taxas=ok#mercado-pago");
+}
+
+// ---- Imagens da página inicial ----
+
+export async function saveHomeImagesAction(input: HomeImages): Promise<{ error?: string }> {
+  await requireAdmin();
+  const url = (u: unknown) => (typeof u === "string" && /^https:\/\/\S+$/.test(u) ? u : null);
+  const images: HomeImages = {
+    hero: (Array.isArray(input.hero) ? input.hero : []).map(url).filter((u): u is string => !!u).slice(0, 8),
+    banner: url(input.banner),
+    about: url(input.about)
+  };
+  try {
+    const before = await getHomeImages();
+    await saveHomeImages(images);
+    // Apaga do Blob só as fotos enviadas por esta tela que saíram da página.
+    const kept = new Set([...images.hero, images.banner, images.about]);
+    await deleteBlobs([...before.hero, before.banner, before.about]
+      .filter((u): u is string => !!u && u.includes("/inicio/") && !kept.has(u)));
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Não foi possível salvar." };
+  }
+  revalidatePath("/");
+  revalidatePath("/admin/inicio");
+  return {};
 }
