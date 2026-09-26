@@ -77,3 +77,18 @@ export async function reviewImagesOf(productId: number) {
   const rows = await getDb().select({ images: reviews.images }).from(reviews).where(eq(reviews.productId, productId));
   return rows.flatMap(r => r.images);
 }
+
+/** Fotos de clientes (avaliações aprovadas com foto) para a página inicial. */
+export async function getCustomerPhotos(limit = 8): Promise<{ src: string; name: string; rating: number; productId: number; productName: string }[]> {
+  if (!hasDatabase()) return [];
+  const rows = await getDb().select({
+    images: reviews.images, name: reviews.name, rating: reviews.rating, productId: products.id, productName: products.name
+  }).from(reviews)
+    .innerJoin(products, eq(products.id, reviews.productId))
+    .where(and(eq(reviews.approved, true), eq(products.active, true)))
+    .orderBy(desc(reviews.createdAt))
+    .limit(40);
+  return rows
+    .flatMap(r => r.images.map(src => ({ src, name: r.name.split(" ")[0], rating: r.rating, productId: r.productId, productName: r.productName })))
+    .slice(0, limit);
+}

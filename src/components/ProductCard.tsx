@@ -5,6 +5,7 @@ import type { Product } from "@/db/products";
 import { money } from "@/lib/format";
 import MediaCarousel from "./MediaCarousel";
 import { track } from "@/lib/track";
+import FavoriteButton from "./FavoriteButton";
 
 export const soldOut = (p: Product) => p.sizes.length > 0 && p.sizes.every(s => s.stock <= 0);
 
@@ -31,6 +32,7 @@ export default function ProductCard({ product, installments }: { product: Produc
     <article className="product-card">
       <MediaCarousel product={product}>
         {badge && <span className="badge">{badge}</span>}
+        <FavoriteButton productId={product.id} />
         <Link className="quick-view" href={href} onClick={clicked}>Ver produto</Link>
       </MediaCarousel>
       <div className="product-info">

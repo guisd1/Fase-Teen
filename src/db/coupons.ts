@@ -52,3 +52,13 @@ export async function releaseCoupon(code: string) {
     .set({ uses: sql`greatest(${coupons.uses} - 1, 0)` })
     .where(eq(coupons.code, code));
 }
+
+/** Cupom ativo e dentro da validade (ex.: o de boas-vindas da newsletter), ou null. */
+export async function getActiveCoupon(code: string | null): Promise<CouponRow | null> {
+  if (!code || !hasDatabase()) return null;
+  const [row] = await getDb().select().from(coupons).where(eq(coupons.code, normalizeCode(code)));
+  const now = new Date();
+  if (!row || !row.active || (row.startsAt && row.startsAt > now) || (row.endsAt && row.endsAt < now)) return null;
+  if (row.maxUses !== null && row.uses >= row.maxUses) return null;
+  return row;
+}

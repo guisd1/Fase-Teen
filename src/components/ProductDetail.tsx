@@ -12,6 +12,7 @@ import { useShop } from "./ShopShell";
 import { Icon } from "./Icons";
 import RelatedProducts from "./RelatedProducts";
 import NotifyMe from "./NotifyMe";
+import FavoriteButton from "./FavoriteButton";
 import { landedFromOutside, track } from "@/lib/track";
 import { detectSource } from "@/lib/traffic-source";
 import { optimized } from "@/lib/image";
@@ -60,7 +61,10 @@ export default function ProductDetail({ product, reviewSummary, children }: {
         <ProductGallery key={color} product={product} color={color} />
         <div className="quick-info">
           {product.category && <div className="product-category">{product.category}</div>}
-          <h1>{product.name}</h1>
+          <div className="product-title-row">
+            <h1>{product.name}</h1>
+            <FavoriteButton productId={product.id} className="large" />
+          </div>
           {product.reference && <div className="product-ref">Ref.: {product.reference}</div>}
           {reviewSummary.total > 0 && (
             <a className="product-rating" href="#avaliacoes">

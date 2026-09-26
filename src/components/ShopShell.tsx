@@ -24,6 +24,9 @@ interface Shop {
   promotions: Promotions;
   /** Mercado Pago ativo (Pix e cartão no site). */
   onlinePayments: boolean;
+  /** Favoritos (coração), guardados neste navegador. */
+  favorites: number[];
+  toggleFavorite: (id: number) => void;
 }
 
 const ShopContext = createContext<Shop | null>(null);
@@ -54,6 +57,18 @@ export default function ShopShell({ store, products, onlinePayments, promotions,
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  // Favoritos sem login: ficam no navegador da cliente.
+  const favKey = `${store.id}:favoritos`;
+  const [favorites, setFavorites] = useState<number[]>([]);
+  useEffect(() => {
+    try { const saved = JSON.parse(localStorage.getItem(favKey) ?? "[]"); if (Array.isArray(saved)) setFavorites(saved.filter(Number.isInteger)); } catch { /* sem localStorage */ }
+  }, [favKey]);
+  const toggleFavorite = (id: number) => setFavorites(list => {
+    const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id];
+    try { localStorage.setItem(favKey, JSON.stringify(next)); } catch { /* ignora */ }
+    return next;
+  });
   const searchRef = useRef<HTMLInputElement>(null);
   const cepInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +104,7 @@ export default function ShopShell({ store, products, onlinePayments, promotions,
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <ShopContext.Provider value={{ store, products, cart, search, openCart: () => setCartOpen(true), promotions, onlinePayments }}>
+    <ShopContext.Provider value={{ store, products, cart, search, openCart: () => setCartOpen(true), promotions, onlinePayments, favorites, toggleFavorite }}>
       <div className="topbar">{t.topbar}</div>
 
       <header className="header">

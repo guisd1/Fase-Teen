@@ -130,7 +130,14 @@ const faseTeen: StoreConfig = {
     },
     privacidade: {
       title: "Política de privacidade",
-      paragraphs: ["EDITE: descreva aqui como a Fase Teen trata os dados dos clientes."]
+      paragraphs: [
+        "Esta página explica quais dados a Fase Teen coleta no site, para que usa e quais são os seus direitos, de acordo com a Lei Geral de Proteção de Dados (LGPD).",
+        "DADOS QUE COLETAMOS: nome, WhatsApp, e-mail e endereço de entrega informados no pedido, além dos itens comprados. Quando você preenche nome e WhatsApp no checkout, guardamos o carrinho para poder te ajudar caso a compra não seja concluída. Se você pedir para ser avisada quando um tamanho chegar, guardamos seu nome e WhatsApp para esse aviso. Se assinar a newsletter, guardamos seu e-mail. Nas avaliações, seu nome, comentário e fotos ficam públicos na página do produto depois de aprovados.",
+        "PARA QUE USAMOS: processar, entregar e acompanhar pedidos, falar com você sobre a compra pelo WhatsApp, enviar avisos que você pediu e, se você assinou, novidades e promoções por e-mail. Não vendemos seus dados.",
+        "COM QUEM COMPARTILHAMOS: só com quem precisa para a compra acontecer: Mercado Pago (pagamento), Melhor Envio e transportadoras (entrega), Brevo (envio da newsletter) e Vercel (hospedagem do site). Os dados do cartão são digitados diretamente no Mercado Pago; a Fase Teen não tem acesso ao número do cartão.",
+        "ESTATÍSTICAS DO SITE: contamos visitas, cliques e de onde as visitas vêm (por exemplo, Instagram ou Google) apenas em números totais, sem identificar quem visitou. Carrinho e favoritos ficam guardados no seu próprio navegador.",
+        "SEUS DIREITOS: você pode pedir para ver, corrigir ou apagar seus dados a qualquer momento pelo nosso WhatsApp. Para sair da newsletter, use o link de descadastro no final de qualquer e-mail. Dados de pedidos podem ser mantidos pelo tempo exigido por lei para fins fiscais."
+      ]
     }
   }
 };
