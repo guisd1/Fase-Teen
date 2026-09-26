@@ -132,7 +132,7 @@ export default function Home() {
       </section>
 
       <section className="about" id="sobre">
-        <div className="about-mark">{store.logo.monogram}</div>
+        <div className="about-mark">{store.logo.icon ? <img src={store.logo.icon} alt="" /> : store.logo.monogram}</div>
         <div>
           <p className="eyebrow">{t.about.eyebrow}</p>
           <h2>{t.about.title}</h2>

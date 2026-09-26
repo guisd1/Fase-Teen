@@ -6,8 +6,8 @@ const faseTeen: StoreConfig = {
   siteUrl: "https://www.faseteen.com.br",
 
   meta: {
-    title: "Fase Teen | Moda Infantil Feminina",
-    description: "Fase Teen — moda infantil feminina para meninas que estão vivendo cada fase com estilo."
+    title: "Fase Teen | Nova coleção de moda teen feminina",
+    description: "Fase Teen é moda teen feminina com qualidade de verdade: tecidos escolhidos a dedo, acabamento caprichado e peças que acompanham cada fase. Conheça a nova coleção."
   },
 
   // Cores tiradas da marca oficial: roxo do nome, laranja do F, lilás do T e rosas do fundo.
@@ -35,7 +35,7 @@ const faseTeen: StoreConfig = {
     main: "FASE",
     sub: "teen",
     subAlign: "right",
-    icon: "/brand/fase-teen-icon.svg",
+    icon: "/brand/fase-teen-icon.png",
     monogram: "FT"
   },
 
@@ -52,48 +52,50 @@ const faseTeen: StoreConfig = {
   },
 
   texts: {
-    topbar: "ENVIO PARA TODO O BRASIL • COMPRA SEGURA • ATENDIMENTO PELO WHATSAPP",
-    nav: { home: "Início", news: "Novidades", collection: "Coleção", about: "Sobre a Fase Teen" },
+    topbar: "NOVA COLEÇÃO NO AR • ENVIO PARA TODO O BRASIL • POSTAGEM EM ATÉ 1 DIA ÚTIL",
+    nav: { home: "Início", news: "Lançamentos", collection: "Coleção", about: "A marca" },
     hero: {
       eyebrow: "NOVA COLEÇÃO • FASE TEEN",
-      title: "Estilo para cada fase.",
-      text: "Looks femininos, atuais e confortáveis para meninas que querem se vestir do seu jeitinho.",
-      primaryCta: "Comprar agora",
-      secondaryCta: "Ver novidades",
-      pill: "NEW",
+      title: "Qualidade que acompanha cada fase.",
+      text: "A nova coleção Fase Teen chegou. Peças femininas com tecido escolhido a dedo, acabamento caprichado e caimento pensado para meninas que estão criando o próprio estilo.",
+      primaryCta: "Ver a nova coleção",
+      secondaryCta: "Lançamentos",
+      pill: "NOVA",
+      image: "/brand/fase-teen-logo.webp",
       cardTop: "FASE",
       cardBottom: "teen",
-      cardCaption: "Moda infantil feminina"
+      cardCaption: "Moda teen feminina"
     },
     benefits: [
-      { icon: "truck", title: "Envio para todo o Brasil", text: "Escolha a melhor opção de entrega no checkout." },
-      { icon: "lock", title: "Compra segura", text: "Seus dados são tratados com cuidado." },
-      { icon: "chat", title: "Atendimento rápido", text: "Fale com a gente pelo WhatsApp." },
-      { icon: "hanger", title: "Peças selecionadas", text: "Moda feminina pensada para cada fase." }
+      { icon: "hanger", title: "Qualidade em cada peça", text: "Tecidos que valem o que custam e acabamento bem-feito." },
+      { icon: "ruler", title: "Tabela de medidas", text: "Medidas de cada peça para acertar o tamanho de primeira." },
+      { icon: "truck", title: "Envio para todo o Brasil", text: "Postagem em até 1 dia útil após a confirmação." },
+      { icon: "lock", title: "Compra segura", text: "Pague no Pix ou no cartão pelo Mercado Pago." }
     ],
-    featured: { eyebrow: "PARA COMEÇAR", title: "Novidades que chegaram", link: "Ver coleção →" },
+    featured: { eyebrow: "LANÇAMENTO", title: "Chegou a nova coleção", link: "Ver todas as peças →" },
     banner: {
-      eyebrow: "FASE TEEN",
-      title: "Do básico ao look que chama atenção.",
-      text: "Monte combinações para escola, passeios, festas e todos os momentos da adolescência.",
-      cta: "Explorar produtos",
-      stickers: ["casual", "trend", "cute", "teen"]
+      eyebrow: "POR QUE FASE TEEN",
+      title: "Roupa bonita que continua bonita.",
+      text: "Cada peça é pensada nos detalhes: tecido de qualidade, costura bem-feita e modelagem confortável para o dia a dia. É roupa para usar muito, lavar muito e continuar gostando.",
+      cta: "Conhecer a coleção",
+      stickers: ["qualidade", "conforto", "estilo", "teen"]
     },
     catalog: {
-      eyebrow: "CATÁLOGO",
-      title: "Encontre seu próximo look",
-      searchPlaceholder: "Buscar por produto, cor ou categoria..."
+      eyebrow: "COLEÇÃO",
+      title: "Escolha sua próxima peça favorita",
+      searchPlaceholder: "Buscar por peça, cor ou categoria..."
     },
     about: {
-      eyebrow: "SOBRE A MARCA",
-      title: "Fase Teen é vestir cada momento.",
+      eyebrow: "A MARCA",
+      title: "Uma marca feita para essa fase.",
       paragraphs: [
-        "A Fase Teen nasceu para acompanhar meninas em uma fase cheia de descobertas. Nossa proposta é unir estilo, conforto e peças que façam sentido para a rotina, deixando espaço para cada uma construir seu próprio jeito de se expressar."
+        "A Fase Teen nasceu para vestir meninas numa das fases mais cheias de descobertas da vida. Acreditamos que roupa boa é a que acompanha: veste bem, é confortável no dia a dia e continua bonita depois de muitas lavagens.",
+        "Por isso, qualidade está no centro de tudo o que fazemos. Escolhemos tecidos que valem o que custam, cuidamos de cada acabamento e pensamos a modelagem para quem está crescendo. A nova coleção é o resultado desse cuidado, e é só o começo."
       ],
-      cta: "Conhecer a coleção"
+      cta: "Ver a nova coleção"
     },
-    newsletter: { eyebrow: "FIQUE POR DENTRO", title: "Receba novidades e ofertas." },
-    footer: { tagline: "Moda infantil feminina para cada fase." },
+    newsletter: { eyebrow: "FAÇA PARTE", title: "Seja a primeira a saber dos lançamentos." },
+    footer: { tagline: "Moda teen feminina com qualidade para acompanhar cada fase." },
     checkout: {
       intro: "Preencha seus dados. Ao continuar, o pedido será enviado para o WhatsApp da Fase Teen para confirmação de estoque, entrega e pagamento."
     },
