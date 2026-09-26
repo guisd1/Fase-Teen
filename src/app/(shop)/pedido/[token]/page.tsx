@@ -29,6 +29,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
         freight: order.freight,
         total: order.total,
         pickup: order.deliveryMode === "pickup",
+        trackingCode: order.trackingCode,
         pix: order.paymentMethod === "pix" ? order.paymentData ?? null : null,
         checkoutUrl: order.paymentMethod === "card" ? order.paymentData?.checkoutUrl ?? null : null
       }}

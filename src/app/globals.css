@@ -643,3 +643,20 @@ img { max-width: 100%; display: block; }
 .order-lookup-error { color: #b42318 !important; font-size: 13px; margin: 0 !important; }
 .order-lookup-help { font-size: 13px; }
 .order-lookup-help a { color: var(--primary-dark); font-weight: 700; text-decoration: underline; }
+
+/* Linha do tempo do pedido */
+.order-steps { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0; padding: 0; }
+.order-steps li {
+  position: relative; padding-top: 22px; font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; line-height: 1.3;
+}
+.order-steps li::before {
+  content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 14px; height: 14px;
+  border-radius: 50%; background: var(--line); z-index: 1;
+}
+.order-steps li:not(:first-child)::after {
+  content: ""; position: absolute; top: 6px; right: 50%; width: calc(100% + 6px); height: 2px; background: var(--line);
+}
+.order-steps li.done, .order-steps li.current { color: var(--ink); }
+.order-steps li.done::before, .order-steps li.current::before, .order-steps li.done::after, .order-steps li.current::after { background: var(--primary); }
+.order-steps li.current::before { box-shadow: 0 0 0 4px var(--primary-soft); }
+.order-tracking { font-size: 14px; }

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { money } from "@/lib/format";
-import { STATUS_LABELS, isOrderStatus } from "@/lib/order-status";
+import { trackingUrl } from "@/lib/order-messages";
 import { hasWhatsapp, whatsappUrl } from "@/lib/whatsapp";
 import PixPayment, { useOrderStatus, type PixData } from "./PixPayment";
 import { useShop } from "./ShopShell";
@@ -21,8 +21,27 @@ export interface TrackedOrder {
   freight: number;
   total: number;
   pickup: boolean;
+  trackingCode: string | null;
   pix: PixData | null;
   checkoutUrl: string | null;
+}
+
+/** Linha do tempo do pedido, na linguagem da cliente. */
+function StatusSteps({ status, pickup }: { status: string; pickup: boolean }) {
+  const steps = [
+    { key: "pendente", label: "Pedido recebido" },
+    { key: "preparacao", label: "Em preparação" },
+    { key: "enviado", label: pickup ? "Pronto para retirada" : "Enviado" },
+    { key: "entregue", label: pickup ? "Retirado" : "Entregue" }
+  ];
+  const current = steps.findIndex(s => s.key === status);
+  return (
+    <ol className="order-steps">
+      {steps.map((s, i) => (
+        <li key={s.key} className={i < current ? "done" : i === current ? "current" : ""}>{s.label}</li>
+      ))}
+    </ol>
+  );
 }
 
 export default function OrderTracker({ token, order }: { token: string; order: TrackedOrder }) {
@@ -44,7 +63,37 @@ export default function OrderTracker({ token, order }: { token: string; order: T
     <main className="product-page order-page">
       <div className="order-card">
         <p className="eyebrow">PEDIDO Nº {order.code}</p>
-        {paid ? (
+        {status === "cancelado" ? (
+          <>
+            <h1>Pedido cancelado</h1>
+            <p className="order-lead">Este pedido foi cancelado. Se tiver alguma dúvida, fale com a gente pelo WhatsApp.</p>
+          </>
+        ) : status === "entregue" ? (
+          <>
+            <h1>{order.pickup ? "Pedido retirado!" : "Pedido entregue!"}</h1>
+            <p className="order-lead">Obrigado por comprar com a {store.name}, {order.firstName}! Esperamos que você ame as peças. Se puder, conta pra gente o que achou avaliando o produto no site.</p>
+          </>
+        ) : status === "enviado" ? (
+          <>
+            <h1>{order.pickup ? "Pronto para retirada!" : "Pedido enviado!"}</h1>
+            <p className="order-lead">
+              {order.pickup
+                ? `${order.firstName}, seu pedido já está separado esperando por você na loja.`
+                : `${order.firstName}, seu pedido já está a caminho.`}
+            </p>
+            {!order.pickup && order.trackingCode && (
+              <p className="order-tracking">
+                Código de rastreio: <strong>{order.trackingCode}</strong>{" "}
+                <a href={trackingUrl(order.trackingCode)} target="_blank" rel="noopener">Acompanhar entrega</a>
+              </p>
+            )}
+          </>
+        ) : status === "preparacao" ? (
+          <>
+            <h1>{paid ? "Pagamento aprovado!" : "Pedido confirmado!"}</h1>
+            <p className="order-lead">Obrigado, {order.firstName}! Seu pedido está {order.pickup ? "sendo separado para retirada" : "em preparação para envio"}. A gente te avisa pelo WhatsApp a cada etapa.</p>
+          </>
+        ) : paid ? (
           <>
             <h1>Pagamento aprovado!</h1>
             <p className="order-lead">Obrigado, {order.firstName}! Seu pedido já está {order.pickup ? "sendo separado para retirada" : "em preparação para envio"}. A gente te avisa pelo WhatsApp a cada etapa.</p>
@@ -68,9 +117,11 @@ export default function OrderTracker({ token, order }: { token: string; order: T
         ) : (
           <>
             <h1>Pedido registrado</h1>
-            <p className="order-lead">Status: {isOrderStatus(status) ? STATUS_LABELS[status] : status}. O pagamento é combinado pelo WhatsApp.</p>
+            <p className="order-lead">Recebemos seu pedido. O pagamento e a entrega são combinados pelo WhatsApp.</p>
           </>
         )}
+
+        {status !== "cancelado" && <StatusSteps status={status} pickup={order.pickup} />}
 
         <div className="order-summary">
           {order.items.map((i, idx) => (
