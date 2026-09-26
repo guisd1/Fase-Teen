@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { StoreConfig } from "@/stores/types";
 import { cleanCep, formatCep, money } from "@/lib/format";
 import { hasWhatsapp, whatsappUrl } from "@/lib/whatsapp";
@@ -131,6 +131,24 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
 }) {
   const [form, setForm] = useState<FormData>(() => initialForm(cart));
   const [addressNote, setAddressNote] = useState("");
+
+  // Carrinho abandonado: com nome e WhatsApp preenchidos, guarda o carrinho para a loja
+  // poder chamar a cliente se ela não finalizar (some da lista quando o pedido sai).
+  const contactKey = form.name.trim() && form.phone.replace(/\D/g, "").length >= 10
+    ? JSON.stringify([form.name.trim(), form.phone, form.email, cart.items.map(x => [x.id, x.size, x.color, x.qty])])
+    : "";
+  useEffect(() => {
+    if (!contactKey) return;
+    const timer = setTimeout(() => {
+      fetch("/api/carrinho", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, phone: form.phone, email: form.email, items: cart.items.map(x => ({ id: x.id, size: x.size, color: x.color, qty: x.qty })) }),
+        keepalive: true
+      }).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [contactKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [method, setMethod] = useState<PaymentChoice>(onlinePayments ? "pix" : "whatsapp");

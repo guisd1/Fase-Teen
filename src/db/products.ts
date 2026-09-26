@@ -16,6 +16,8 @@ export interface Product {
   /** Preço no Pix (menor, com a taxa do Pix). Igual a price sem Mercado Pago. */
   pixPrice: number;
   oldPrice: number | null;
+  /** Promoção com data ativa agora: % de desconto e quando termina. */
+  promo: { percent: number; endsAt: string | null } | null;
   sizes: ProductSize[];
   /** Tabela de medidas (null = sem tabela). */
   sizeChart: SizeChart | null;
@@ -66,8 +68,27 @@ function noDatabase() {
   return true;
 }
 
-function toPublic(row: ProductRow, fees: PaymentFees): Product {
+/** Promoção com data valendo agora? */
+function activePromo(row: Pick<ProductRow, "promoPercent" | "promoStartsAt" | "promoEndsAt">, now = new Date()) {
+  const p = row.promoPercent;
+  if (!p || p <= 0 || p >= 100) return null;
+  if (row.promoStartsAt && now < row.promoStartsAt) return null;
+  if (row.promoEndsAt && now > row.promoEndsAt) return null;
+  return { percent: p, endsAt: row.promoEndsAt?.toISOString() ?? null };
+}
+
+/** Valor a receber já com a promoção com data, se estiver valendo. */
+export function effectiveNet(row: Pick<ProductRow, "price" | "promoPercent" | "promoStartsAt" | "promoEndsAt">) {
   const net = row.price ?? 0;
+  const promo = activePromo(row);
+  return promo ? Math.round(net * (1 - promo.percent / 100) * 100) / 100 : net;
+}
+
+function toPublic(row: ProductRow, fees: PaymentFees): Product {
+  const promo = activePromo(row);
+  const net = effectiveNet(row);
+  // Na promoção, o preço "de" é o preço normal (ou o preço antigo cadastrado, se for maior).
+  const regular = Math.max(row.price ?? 0, row.oldPrice ?? 0);
   return {
     id: row.id,
     slug: productSlug(row),
@@ -75,7 +96,8 @@ function toPublic(row: ProductRow, fees: PaymentFees): Product {
     category: row.category ?? "",
     price: cardPrice(net, fees),
     pixPrice: pixPrice(net, fees),
-    oldPrice: row.oldPrice === null ? null : cardPrice(row.oldPrice, fees),
+    oldPrice: promo ? cardPrice(regular, fees) : row.oldPrice === null ? null : cardPrice(row.oldPrice, fees),
+    promo,
     sizes: row.sizes,
     sizeChart: row.sizeChart,
     colors: row.colors,
@@ -114,8 +136,8 @@ export async function getShippingInfo(ids: number[]): Promise<ProductShipping[]>
     getPaymentFees()
   ]);
   return rows.map(r => ({
-    id: r.id, name: r.name, reference: r.reference, price: r.price ?? 0,
-    cardPrice: cardPrice(r.price ?? 0, fees), pixPrice: pixPrice(r.price ?? 0, fees),
+    id: r.id, name: r.name, reference: r.reference, price: effectiveNet(r),
+    cardPrice: cardPrice(effectiveNet(r), fees), pixPrice: pixPrice(effectiveNet(r), fees),
     weightKg: r.weightKg, heightCm: r.heightCm, widthCm: r.widthCm, lengthCm: r.lengthCm
   }));
 }

@@ -12,6 +12,7 @@ import { getStore } from "@/stores";
 import { cleanSource } from "@/lib/traffic-source";
 import { getPromotions } from "@/db/settings";
 import { hasFreeShipping } from "@/lib/promotions";
+import { markCartRecovered } from "@/db/recovery";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +153,9 @@ export async function POST(request: Request) {
     if (couponCode) await releaseCoupon(couponCode).catch(() => {});
     return reply(500, { error: "Não foi possível registrar o pedido." });
   }
+
+  // Quem estava na lista de carrinhos abandonados comprou: sai da lista.
+  await markCartRecovered(customerPhone, order.code).catch(() => {});
 
   const result = { code: order.code, token: order.publicToken, subtotal, discount, couponCode, couponError, paymentDiscount, freight, total };
   if (!online) return reply(200, result);

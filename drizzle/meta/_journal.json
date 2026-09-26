@@ -78,6 +78,13 @@
       "when": 1790436356217,
       "tag": "0010_origem-visitas",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790447682938,
+      "tag": "0011_carrinho-aviseme-promocao",
+      "breakpoints": true
     }
   ]
 }

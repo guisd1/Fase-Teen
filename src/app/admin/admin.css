@@ -271,3 +271,8 @@ ol.summary-list { counter-reset: top; }
 ol.summary-list li::before { counter-increment: top; content: counter(top) "."; color: var(--muted); font-weight: 700; }
 .summary-list li span { flex: 1; }
 .summary-list li small { color: var(--muted); }
+.admin-promo { margin-top: 14px; padding: 14px; border: 1px dashed #dccbd8; border-radius: 14px; }
+.admin-promo > small { color: var(--muted); }
+.admin-promo .admin-grid-3 { margin-top: 10px; }
+.admin-notify-btn { width: 100%; margin-bottom: 10px; padding: 9px 10px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.4); background: transparent; color: #f3d7ec; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.admin-notify-btn:hover { background: rgba(255,255,255,.08); }

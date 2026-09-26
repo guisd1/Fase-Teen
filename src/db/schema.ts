@@ -1,4 +1,4 @@
-import { boolean, date, index, integer, jsonb, numeric, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, date, index, integer, jsonb, numeric, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { OrderStatus } from "@/lib/order-status";
 
@@ -46,6 +46,10 @@ export const products = pgTable("products", {
   sizes: jsonb("sizes").$type<ProductSize[]>().notNull().default([]),
   colors: text("colors").array().notNull().default([]),
   sizeChart: jsonb("size_chart").$type<SizeChart>(),
+  /** Promoção com data: desconto em % que liga e desliga sozinho. */
+  promoPercent: numeric("promo_percent", { precision: 5, scale: 2, mode: "number" }),
+  promoStartsAt: timestamp("promo_starts_at", { withTimezone: true }),
+  promoEndsAt: timestamp("promo_ends_at", { withTimezone: true }),
   /** Fotos do carrossel, na ordem de exibição. */
   images: jsonb("media").$type<ProductImage[]>().notNull().default([]),
   /** Vídeo do YouTube, sempre exibido por último no carrossel. */
@@ -257,3 +261,38 @@ export const trafficStats = pgTable("traffic_stats", {
   campaign: text("campaign").notNull().default(""),
   visits: integer("visits").notNull().default(0)
 }, t => [primaryKey({ columns: [t.day, t.source, t.campaign] })]);
+
+/** Item guardado de um carrinho que não virou pedido. */
+export interface CartSnapshotItem { productId: number; name: string; size: string; color: string; qty: number; price: number }
+
+/*
+  Carrinho abandonado: quem preencheu nome e WhatsApp no checkout e não
+  finalizou. Um registro por telefone (o mais recente vale). Some da lista
+  quando a pessoa faz o pedido.
+*/
+export const abandonedCarts = pgTable("abandoned_carts", {
+  id: serial("id").primaryKey(),
+  /** Últimos 11 dígitos do telefone (um carrinho por pessoa). */
+  phoneKey: text("phone_key").notNull(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  items: jsonb("items").$type<CartSnapshotItem[]>().notNull(),
+  subtotal: numeric("subtotal", { precision: 10, scale: 2, mode: "number" }).notNull(),
+  /** Pedido feito depois (carrinho recuperado). */
+  orderCode: text("order_code"),
+  contactedAt: timestamp("contacted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date())
+}, t => [uniqueIndex("abandoned_carts_phone_key_idx").on(t.phoneKey)]);
+
+/** "Avise-me quando chegar": quem quer saber da volta de um tamanho esgotado. */
+export const waitlist = pgTable("waitlist", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  size: text("size").notNull().default(""),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  notifiedAt: timestamp("notified_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, t => [index("waitlist_product_idx").on(t.productId)]);

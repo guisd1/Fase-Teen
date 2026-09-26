@@ -12,7 +12,9 @@ import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/or
 import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
 import { normalizeCode } from "@/lib/coupon";
-import { getHomeImages, saveHomeImages, savePaymentFees, type HomeImages } from "@/db/settings";
+import { getHomeImages, saveHomeImages, savePaymentFees, savePromotions, type HomeImages } from "@/db/settings";
+import { deleteAbandonedCart, deleteWaitlist, markCartContacted, markWaitlistNotified } from "@/db/recovery";
+import type { Promotions } from "@/lib/promotions";
 import { parseFee, priceFromMarkup, type MarkupType } from "@/lib/pricing";
 import type { NewProductRow, ProductImage, ProductSize, SizeChart } from "@/db/schema";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
@@ -59,6 +61,10 @@ export interface ProductInput {
   markupType: MarkupType;
   markupValue: string;
   oldPrice: string;
+  /** Promoção com data: % e período (AAAA-MM-DDTHH:mm, horário de Brasília). */
+  promoPercent: string;
+  promoStartsAt: string;
+  promoEndsAt: string;
   badge: string;
   featured: boolean;
   active: boolean;
@@ -123,6 +129,18 @@ function cleanSizeChart(chart: SizeChart | null): SizeChart | null {
   return { columns: keep.map(c => c.name), rows, ...(note && { note }) };
 }
 
+/** Data e hora do formulário (horário de Brasília) ou null. */
+const brDateTime = (v: string) => (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v) ? new Date(`${v}:00-03:00`) : null);
+
+function promoFields(input: ProductInput) {
+  const percent = toNumber(input.promoPercent ?? "", "Desconto da promoção");
+  if (percent === null || percent === 0) return { promoPercent: null, promoStartsAt: null, promoEndsAt: null };
+  if (percent >= 90) throw new Error("O desconto da promoção vai até 89%.");
+  const promoStartsAt = brDateTime(input.promoStartsAt ?? ""), promoEndsAt = brDateTime(input.promoEndsAt ?? "");
+  if (promoStartsAt && promoEndsAt && promoEndsAt <= promoStartsAt) throw new Error("O fim da promoção é antes do começo.");
+  return { promoPercent: percent, promoStartsAt, promoEndsAt };
+}
+
 function toRow(input: ProductInput): NewProductRow {
   const name = input.name.trim();
   if (!name) throw new Error("O nome do produto é obrigatório.");
@@ -144,6 +162,7 @@ function toRow(input: ProductInput): NewProductRow {
     composition: text(input.composition),
     ...pricing(input),
     oldPrice: toNumber(input.oldPrice, "Preço antigo"),
+    ...promoFields(input),
     badge: text(input.badge)?.toUpperCase() ?? null,
     featured: input.featured,
     active: input.active,
@@ -390,4 +409,57 @@ export async function saveHomeImagesAction(input: HomeImages): Promise<{ error?:
   revalidatePath("/");
   revalidatePath("/admin/inicio");
   return {};
+}
+
+// ---- Carrinhos abandonados e "avise-me" ----
+
+export async function markCartContactedAction(id: number) {
+  await requireAdmin();
+  await markCartContacted(id);
+  revalidatePath("/admin/carrinhos");
+}
+
+export async function deleteCartAction(id: number) {
+  await requireAdmin();
+  await deleteAbandonedCart(id);
+  revalidatePath("/admin/carrinhos");
+}
+
+export async function markWaitlistNotifiedAction(id: number) {
+  await requireAdmin();
+  await markWaitlistNotified(id);
+  revalidatePath("/admin/avise-me");
+}
+
+export async function deleteWaitlistAction(id: number) {
+  await requireAdmin();
+  await deleteWaitlist(id);
+  revalidatePath("/admin/avise-me");
+}
+
+// ---- Promoções (frete grátis, cupom da newsletter, lançamento) ----
+
+export async function savePromotionsAction(form: FormData) {
+  await requireAdmin();
+  const fail = (msg: string) => redirect(`/admin/promocoes?erro=${encodeURIComponent(msg)}`);
+  let freeShippingMin: number | null = null;
+  if (form.get("freeShippingOn") === "on") {
+    try {
+      freeShippingMin = toNumber(String(form.get("freeShippingMin") ?? ""), "Valor do frete grátis");
+    } catch (error) {
+      return fail((error as Error).message);
+    }
+    if (!freeShippingMin || freeShippingMin <= 0) return fail("Informe a partir de qual valor o frete é grátis.");
+  }
+  const welcomeCoupon = normalizeCode(form.get("welcomeCoupon")) || null;
+  const title = String(form.get("launchTitle") ?? "").trim().slice(0, 80);
+  const when = String(form.get("launchDate") ?? "");
+  let launch: Promotions["launch"] = null;
+  if (title || when) {
+    if (!title || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when)) return fail("Para a contagem regressiva, preencha o nome e a data do lançamento.");
+    launch = { title, date: new Date(`${when}:00-03:00`).toISOString() };
+  }
+  await savePromotions({ freeShippingMin, welcomeCoupon, launch });
+  refreshSite();
+  redirect("/admin/promocoes?ok=1");
 }

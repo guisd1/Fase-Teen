@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { adminCountOrders } from "@/db/orders";
 import { adminCountPendingReviews } from "@/db/reviews";
 import { logout } from "../actions";
+import OrderNotifier from "@/components/admin/OrderNotifier";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +30,16 @@ export default async function PanelLayout({ children }: { children: ReactNode })
           <Link href="/admin/inicio">Página inicial</Link>
           <Link href="/admin/integracoes">Integrações</Link>
           <Link href="/admin/pedidos">Pedidos {pending > 0 && <em className="admin-badge">{pending}</em>}</Link>
+          <Link href="/admin/carrinhos">Carrinhos abandonados</Link>
+          <Link href="/admin/avise-me">Avise-me</Link>
           <Link href="/admin/cupons">Cupons</Link>
+          <Link href="/admin/promocoes">Promoções</Link>
           <Link href="/admin/relatorio">Relatório</Link>
           <Link href="/admin/clientes">Clientes</Link>
           <Link href="/admin/avaliacoes">Avaliações {pendingReviews > 0 && <em className="admin-badge">{pendingReviews}</em>}</Link>
         </nav>
         <div className="admin-side-foot">
+          <OrderNotifier />
           <a href="/" target="_blank" rel="noopener">Ver loja ↗</a>
           <form action={logout}><button type="submit">Sair</button></form>
         </div>

@@ -11,6 +11,7 @@ import { PixPrice, PriceRow, soldOut } from "./ProductCard";
 import { useShop } from "./ShopShell";
 import { Icon } from "./Icons";
 import RelatedProducts from "./RelatedProducts";
+import NotifyMe from "./NotifyMe";
 import { landedFromOutside, track } from "@/lib/track";
 import { detectSource } from "@/lib/traffic-source";
 import { optimized } from "@/lib/image";
@@ -68,6 +69,12 @@ export default function ProductDetail({ product, reviewSummary, children }: {
           )}
           <PriceRow product={product} />
           <PixPrice product={product} />
+          {product.promo && (
+            <div className="promo-note">
+              Promoção de {Math.round(product.promo.percent)}% off
+              {product.promo.endsAt && ` até ${new Date(product.promo.endsAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}`}
+            </div>
+          )}
           {installments > 1 && <div className="installment">ou {installments}x de {money(product.price / installments)}*</div>}
           {product.description && <p className="quick-desc">{product.description}</p>}
           {product.composition && (
@@ -93,6 +100,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
               </div>
             </div>
           )}
+          <NotifyMe product={product} />
           {chart && (
             <div className="size-chart">
               <button type="button" className="text-link" aria-expanded={chartOpen} onClick={() => setChartOpen(o => !o)}>

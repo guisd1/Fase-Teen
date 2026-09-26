@@ -25,7 +25,7 @@ export function PixPrice({ product }: { product: Product }) {
 
 export default function ProductCard({ product, installments }: { product: Product; installments: number }) {
   const href = `/produto/${product.slug}`;
-  const badge = soldOut(product) ? "ESGOTADO" : product.badge;
+  const badge = soldOut(product) ? "ESGOTADO" : product.promo ? `-${Math.round(product.promo.percent)}%` : product.badge;
   const clicked = () => track("click", product.id);
   return (
     <article className="product-card">

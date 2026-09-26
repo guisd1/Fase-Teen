@@ -21,6 +21,13 @@ function parseMoney(value: string) {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
+/** Data do banco → valor do campo datetime-local no horário de Brasília. */
+function brLocal(d: Date | null | undefined) {
+  if (!d) return "";
+  const t = new Date(d.getTime() - 3 * 60 * 60 * 1000);
+  return t.toISOString().slice(0, 16);
+}
+
 function initialInput(p: ProductRow | null): ProductInput {
   return {
     name: p?.name ?? "",
@@ -33,6 +40,9 @@ function initialInput(p: ProductRow | null): ProductInput {
     markupType: p?.markupType ?? "percent",
     markupValue: num(p?.markupValue),
     oldPrice: num(p?.oldPrice),
+    promoPercent: num(p?.promoPercent),
+    promoStartsAt: brLocal(p?.promoStartsAt),
+    promoEndsAt: brLocal(p?.promoEndsAt),
     badge: p?.badge ?? "",
     featured: p?.featured ?? false,
     active: p?.active ?? true,
@@ -230,6 +240,23 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
           </label>
         </div>
         {noPrice && <p className="admin-hint">Sem preço, o produto fica como <strong>rascunho</strong> e não aparece no site.</p>}
+        <div className="admin-promo">
+          <strong>Promoção com data</strong> <small>liga e desliga sozinha; deixe o desconto vazio para não ter promoção</small>
+          <div className="admin-grid-3">
+            <label>Desconto (%)
+              <input inputMode="decimal" {...field("promoPercent")} placeholder="20" />
+            </label>
+            <label>Começa em <small>vazio = já</small>
+              <input type="datetime-local" {...field("promoStartsAt")} />
+            </label>
+            <label>Termina em <small>vazio = sem fim</small>
+              <input type="datetime-local" {...field("promoEndsAt")} />
+            </label>
+          </div>
+          {parseMoney(form.promoPercent) && netPrice ? (
+            <p className="admin-hint">Durante a promoção: <strong>{money(cardPrice(Math.round(netPrice * (1 - (parseMoney(form.promoPercent) ?? 0) / 100) * 100) / 100, fees))}</strong> no site (o preço normal aparece riscado).</p>
+          ) : null}
+        </div>
         {netPrice && (
           <div className="admin-price-summary">
             {(fees.cardPercent > 0 || fees.pixPercent > 0) ? (
