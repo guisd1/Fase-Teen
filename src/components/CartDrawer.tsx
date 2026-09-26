@@ -86,8 +86,8 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
               <div className={`free-shipping ${cart.freeShipping ? "done" : ""}`}>
                 <p>
                   {cart.freeShipping || cart.missingForFreeShipping === 0
-                    ? <><strong>Frete grátis no PAC</strong> garantido para este pedido!</>
-                    : <>Faltam <strong>{money(cart.missingForFreeShipping)}</strong> para ganhar <strong>frete grátis no PAC</strong></>}
+                    ? <><strong>Frete grátis</strong> garantido para este pedido!</>
+                    : <>Faltam <strong>{money(cart.missingForFreeShipping)}</strong> para ganhar <strong>frete grátis</strong></>}
                 </p>
                 <div className="free-shipping-bar"><span style={{ width: `${Math.min(100, (cart.subtotal / cart.freeShippingMin) * 100)}%` }} /></div>
               </div>
@@ -148,7 +148,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
             )}
             <div className="totals-row freight-total-row">
               <span>Frete</span>
-              <strong>{cart.freight === null ? (cart.freeShipping ? "Grátis no PAC (escolha o envio)" : "A calcular") : cart.freight === 0 && cart.freeShipping ? "Grátis" : money(cart.freight)}</strong>
+              <strong>{cart.freight === null ? (cart.freeShipping ? "Grátis (escolha o envio)" : "A calcular") : cart.freight === 0 && cart.freeShipping ? "Grátis" : money(cart.freight)}</strong>
             </div>
             <p className="mini-note">O valor do frete é calculado conforme o CEP e a opção de envio escolhida.</p>
           </div>

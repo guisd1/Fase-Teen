@@ -159,7 +159,7 @@ export default function ProductDetail({ product, reviewSummary, children }: {
           </button>
           <ul className="trust-list">
             {onlinePayments && <li><Icon name="lock" /> Pagamento seguro pelo Mercado Pago: Pix ou cartão{installments > 1 ? ` em até ${installments}x` : ""}</li>}
-            {promotions.freeShippingMin !== null && <li><Icon name="truck" /> Frete grátis no PAC nas compras a partir de {money(promotions.freeShippingMin)}</li>}
+            {promotions.freeShippingMin !== null && <li><Icon name="truck" /> Frete grátis nas compras a partir de {money(promotions.freeShippingMin)}</li>}
             {store.commerce.shippingNote && <li><Icon name="bag" /> {store.commerce.shippingNote}</li>}
             {chart && <li><Icon name="ruler" /> Tabela de medidas em cada peça</li>}
           </ul>
