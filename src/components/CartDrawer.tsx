@@ -149,8 +149,14 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
               <span>Frete</span>
               <strong>{cart.freight === null ? (cart.freeShipping ? "Grátis (escolha o envio)" : "A calcular") : cart.freight === 0 && cart.freeShipping ? "Grátis" : money(cart.freight)}</strong>
             </div>
-            <div className="totals-row grand-total-row"><span>Total</span><strong>{money(cart.total)}</strong></div>
             <p className="mini-note">O valor do frete é calculado conforme o CEP e a opção de envio escolhida.</p>
+          </div>
+        )}
+
+        {items.length > 0 && (
+          // Total e botão sempre visíveis no rodapé, mesmo rolando o carrinho.
+          <div className="cart-checkout-bar">
+            <div className="totals-row grand-total-row"><span>Total</span><strong>{money(cart.total)}</strong></div>
             <button className="btn btn-dark full" type="button" onClick={onCheckout}>Finalizar pedido</button>
           </div>
         )}
