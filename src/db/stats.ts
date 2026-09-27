@@ -30,6 +30,8 @@ export interface ProductReportRow {
   reference: string | null;
   image: string | null;
   active: boolean;
+  /** Produto já excluído do cadastro (as vendas continuam no relatório). */
+  deleted?: boolean;
   views: number;
   clicks: number;
   carts: number;
@@ -77,16 +79,23 @@ export async function adminProductReport(fromDay: string | null): Promise<Produc
   }
 
   const byId = new Map(stats.map(s => [s.productId, s]));
-  const sales = new Map<number, { sold: number; revenue: number }>();
+  const sales = new Map<number, { sold: number; revenue: number; name: string; reference: string | null }>();
   for (const o of confirmed) {
     for (const i of o.items) {
-      const s = sales.get(i.productId) ?? { sold: 0, revenue: 0 };
+      const s = sales.get(i.productId) ?? { sold: 0, revenue: 0, name: i.name, reference: i.reference ?? null };
       s.sold += i.qty;
       s.revenue += i.qty * i.price;
       sales.set(i.productId, s);
     }
   }
-  return items.map(p => ({
+  const known = new Set(items.map(p => p.id));
+  // Vendas de produtos que já foram excluídos: entram numa linha própria para os totais baterem.
+  const deleted: ProductReportRow[] = [...sales.entries()].filter(([id]) => !known.has(id)).map(([id, s]) => ({
+    id, name: s.name, reference: s.reference, image: null, active: false, deleted: true,
+    views: 0, clicks: 0, carts: 0, shares: 0, linkOpens: 0, adOpens: 0,
+    sold: s.sold, revenue: Math.round(s.revenue * 100) / 100, profit: profits.has(id) ? profits.get(id)! : null
+  }));
+  return [...items.map(p => ({
     id: p.id,
     name: p.name,
     reference: p.reference,
@@ -101,7 +110,7 @@ export async function adminProductReport(fromDay: string | null): Promise<Produc
     sold: sales.get(p.id)?.sold ?? 0,
     revenue: Math.round((sales.get(p.id)?.revenue ?? 0) * 100) / 100,
     profit: profits.has(p.id) ? profits.get(p.id)! : (sales.has(p.id) ? null : 0)
-  }));
+  })), ...deleted];
 }
 
 // ---- Origem das visitas (tráfego pago, Instagram, Google...) ----

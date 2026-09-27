@@ -102,8 +102,8 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
                   <div className="admin-report-product">
                     {r.image ? <img src={r.image} alt="" /> : <span />}
                     <div>
-                      <a href={`/produto/${productSlug(r)}`} target="_blank" rel="noopener"><strong>{r.name}</strong></a>
-                      <small>{[r.reference, !r.active && "inativo"].filter(Boolean).join(" • ")}</small>
+                      {r.deleted ? <strong>{r.name}</strong> : <a href={`/produto/${productSlug(r)}`} target="_blank" rel="noopener"><strong>{r.name}</strong></a>}
+                      <small>{[r.reference, r.deleted ? "produto excluído" : !r.active && "inativo"].filter(Boolean).join(" • ")}</small>
                     </div>
                   </div>
                 </td>
