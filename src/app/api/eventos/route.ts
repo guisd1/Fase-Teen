@@ -1,5 +1,6 @@
 import { recordEvent, recordVisit, type StatEvent } from "@/db/stats";
 import { cleanSource } from "@/lib/traffic-source";
+import { isAdmin } from "@/lib/auth";
 import { rateLimited } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,8 @@ const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|headless|lightho
  */
 export async function POST(request: Request) {
   if (BOT.test(request.headers.get("user-agent") ?? "")) return new Response(null, { status: 204 });
+  // Navegador logado no painel (a dona da loja testando): não entra no relatório.
+  if (await isAdmin()) return new Response(null, { status: 204 });
   // Limite por IP: evita que alguém infle os números de propósito.
   if (await rateLimited(request, "eventos", 600, 60 * 60)) return new Response(null, { status: 204 });
   let body: { type?: unknown; productId?: unknown; source?: unknown; campaign?: unknown };

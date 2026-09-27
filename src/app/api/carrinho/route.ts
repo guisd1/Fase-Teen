@@ -1,6 +1,7 @@
 import { getProducts } from "@/db/products";
 import { saveCartSnapshot } from "@/db/recovery";
 import { rateLimited } from "@/lib/redis";
+import { isAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,8 @@ const str = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
  */
 export async function POST(request: Request) {
   if (await rateLimited(request, "carrinho", 30, 60 * 60)) return new Response(null, { status: 204 });
+  // Testes feitos com o painel logado não viram carrinho abandonado.
+  if (await isAdmin()) return new Response(null, { status: 204 });
   const body = await request.json().catch(() => null);
   const name = str(body?.name, 80);
   const phone = str(body?.phone, 40);

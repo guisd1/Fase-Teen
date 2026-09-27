@@ -155,7 +155,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
       <p className="admin-hint">
         <strong>Aberto por link</strong> conta quem chegou direto na página do produto vindo de fora do site: um link
         recebido no WhatsApp, no Instagram, achado no Google etc. Quem navegou pela loja até o produto não entra aí.
-        {" "}Os números começam a contar a partir de hoje. Visitas de robôs (Google etc.) não entram, e recarregar a mesma página
+        {" "}Os números começam a contar a partir de hoje. Visitas de robôs (Google etc.) e dos navegadores logados no painel (seus testes) não entram, e recarregar a mesma página
         não conta duas vezes. Nada de quem visitou é guardado, só os totais.
       </p>
     </>
