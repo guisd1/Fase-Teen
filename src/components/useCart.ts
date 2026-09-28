@@ -30,7 +30,11 @@ interface SavedCheckout {
   cep?: string;
   address?: Address | null;
   coupon?: CouponRule | null;
+  /** Frete cotado e escolhido (vale por 2 horas; some se o carrinho mudar). */
+  shipping?: { cep: string; options: ShippingOption[]; selectedId: string | null; at: number } | null;
 }
+
+const SHIPPING_TTL = 2 * 60 * 60 * 1000;
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -67,6 +71,12 @@ export function useCart(storeId: string, products: Product[], freeShippingMin: n
     setCepState(saved.cep || "");
     setAddress(saved.address || null);
     setCoupon(saved.coupon || null);
+    const sh = saved.shipping;
+    if (sh && sh.cep === (saved.cep || "") && Date.now() - sh.at < SHIPPING_TTL && Array.isArray(sh.options)) {
+      quotedCep.current = sh.cep;
+      setShippingOptions(sh.options);
+      setSelectedShipping(sh.options.find(o => o.id === sh.selectedId) ?? null);
+    }
     setHydrated(true);
   }, [cartKey, checkoutKey]);
 
@@ -75,8 +85,12 @@ export function useCart(storeId: string, products: Product[], freeShippingMin: n
   }, [hydrated, cartKey, cart]);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(checkoutKey, JSON.stringify({ deliveryMode, cep, address, coupon }));
-  }, [hydrated, checkoutKey, deliveryMode, cep, address, coupon]);
+    if (!hydrated) return;
+    const shipping = shippingOptions.length && quotedCep.current
+      ? { cep: quotedCep.current, options: shippingOptions, selectedId: selectedShipping?.id ?? null, at: Date.now() }
+      : null;
+    localStorage.setItem(checkoutKey, JSON.stringify({ deliveryMode, cep, address, coupon, shipping }));
+  }, [hydrated, checkoutKey, deliveryMode, cep, address, coupon, shippingOptions, selectedShipping]);
 
   useEffect(() => {
     if (!hydrated) return;

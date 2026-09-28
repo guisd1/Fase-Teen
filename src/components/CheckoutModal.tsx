@@ -153,6 +153,8 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
     return () => clearTimeout(timer);
   }, [contactKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const [note, setNote] = useState("");
+  /** Frete faltando ou desatualizado: mostra o botão para voltar ao carrinho (sem fechar sozinho). */
+  const [needsShipping, setNeedsShipping] = useState(false);
   const [sending, setSending] = useState(false);
   const [method, setMethod] = useState<PaymentChoice>(onlinePayments ? "pix" : "whatsapp");
   const [pixOrder, setPixOrder] = useState<OnlineOrder | null>(null);
@@ -196,7 +198,8 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
     if (delivery) {
       if (!cart.selectedShipping) {
         cart.setShippingStatus("Calcule e escolha o frete para este CEP antes de enviar o pedido.");
-        onBackToCart();
+        setNeedsShipping(true);
+        setNote("Falta escolher o frete para este CEP. Volte ao carrinho, calcule o frete e escolha a opção de envio.");
         return;
       }
       if (!cart.address || cleanCep(form.cep) !== cart.address.cep) {
@@ -223,7 +226,7 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
         setNote(result.error);
         if (result.shippingChanged) {
           cart.setShippingStatus(result.error);
-          onBackToCart();
+          setNeedsShipping(true);
         }
         return;
       }
@@ -396,6 +399,9 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
             <button className="btn btn-dark full" type="submit" disabled={sending}>{sending ? "Registrando..." : "Enviar pedido pelo WhatsApp"}</button>
           )}
           <p className="form-note">{note}</p>
+          {needsShipping && (
+            <button className="btn btn-light full" type="button" onClick={onBackToCart}>Voltar ao carrinho e escolher o frete</button>
+          )}
         </form>
         </>
         )}
