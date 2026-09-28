@@ -3,8 +3,8 @@ import { blobMode } from "@/lib/blob";
 import { melhorEnvioStatus } from "@/lib/melhor-envio";
 import { checkCredentials, getLastError, mercadoPagoConfigured, mercadoPagoTestMode, webhookUrl } from "@/lib/mercado-pago";
 import { getYoutubeRedirectUri, youtubeClientIdLooksValid, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
-import { disconnectYoutubeAction, saveLabelSenderAction, savePaymentFeesAction } from "../../actions";
-import { getLabelSender, getSavedFees } from "@/db/settings";
+import { disconnectYoutubeAction, saveLabelSenderAction, saveOrderEmailAction, savePaymentFeesAction } from "../../actions";
+import { getLabelSender, getOrderEmailSettings, getSavedFees } from "@/db/settings";
 import { cardPrice, pixPrice } from "@/lib/pricing";
 import { money } from "@/lib/format";
 
@@ -18,7 +18,7 @@ function Notice({ value }: { value?: string }) {
 }
 
 export default async function IntegrationsPage({ searchParams }: {
-  searchParams: Promise<{ youtube?: string; melhorenvio?: string; taxas?: string; remetente?: string }>;
+  searchParams: Promise<{ youtube?: string; melhorenvio?: string; taxas?: string; remetente?: string; aviso?: string }>;
 }) {
   const query = await searchParams;
   const store = getStore();
@@ -27,7 +27,7 @@ export default async function IntegrationsPage({ searchParams }: {
   const blobReady = blobMode() !== null;
   const mpReady = mercadoPagoConfigured();
   const mpTest = mercadoPagoTestMode();
-  const [fees, sender] = await Promise.all([getSavedFees(), getLabelSender()]);
+  const [fees, sender, saleEmail] = await Promise.all([getSavedFees(), getLabelSender(), getOrderEmailSettings()]);
   const origin = String(process.env.STORE_ORIGIN_POSTAL_CODE ?? "").replace(/\D/g, "");
   const [mpCheck, mpLastError] = mpReady ? await Promise.all([checkCredentials(), getLastError()]) : [null, null];
 
@@ -36,6 +36,42 @@ export default async function IntegrationsPage({ searchParams }: {
   return (
     <>
       <div className="admin-head"><h1>Integrações</h1></div>
+
+      <section className="admin-card" id="aviso-venda">
+        <div className="admin-integration-head">
+          <h2>Aviso de venda por e-mail</h2>
+          <span className={`admin-status ${saleEmail?.to ? "ok" : ""}`}>{saleEmail?.to ? "Ligado" : "Desligado"}</span>
+        </div>
+        <p>
+          Um e-mail para você a cada venda: pedido pelo WhatsApp na hora em que é registrado; Pix e cartão quando o pagamento
+          é aprovado. Enviado pela Brevo (a mesma da newsletter).
+        </p>
+        {query.aviso === "ok" && <p className="admin-ok">Salvo!</p>}
+        {query.aviso === "teste" && <p className="admin-ok">Salvo! Mandamos um e-mail de teste. Confira a caixa de entrada (e o spam).</p>}
+        {query.aviso && !["ok", "teste"].includes(query.aviso) && <p className="admin-error">{query.aviso}</p>}
+        {saleEmail?.lastError && (
+          <p className="admin-error">Último erro ao enviar ({new Date(saleEmail.lastErrorAt ?? "").toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}): {saleEmail.lastError}</p>
+        )}
+        {!process.env.BREVO_API_KEY && <p className="admin-alert">A Brevo não está configurada neste projeto (falta BREVO_API_KEY na Vercel).</p>}
+        <form action={saveOrderEmailAction} className="admin-form">
+          <div className="admin-grid-2">
+            <label>Enviar para <small>vazio = desligado</small>
+              <input name="to" type="email" defaultValue={saleEmail?.to ?? ""} placeholder="seuemail@gmail.com" />
+            </label>
+            <label>Remetente <small>e-mail verificado na Brevo; vazio = o mesmo</small>
+              <input name="from" type="email" defaultValue={saleEmail?.from ?? ""} placeholder="o mesmo do destino" />
+            </label>
+          </div>
+          <div className="admin-row">
+            <button className="btn btn-dark" type="submit" name="test" value="1">Salvar e mandar e-mail de teste</button>
+            <button className="btn btn-light" type="submit">Só salvar</button>
+          </div>
+        </form>
+        <p className="admin-hint">
+          Se o teste não chegar, confira na Brevo em <em>Remetentes, domínios e IPs dedicados → Remetentes</em> se o e-mail do
+          remetente está verificado (a Brevo só envia de remetentes verificados).
+        </p>
+      </section>
 
       <section className="admin-card" id="melhor-envio">
         <div className="admin-integration-head">

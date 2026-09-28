@@ -107,3 +107,34 @@ export async function saveLabelSender(sender: LabelSender) {
   await getDb().insert(settings).values({ key: SENDER_KEY, value: sender })
     .onConflictDoUpdate({ target: settings.key, set: { value: sender } });
 }
+
+// ---- Aviso de venda por e-mail (Integrações) ----
+
+const ORDER_EMAIL_KEY = "order-email";
+
+export interface OrderEmailSettings {
+  /** Para quem vai o aviso (vazio = desligado). */
+  to: string;
+  /** Remetente verificado na Brevo (vazio = o mesmo do destino). */
+  from: string;
+  lastError?: string | null;
+  lastErrorAt?: string | null;
+}
+
+export async function getOrderEmailSettings(): Promise<OrderEmailSettings | null> {
+  if (!hasDatabase()) return null;
+  const [row] = await getDb().select().from(settings).where(eq(settings.key, ORDER_EMAIL_KEY));
+  return (row?.value as OrderEmailSettings | undefined) ?? null;
+}
+
+export async function saveOrderEmailSettings(value: OrderEmailSettings) {
+  await getDb().insert(settings).values({ key: ORDER_EMAIL_KEY, value })
+    .onConflictDoUpdate({ target: settings.key, set: { value } });
+}
+
+/** Guarda o último erro de envio para o painel mostrar. */
+export async function saveOrderEmailError(message: string) {
+  const current = await getOrderEmailSettings();
+  if (!current) return;
+  await saveOrderEmailSettings({ ...current, lastError: message.slice(0, 300), lastErrorAt: new Date().toISOString() });
+}

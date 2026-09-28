@@ -1,5 +1,6 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { notifySale } from "@/lib/order-email";
 import { getDb, hasDatabase } from "./client";
 import { orders, products, type NewOrderRow, type OrderRow } from "./schema";
 import type { OrderStatus } from "@/lib/order-status";
@@ -118,14 +119,17 @@ export async function setOrderPayment(id: number, data: Pick<NewOrderRow, "payme
 export async function applyPayment(order: OrderRow, payment: { id: string; status: string; amount: number }) {
   if (order.paidAt) return false;
   const approved = payment.status === "approved" && payment.amount >= order.total - 0.01;
-  await getDb().update(orders)
+  // Só um aviso por pagamento: o webhook e a tela da cliente podem chegar juntos.
+  const [updated] = await getDb().update(orders)
     .set({ paymentId: payment.id, paymentStatus: payment.status, ...(approved ? { paidAt: new Date() } : {}) })
-    .where(eq(orders.id, order.id));
-  if (!approved) {
-    if (payment.status === "approved") console.error(`Pagamento ${payment.id} aprovado com valor menor que o pedido ${order.code}.`);
+    .where(and(eq(orders.id, order.id), isNull(orders.paidAt)))
+    .returning();
+  if (!approved || !updated) {
+    if (payment.status === "approved" && !approved) console.error(`Pagamento ${payment.id} aprovado com valor menor que o pedido ${order.code}.`);
     return false;
   }
   if (order.status === "pendente") await adminSetOrderStatus(order.id, "preparacao");
+  await notifySale(updated, "paid");
   return true;
 }
 

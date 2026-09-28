@@ -14,6 +14,8 @@ import { cleanCpf, isValidCpf } from "@/lib/cpf";
 import { getPromotions } from "@/db/settings";
 import { hasFreeShipping, isFreeShippingOption } from "@/lib/promotions";
 import { markCartRecovered } from "@/db/recovery";
+import { notifySale } from "@/lib/order-email";
+import { adminGetOrder } from "@/db/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -162,7 +164,12 @@ export async function POST(request: Request) {
   await markCartRecovered(customerPhone, order.code).catch(() => {});
 
   const result = { code: order.code, token: order.publicToken, subtotal, discount, couponCode, couponError, paymentDiscount, freight, total };
-  if (!online) return reply(200, result);
+  if (!online) {
+    // Pedido pelo WhatsApp: avisa a loja por e-mail (Pix/cartão avisam quando o pagamento é aprovado).
+    const saved = await adminGetOrder(order.id).catch(() => null);
+    if (saved) await notifySale(saved, "whatsapp");
+    return reply(200, result);
+  }
 
   // Cria a cobrança no Mercado Pago. Se falhar, o pedido é desfeito.
   const payer = { email: customerEmail!, name: customerName };

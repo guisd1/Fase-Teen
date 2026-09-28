@@ -12,7 +12,8 @@ import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/or
 import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
 import { normalizeCode } from "@/lib/coupon";
-import { getHomeImages, saveHomeImages, saveLabelSender, savePaymentFees, savePromotions, type HomeImages } from "@/db/settings";
+import { getHomeImages, saveHomeImages, saveLabelSender, saveOrderEmailSettings, savePaymentFees, savePromotions, type HomeImages } from "@/db/settings";
+import { sendTestEmail } from "@/lib/order-email";
 import { buyLabel, cancelLabel, labelOptions, printLabel, refreshLabel } from "@/lib/labels";
 import { deleteAbandonedCart, deleteWaitlist, markCartContacted, markWaitlistNotified } from "@/db/recovery";
 import type { Promotions } from "@/lib/promotions";
@@ -539,4 +540,24 @@ export async function saveLabelSenderAction(form: FormData) {
   }
   await saveLabelSender(sender);
   redirect("/admin/integracoes?remetente=ok#melhor-envio");
+}
+
+// ---- Aviso de venda por e-mail ----
+
+export async function saveOrderEmailAction(form: FormData) {
+  await requireAdmin();
+  const to = String(form.get("to") ?? "").trim().toLowerCase();
+  const from = String(form.get("from") ?? "").trim().toLowerCase();
+  const valid = (e: string) => !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  if (!valid(to) || !valid(from)) redirect(`/admin/integracoes?aviso=${encodeURIComponent("Confira os e-mails digitados.")}#aviso-venda`);
+  await saveOrderEmailSettings({ to, from, lastError: null, lastErrorAt: null });
+  if (form.get("test") === "1" && to) {
+    try {
+      await sendTestEmail(to, from);
+    } catch (error) {
+      redirect(`/admin/integracoes?aviso=${encodeURIComponent(`Salvo, mas o e-mail de teste falhou: ${(error as Error).message}`)}#aviso-venda`);
+    }
+    redirect("/admin/integracoes?aviso=teste#aviso-venda");
+  }
+  redirect("/admin/integracoes?aviso=ok#aviso-venda");
 }
