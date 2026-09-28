@@ -44,8 +44,8 @@ const cirandaCirandinha: StoreConfig = {
 
   contact: {
     whatsapp: "5538998286040",
-    instagramUrl: "https://instagram.com/cirandacirandinhaespi",
-    instagramHandle: "@cirandacirandinhaespi"
+    instagramUrl: "https://instagram.com/lojacirandacirandinhaespi",
+    instagramHandle: "@lojacirandacirandinhaespi"
   },
 
   commerce: {
