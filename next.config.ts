@@ -28,6 +28,16 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  // Um endereço só: quem abre o domínio sem "www" vai para o com "www" (o login do
+  // painel, os cookies e o Google passam a enxergar um site só).
+  async redirects() {
+    return ["faseteen.com.br"].map(domain => ({
+      source: "/:path*",
+      has: [{ type: "host" as const, value: domain }],
+      destination: `https://www.${domain}/:path*`,
+      permanent: true
+    }));
   }
 };
 
