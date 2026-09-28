@@ -299,3 +299,17 @@ ol.summary-list li::before { counter-increment: top; content: counter(top) "."; 
 .admin-side nav { gap: 2px; }
 .admin-side nav a { padding: 8px 12px; }
 @media (max-width: 900px) { .admin-side { overflow: visible; } }
+
+/* Cartão das notificações no rodapé do menu */
+.admin-side-foot .notify-card { display: grid; gap: 6px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+.notify-status { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; color: #fff; }
+.notify-status i { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgba(74, 222, 128, .25); }
+.notify-card small { color: #d9c9d4; font-size: 11px; line-height: 1.35; }
+.admin-side-foot .notify-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+.admin-side-foot .notify-actions button {
+  width: auto; padding: 7px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; cursor: pointer;
+  background: rgba(255,255,255,.1); border: 1px solid transparent; color: #fff;
+}
+.admin-side-foot .notify-actions button:hover { background: rgba(255,255,255,.18); }
+.admin-side-foot .notify-actions button:last-child { background: transparent; border-color: rgba(255,255,255,.2); color: #d9c9d4; }
+.admin-side-foot .notify-actions button:disabled { opacity: .8; cursor: default; }

@@ -26,6 +26,13 @@ const deviceName = () => {
 export default function OrderNotifier() {
   const [state, setState] = useState<State>("loading");
   const [error, setError] = useState("");
+  const [tested, setTested] = useState(false);
+
+  const test = async () => {
+    setTested(true);
+    await fetch("/api/admin/push", { method: "PUT" }).catch(() => {});
+    setTimeout(() => setTested(false), 3000);
+  };
 
   useEffect(() => {
     (async () => {
@@ -87,14 +94,14 @@ export default function OrderNotifier() {
   return (
     <div className="admin-notify">
       {state === "on" && (
-        <>
-          <span className="admin-notify-on">Notificações ativas neste aparelho</span>
-          <span>
-            <button type="button" className="admin-notify-link" onClick={() => fetch("/api/admin/push", { method: "PUT" })}>testar</button>
-            {" • "}
-            <button type="button" className="admin-notify-link" onClick={disable}>desativar</button>
-          </span>
-        </>
+        <div className="notify-card">
+          <span className="notify-status"><i aria-hidden /> Notificações ativas</span>
+          <small>Você recebe um aviso a cada pedido neste aparelho.</small>
+          <div className="notify-actions">
+            <button type="button" onClick={test} disabled={tested}>{tested ? "Enviado!" : "Testar"}</button>
+            <button type="button" onClick={disable}>Desativar</button>
+          </div>
+        </div>
       )}
       {(state === "off" || state === "working") && (
         <button type="button" className="admin-notify-btn" disabled={state === "working"} onClick={enable}>
