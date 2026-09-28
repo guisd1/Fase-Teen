@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from "node:crypto";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { notifySale } from "@/lib/order-email";
+import { notifyOrderPush } from "@/lib/push";
 import { getDb, hasDatabase } from "./client";
 import { orders, products, type NewOrderRow, type OrderRow } from "./schema";
 import type { OrderStatus } from "@/lib/order-status";
@@ -129,7 +130,7 @@ export async function applyPayment(order: OrderRow, payment: { id: string; statu
     return false;
   }
   if (order.status === "pendente") await adminSetOrderStatus(order.id, "preparacao");
-  await notifySale(updated, "paid");
+  await Promise.all([notifySale(updated, "paid"), notifyOrderPush(updated, "paid")]);
   return true;
 }
 

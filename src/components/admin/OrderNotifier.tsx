@@ -1,61 +1,112 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { money } from "@/lib/format";
+import { useEffect, useState } from "react";
 
-interface Latest { id: number; code: string; name: string; total: number }
+/*
+  Notificação de pedido novo neste aparelho (Web Push): chega mesmo com o painel
+  fechado. Cada aparelho/navegador ativa uma vez. No iPhone, só funciona com o
+  painel adicionado à Tela de Início (limite da Apple).
+*/
 
-/**
- * Aviso de pedido novo: com o painel aberto (em qualquer aba do navegador),
- * confere a cada 30 segundos e mostra uma notificação do sistema com som.
- */
+type State = "loading" | "unsupported" | "ios-install" | "off" | "on" | "denied" | "working";
+
+function keyToBytes(base64: string) {
+  const pad = "=".repeat((4 - (base64.length % 4)) % 4);
+  const raw = atob((base64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
+}
+
+const deviceName = () => {
+  const ua = navigator.userAgent;
+  const os = /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "Aparelho";
+  const browser = /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "navegador";
+  return `${os} • ${browser}`;
+};
+
 export default function OrderNotifier() {
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
-  const last = useRef<number | null>(null);
+  const [state, setState] = useState<State>("loading");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    setPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
-    const check = async () => {
+    (async () => {
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || typeof Notification === "undefined") {
+        setState(ios && !standalone ? "ios-install" : "unsupported");
+        return;
+      }
+      if (Notification.permission === "denied") { setState("denied"); return; }
       try {
-        const r = await fetch("/api/admin/pedidos-novos", { cache: "no-store" });
-        if (!r.ok) return;
-        const { latest } = (await r.json()) as { latest: Latest | null };
-        if (!latest) return;
-        if (last.current !== null && latest.id > last.current) notify(latest);
-        last.current = latest.id;
-      } catch { /* sem conexão: tenta de novo depois */ }
-    };
-    check();
-    const timer = setInterval(check, 30_000);
-    return () => clearInterval(timer);
+        const reg = await navigator.serviceWorker.register("/sw.js");
+        const sub = await reg.pushManager.getSubscription();
+        setState(sub && Notification.permission === "granted" ? "on" : "off");
+      } catch {
+        setState("unsupported");
+      }
+    })();
   }, []);
 
-  const notify = (o: Latest) => {
-    document.title = `Pedido novo! nº ${o.code}`;
+  const enable = async () => {
+    setError("");
+    setState("working");
     try {
-      // Bipe curto sem arquivo de áudio.
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      osc.frequency.value = 880;
-      osc.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.25);
-    } catch { /* sem som */ }
-    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      const n = new Notification(`Pedido novo nº ${o.code}`, { body: `${o.name} • ${money(o.total)}`, tag: `pedido-${o.id}` });
-      n.onclick = () => { window.focus(); window.location.href = `/admin/pedidos/${o.id}`; };
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") { setState(permission === "denied" ? "denied" : "off"); return; }
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+      const { publicKey } = await (await fetch("/api/admin/push", { cache: "no-store" })).json();
+      const sub = (await reg.pushManager.getSubscription()) ?? await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(publicKey) });
+      const r = await fetch("/api/admin/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON(), device: deviceName() })
+      });
+      if (!r.ok) throw new Error("O servidor não aceitou este aparelho.");
+      setState("on");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível ativar.");
+      setState("off");
     }
   };
 
-  const enable = async () => {
-    if (typeof Notification === "undefined") return;
-    setPermission(await Notification.requestPermission());
+  const disable = async () => {
+    setState("working");
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = await reg?.pushManager.getSubscription();
+      if (sub) {
+        await fetch("/api/admin/push", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+        await sub.unsubscribe();
+      }
+    } finally {
+      setState("off");
+    }
   };
 
-  if (permission === "granted" || permission === "unsupported") return null;
+  if (state === "loading") return null;
   return (
-    <button type="button" className="admin-notify-btn" onClick={enable}>
-      {permission === "denied" ? "Avisos bloqueados no navegador" : "Ativar aviso de pedido novo"}
-    </button>
+    <div className="admin-notify">
+      {state === "on" && (
+        <>
+          <span className="admin-notify-on">Notificações ativas neste aparelho</span>
+          <span>
+            <button type="button" className="admin-notify-link" onClick={() => fetch("/api/admin/push", { method: "PUT" })}>testar</button>
+            {" • "}
+            <button type="button" className="admin-notify-link" onClick={disable}>desativar</button>
+          </span>
+        </>
+      )}
+      {(state === "off" || state === "working") && (
+        <button type="button" className="admin-notify-btn" disabled={state === "working"} onClick={enable}>
+          {state === "working" ? "Ativando..." : "Ativar notificação de pedido neste aparelho"}
+        </button>
+      )}
+      {state === "denied" && <span className="admin-notify-hint">Notificações bloqueadas. Libere nas configurações do navegador para este site.</span>}
+      {state === "ios-install" && (
+        <span className="admin-notify-hint">No iPhone: toque em Compartilhar → Adicionar à Tela de Início, abra o painel pelo ícone e ative aqui.</span>
+      )}
+      {state === "unsupported" && <span className="admin-notify-hint">Este navegador não aceita notificações.</span>}
+      {error && <span className="admin-notify-hint">{error}</span>}
+    </div>
   );
 }

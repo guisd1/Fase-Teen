@@ -288,3 +288,14 @@ ol.summary-list li::before { counter-increment: top; content: counter(top) "."; 
 .label-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 6px; }
 .label-buy { display: grid; gap: 10px; max-width: 520px; margin-top: 8px; }
 .label-buy label { margin: 0 !important; }
+.admin-notify { display: grid; gap: 4px; margin-bottom: 10px; font-size: 12px; }
+.admin-notify-on { color: #b9f0c8; font-weight: 700; }
+.admin-notify-link { background: none; border: 0; padding: 0; color: #f3d7ec; text-decoration: underline; cursor: pointer; font: inherit; font-size: 11px; text-align: left; }
+.admin-notify-hint { color: #e9d5e3; line-height: 1.4; }
+.admin-notify .admin-notify-btn { margin-bottom: 0; }
+
+/* Menu lateral com muitos itens: rola em telas baixas, sem esconder o rodapé */
+.admin-side { overflow-y: auto; gap: 16px; }
+.admin-side nav { gap: 2px; }
+.admin-side nav a { padding: 8px 12px; }
+@media (max-width: 900px) { .admin-side { overflow: visible; } }

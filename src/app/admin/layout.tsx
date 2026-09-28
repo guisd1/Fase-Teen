@@ -6,7 +6,9 @@ import "./admin.css";
 export function generateMetadata(): Metadata {
   return {
     title: `Painel | ${getStore().name}`,
-    robots: { index: false, follow: false }
+    robots: { index: false, follow: false },
+    manifest: "/admin/manifest.webmanifest",
+    appleWebApp: { capable: true, title: `Painel ${getStore().name}`, statusBarStyle: "default" }
   };
 }
 

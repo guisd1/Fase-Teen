@@ -92,6 +92,13 @@
       "when": 1790619487944,
       "tag": "0012_etiquetas",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790622086761,
+      "tag": "0013_notificacoes-push",
+      "breakpoints": true
     }
   ]
 }

@@ -15,9 +15,16 @@ import { getPromotions } from "@/db/settings";
 import { hasFreeShipping, isFreeShippingOption } from "@/lib/promotions";
 import { markCartRecovered } from "@/db/recovery";
 import { notifySale } from "@/lib/order-email";
+import { notifyOrderPush } from "@/lib/push";
 import { adminGetOrder } from "@/db/orders";
 
 export const dynamic = "force-dynamic";
+
+/** Notificação de pedido novo no celular da loja (Pix/cartão ainda sem pagar também avisam). */
+async function pushNewOrder(id: number) {
+  const saved = await adminGetOrder(id).catch(() => null);
+  if (saved) await notifyOrderPush(saved, "new");
+}
 
 const reply = (status: number, body: unknown) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -167,7 +174,7 @@ export async function POST(request: Request) {
   if (!online) {
     // Pedido pelo WhatsApp: avisa a loja por e-mail (Pix/cartão avisam quando o pagamento é aprovado).
     const saved = await adminGetOrder(order.id).catch(() => null);
-    if (saved) await notifySale(saved, "whatsapp");
+    if (saved) await Promise.all([notifySale(saved, "whatsapp"), notifyOrderPush(saved, "new")]);
     return reply(200, result);
   }
 
@@ -179,10 +186,12 @@ export async function POST(request: Request) {
       const pix = await createPixPayment({ code: order.code, total, payer, description });
       const paymentData = { pixCode: pix.pixCode, pixQrBase64: pix.pixQrBase64, pixExpiresAt: pix.pixExpiresAt };
       await setOrderPayment(order.id, { paymentId: pix.paymentId, paymentStatus: pix.status, paymentData });
+      await pushNewOrder(order.id);
       return reply(200, { ...result, pix: paymentData });
     }
     const card = await createCardCheckout({ code: order.code, token: order.publicToken, total, payer, description, installments: store.commerce.installments });
     await setOrderPayment(order.id, { paymentId: null, paymentStatus: "aguardando", paymentData: { checkoutUrl: card.checkoutUrl } });
+    await pushNewOrder(order.id);
     return reply(200, { ...result, checkoutUrl: card.checkoutUrl });
   } catch (error) {
     console.error("Falha ao criar pagamento no Mercado Pago:", error);

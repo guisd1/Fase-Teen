@@ -315,3 +315,13 @@ export const waitlist = pgTable("waitlist", {
   notifiedAt: timestamp("notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
 }, t => [index("waitlist_product_idx").on(t.productId)]);
+
+/** Aparelhos que recebem notificação de pedido novo (Web Push), ativados no painel. */
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  endpoint: text("endpoint").notNull().unique(),
+  keys: jsonb("keys").$type<{ p256dh: string; auth: string }>().notNull(),
+  /** Nome do aparelho/navegador, só para reconhecer na lista. */
+  device: text("device"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+});
