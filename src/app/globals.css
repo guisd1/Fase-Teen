@@ -770,3 +770,7 @@ button { color: inherit; }
 }
 .cart-checkout-bar .grand-total-row { border: 0; padding: 0; align-items: center; }
 .cart-checkout-bar .grand-total-row strong { font-size: 22px; }
+
+/* CPF no checkout */
+.field-hint { font-weight: 400; color: var(--muted); font-size: 11px; }
+.field-error { display: block; color: #b42318; font-size: 12px; margin-top: 4px; font-weight: 600; }

@@ -1,5 +1,5 @@
 import { isAdmin } from "@/lib/auth";
-import { createOAuthState, getClientId, getRedirectUri } from "@/lib/melhor-envio";
+import { ME_SCOPES, createOAuthState, getClientId, getRedirectUri } from "@/lib/melhor-envio";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ export async function GET() {
       redirect_uri: getRedirectUri(),
       response_type: "code",
       state,
-      scope: "shipping-calculate"
+      scope: ME_SCOPES
     });
 
     return new Response(null, {

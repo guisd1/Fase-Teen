@@ -3,8 +3,8 @@ import { blobMode } from "@/lib/blob";
 import { melhorEnvioStatus } from "@/lib/melhor-envio";
 import { checkCredentials, getLastError, mercadoPagoConfigured, mercadoPagoTestMode, webhookUrl } from "@/lib/mercado-pago";
 import { getYoutubeRedirectUri, youtubeClientIdLooksValid, youtubeConfigured, youtubeConnected } from "@/lib/youtube";
-import { disconnectYoutubeAction, savePaymentFeesAction } from "../../actions";
-import { getSavedFees } from "@/db/settings";
+import { disconnectYoutubeAction, saveLabelSenderAction, savePaymentFeesAction } from "../../actions";
+import { getLabelSender, getSavedFees } from "@/db/settings";
 import { cardPrice, pixPrice } from "@/lib/pricing";
 import { money } from "@/lib/format";
 
@@ -18,7 +18,7 @@ function Notice({ value }: { value?: string }) {
 }
 
 export default async function IntegrationsPage({ searchParams }: {
-  searchParams: Promise<{ youtube?: string; melhorenvio?: string; taxas?: string }>;
+  searchParams: Promise<{ youtube?: string; melhorenvio?: string; taxas?: string; remetente?: string }>;
 }) {
   const query = await searchParams;
   const store = getStore();
@@ -27,7 +27,8 @@ export default async function IntegrationsPage({ searchParams }: {
   const blobReady = blobMode() !== null;
   const mpReady = mercadoPagoConfigured();
   const mpTest = mercadoPagoTestMode();
-  const fees = await getSavedFees();
+  const [fees, sender] = await Promise.all([getSavedFees(), getLabelSender()]);
+  const origin = String(process.env.STORE_ORIGIN_POSTAL_CODE ?? "").replace(/\D/g, "");
   const [mpCheck, mpLastError] = mpReady ? await Promise.all([checkCredentials(), getLastError()]) : [null, null];
 
   const meLabel = { connected: "Conectado", expired: "Autorização expirada", disconnected: "Não conectado", "no-redis": "Redis não configurado" }[me];
@@ -36,18 +37,44 @@ export default async function IntegrationsPage({ searchParams }: {
     <>
       <div className="admin-head"><h1>Integrações</h1></div>
 
-      <section className="admin-card">
+      <section className="admin-card" id="melhor-envio">
         <div className="admin-integration-head">
           <h2>Melhor Envio</h2>
           <span className={`admin-status ${me === "connected" ? "ok" : ""}`}>{meLabel}</span>
         </div>
         <Notice value={query.melhorenvio} />
-        <p>Calcula o frete no carrinho. A chave da API não fica guardada no painel.</p>
+        <p>Calcula o frete no carrinho e compra as etiquetas pelo painel (na página de cada pedido). A chave da API não fica guardada no painel.</p>
+        <p className="admin-hint">Conectou antes das etiquetas existirem? Clique em <strong>Reconectar</strong> uma vez para liberar as permissões de compra, impressão e rastreio.</p>
         <div className="admin-row">
           <a className="btn btn-light" href={ME_TOKENS_URL} target="_blank" rel="noopener">Abrir chaves da API no Melhor Envio ↗</a>
           <a className="btn btn-dark" href="/api/melhor-envio/authorize">{me === "connected" ? "Reconectar" : "Conectar"}</a>
         </div>
         <p className="admin-hint">A autorização vale 45 dias e é renovada automaticamente enquanto houver cotações.</p>
+
+        <h3 className="admin-subtitle">Remetente das etiquetas</h3>
+        <p className="admin-hint">Quem envia os pacotes: aparece na etiqueta e na declaração de conteúdo. Use o endereço de onde saem os envios.</p>
+        {query.remetente === "ok" && <p className="admin-ok">Remetente salvo!</p>}
+        {query.remetente && query.remetente !== "ok" && <p className="admin-error">{query.remetente}</p>}
+        <form action={saveLabelSenderAction} className="admin-form sender-form">
+          <div className="admin-grid-2">
+            <label>Nome (pessoa ou empresa)<input name="name" required defaultValue={sender?.name ?? store.name} /></label>
+            <label>CPF ou CNPJ<input name="document" required inputMode="numeric" defaultValue={sender?.document ?? ""} placeholder="Só números" /></label>
+            <label>Telefone<input name="phone" inputMode="tel" defaultValue={sender?.phone ?? store.contact.whatsapp.replace(/^55/, "")} /></label>
+            <label>E-mail<input name="email" type="email" defaultValue={sender?.email ?? ""} /></label>
+          </div>
+          <div className="admin-grid-3">
+            <label>CEP<input name="postalCode" required inputMode="numeric" defaultValue={sender?.postalCode ?? origin} /></label>
+            <label>Cidade<input name="city" required defaultValue={sender?.city ?? ""} /></label>
+            <label>UF<input name="state" required maxLength={2} defaultValue={sender?.state ?? "MG"} /></label>
+          </div>
+          <div className="admin-grid-3">
+            <label>Rua<input name="address" required defaultValue={sender?.address ?? ""} /></label>
+            <label>Número<input name="number" required defaultValue={sender?.number ?? ""} /></label>
+            <label>Complemento<input name="complement" defaultValue={sender?.complement ?? ""} /></label>
+          </div>
+          <label>Bairro<input name="district" required defaultValue={sender?.district ?? ""} /></label>
+          <button className="btn btn-dark" type="submit">Salvar remetente</button>
+        </form>
       </section>
 
       <section className="admin-card">

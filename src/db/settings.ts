@@ -76,3 +76,34 @@ export async function savePromotions(promo: Promotions) {
   await getDb().insert(settings).values({ key: PROMO_KEY, value: promo })
     .onConflictDoUpdate({ target: settings.key, set: { value: promo } });
 }
+
+// ---- Remetente das etiquetas do Melhor Envio (Integrações) ----
+
+const SENDER_KEY = "label-sender";
+
+export interface LabelSender {
+  name: string;
+  /** CPF (pessoa física/MEI) ou CNPJ, só números. */
+  document: string;
+  phone: string;
+  email: string;
+  postalCode: string;
+  address: string;
+  number: string;
+  complement: string;
+  district: string;
+  city: string;
+  /** UF, duas letras. */
+  state: string;
+}
+
+export async function getLabelSender(): Promise<LabelSender | null> {
+  if (!hasDatabase()) return null;
+  const [row] = await getDb().select().from(settings).where(eq(settings.key, SENDER_KEY));
+  return (row?.value as LabelSender | undefined) ?? null;
+}
+
+export async function saveLabelSender(sender: LabelSender) {
+  await getDb().insert(settings).values({ key: SENDER_KEY, value: sender })
+    .onConflictDoUpdate({ target: settings.key, set: { value: sender } });
+}

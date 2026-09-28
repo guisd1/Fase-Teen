@@ -63,7 +63,7 @@ function doQuote(token: string, payload: unknown) {
  * Usada pelo carrinho e, de novo, ao gravar um pedido pago online (o valor do
  * frete que o navegador manda nunca é usado para cobrar).
  */
-export async function quoteShipping(postalCode: unknown, items: { id: unknown; quantity: unknown }[]) {
+async function fetchQuote(postalCode: unknown, items: { id: unknown; quantity: unknown }[]) {
   const origin = cleanCep(process.env.STORE_ORIGIN_POSTAL_CODE);
   const services = String(process.env.MELHOR_ENVIO_SERVICES || "").trim();
   if (origin.length !== 8) throw new QuoteError(500, "Frete ainda não configurado: STORE_ORIGIN_POSTAL_CODE ausente ou inválido.");
@@ -128,8 +128,38 @@ export async function quoteShipping(postalCode: unknown, items: { id: unknown; q
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new QuoteError(502, data?.message || data?.error || "O Melhor Envio recusou a cotação.");
+  return { data, payload, destination };
+}
+
+export async function quoteShipping(postalCode: unknown, items: { id: unknown; quantity: unknown }[]) {
+  const { data, payload, destination } = await fetchQuote(postalCode, items);
   const options = normalizeQuotes(data);
   const unavailable = options.length ? [] : unavailableReasons(data);
   if (!options.length) console.warn("Frete sem opções:", JSON.stringify({ payload, unavailable }));
   return { options, unavailable, postalCode: destination };
+}
+
+export interface LabelPackage { height: number; width: number; length: number; weight: number }
+
+/**
+ * Cotação para comprar a etiqueta: além do preço, traz as caixas (medidas e peso)
+ * que o Melhor Envio montou para cada serviço, usadas no carrinho de etiquetas.
+ */
+export async function quoteForLabel(postalCode: unknown, items: { id: unknown; quantity: unknown }[]) {
+  const { data } = await fetchQuote(postalCode, items);
+  return quoteList(data)
+    .filter(q => !q?.error && q?.status !== "unavailable")
+    .map(q => ({
+      id: String(q.id ?? q.service_id ?? q.service?.id ?? ""),
+      company: q.company?.name ?? "Transportadora",
+      service: q.name ?? "",
+      price: Number(q.custom_price ?? q.price ?? NaN),
+      deliveryTime: Number(q.custom_delivery_time ?? q.delivery_time ?? NaN) || null,
+      packages: (Array.isArray(q.packages) ? q.packages : []).map((p: RawQuote): LabelPackage => ({
+        height: Number(p.dimensions?.height), width: Number(p.dimensions?.width),
+        length: Number(p.dimensions?.length), weight: Number(p.weight)
+      }))
+    }))
+    .filter(q => q.id && Number.isFinite(q.price))
+    .sort((a, b) => a.price - b.price);
 }

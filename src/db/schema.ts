@@ -119,6 +119,22 @@ export interface OrderShipping {
   deliveryTime: number | null;
   /** Valor cotado do frete (a loja paga quando o pedido tem frete grátis). */
   price?: number;
+  /** Id do serviço no Melhor Envio (PAC, SEDEX...), para comprar a etiqueta. */
+  serviceId?: string;
+}
+
+/** Etiqueta comprada no Melhor Envio pelo painel. */
+export interface OrderLabel {
+  /** Id da etiqueta no Melhor Envio. */
+  id: string;
+  protocol: string | null;
+  company: string;
+  service: string;
+  price: number;
+  /** cart (no carrinho, não paga) | paid | generated | posted | delivered | canceled */
+  status: string;
+  tracking: string | null;
+  createdAt: string;
 }
 
 /*
@@ -134,6 +150,8 @@ export const orders = pgTable("orders", {
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),
   customerEmail: text("customer_email"),
+  /** CPF da cliente (só números), exigido pelo Melhor Envio para a etiqueta. */
+  customerDocument: text("customer_document"),
   deliveryMode: text("delivery_mode").$type<"delivery" | "pickup">().notNull(),
   address: jsonb("address").$type<OrderAddress>(),
   shipping: jsonb("shipping").$type<OrderShipping>(),
@@ -147,6 +165,7 @@ export const orders = pgTable("orders", {
   notes: text("notes"),
   /** Anotações internas do administrador (não aparecem para o cliente). */
   adminNotes: text("admin_notes"),
+  label: jsonb("label").$type<OrderLabel>(),
   /** De onde veio a cliente (anuncio, instagram, google, whatsapp, direto...) e a campanha do anúncio. */
   source: text("source"),
   campaign: text("campaign"),

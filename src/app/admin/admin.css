@@ -280,3 +280,11 @@ ol.summary-list li::before { counter-increment: top; content: counter(top) "."; 
 .admin-order-name { display: grid; }
 .summary-list li span small { color: var(--muted); }
 .admin-inline-ref { color: var(--muted); }
+
+/* Etiquetas */
+.admin-subtitle { font-size: 15px; margin: 22px 0 6px; padding-top: 16px; border-top: 1px solid var(--line); }
+.sender-form { margin-top: 10px; }
+.label-panel p { margin-bottom: 6px; }
+.label-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 6px; }
+.label-buy { display: grid; gap: 10px; max-width: 520px; margin-top: 8px; }
+.label-buy label { margin: 0 !important; }

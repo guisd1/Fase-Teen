@@ -10,6 +10,7 @@ import { QuoteError, quoteShipping } from "@/lib/shipping-quote";
 import { createCardCheckout, createPixPayment, mercadoPagoConfigured, saveLastError } from "@/lib/mercado-pago";
 import { getStore } from "@/stores";
 import { cleanSource } from "@/lib/traffic-source";
+import { cleanCpf, isValidCpf } from "@/lib/cpf";
 import { getPromotions } from "@/db/settings";
 import { hasFreeShipping, isFreeShippingOption } from "@/lib/promotions";
 import { markCartRecovered } from "@/db/recovery";
@@ -94,12 +95,12 @@ export async function POST(request: Request) {
       }
       if (!option) return reply(409, { error: "A opção de frete mudou. Calcule o frete de novo no carrinho.", shippingChanged: true });
       freight = round(option.price);
-      shipping = { company: option.company, service: option.service, deliveryTime: option.deliveryTime, price: round(option.price) };
+      shipping = { company: option.company, service: option.service, deliveryTime: option.deliveryTime, price: round(option.price), serviceId: option.id };
     } else {
       const price = Number(s.price);
       freight = Number.isFinite(price) && price >= 0 && price < 10000 ? round(price) : 0;
       const days = Number(s.deliveryTime);
-      shipping = { company: str(s.company, 80), service: str(s.service, 80), deliveryTime: Number.isFinite(days) && days > 0 ? days : null, price: freight };
+      shipping = { company: str(s.company, 80), service: str(s.service, 80), deliveryTime: Number.isFinite(days) && days > 0 ? days : null, price: freight, serviceId: str(s.id, 20) || undefined };
     }
   }
 
@@ -136,11 +137,14 @@ export async function POST(request: Request) {
   const total = round(productsTotal - discount + freight);
 
   const origin = cleanSource(body?.origin?.source, body?.origin?.campaign);
+  // CPF: exigido pelo Melhor Envio para a etiqueta (só na entrega).
+  const customerDocument = pickup ? null : cleanCpf(body?.customer?.document);
+  if (!pickup && !isValidCpf(customerDocument)) return reply(400, { error: "Informe um CPF válido para a etiqueta de envio." });
 
   let order;
   try {
     order = await createOrder({
-      customerName, customerPhone, customerEmail,
+      customerName, customerPhone, customerEmail, customerDocument,
       deliveryMode: pickup ? "pickup" : "delivery",
       address, shipping, items,
       subtotal, freight, discount, couponCode, paymentMethod, paymentDiscount, total,

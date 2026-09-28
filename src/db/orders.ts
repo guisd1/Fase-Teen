@@ -80,7 +80,7 @@ export async function adminSetOrderStatus(id: number, status: OrderStatus) {
   if (apply !== order.stockApplied) await moveStock(order, apply ? -1 : 1);
 }
 
-export async function adminUpdateOrder(id: number, data: Pick<NewOrderRow, "trackingCode" | "adminNotes">) {
+export async function adminUpdateOrder(id: number, data: Partial<Pick<NewOrderRow, "trackingCode" | "adminNotes" | "label" | "customerDocument">>) {
   await getDb().update(orders).set(data).where(eq(orders.id, id));
 }
 

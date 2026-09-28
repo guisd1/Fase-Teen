@@ -12,7 +12,8 @@ import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/or
 import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
 import { normalizeCode } from "@/lib/coupon";
-import { getHomeImages, saveHomeImages, savePaymentFees, savePromotions, type HomeImages } from "@/db/settings";
+import { getHomeImages, saveHomeImages, saveLabelSender, savePaymentFees, savePromotions, type HomeImages } from "@/db/settings";
+import { buyLabel, cancelLabel, labelOptions, printLabel, refreshLabel } from "@/lib/labels";
 import { deleteAbandonedCart, deleteWaitlist, markCartContacted, markWaitlistNotified } from "@/db/recovery";
 import type { Promotions } from "@/lib/promotions";
 import { parseFee, priceFromMarkup, type MarkupType } from "@/lib/pricing";
@@ -464,4 +465,78 @@ export async function savePromotionsAction(form: FormData) {
   await savePromotions({ freeShippingMin, welcomeCoupon, launch });
   refreshSite();
   redirect("/admin/promocoes?ok=1");
+}
+
+// ---- Etiquetas do Melhor Envio ----
+
+const labelError = (error: unknown) => ({ error: error instanceof Error ? error.message : "Não foi possível falar com o Melhor Envio." });
+
+export async function labelOptionsAction(orderId: number) {
+  await requireAdmin();
+  try {
+    return await labelOptions(orderId);
+  } catch (error) {
+    return labelError(error);
+  }
+}
+
+export async function buyLabelAction(orderId: number, serviceId: string, document: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  try {
+    await buyLabel(orderId, serviceId, document);
+  } catch (error) {
+    revalidatePath(`/admin/pedidos/${orderId}`);
+    return labelError(error);
+  }
+  revalidatePath(`/admin/pedidos/${orderId}`);
+  return {};
+}
+
+export async function printLabelAction(orderId: number): Promise<{ error?: string; url?: string }> {
+  await requireAdmin();
+  try {
+    return { url: await printLabel(orderId) };
+  } catch (error) {
+    return labelError(error);
+  }
+}
+
+export async function refreshLabelAction(orderId: number): Promise<{ error?: string }> {
+  await requireAdmin();
+  try {
+    await refreshLabel(orderId);
+  } catch (error) {
+    return labelError(error);
+  }
+  revalidatePath(`/admin/pedidos/${orderId}`);
+  return {};
+}
+
+export async function cancelLabelAction(orderId: number): Promise<{ error?: string }> {
+  await requireAdmin();
+  try {
+    await cancelLabel(orderId);
+  } catch (error) {
+    return labelError(error);
+  }
+  revalidatePath(`/admin/pedidos/${orderId}`);
+  return {};
+}
+
+export async function saveLabelSenderAction(form: FormData) {
+  await requireAdmin();
+  const v = (k: string, max = 120) => String(form.get(k) ?? "").trim().slice(0, max);
+  const sender = {
+    name: v("name"), document: v("document").replace(/\D/g, ""), phone: v("phone"), email: v("email"),
+    postalCode: v("postalCode").replace(/\D/g, ""), address: v("address"), number: v("number", 20),
+    complement: v("complement", 60), district: v("district", 80), city: v("city", 80), state: v("state", 2).toUpperCase()
+  };
+  const fail = (msg: string) => redirect(`/admin/integracoes?remetente=${encodeURIComponent(msg)}#melhor-envio`);
+  if (!sender.name) return fail("Informe o nome do remetente.");
+  if (!(sender.document.length === 11 || sender.document.length === 14)) return fail("Informe o CPF (11 números) ou CNPJ (14 números) do remetente.");
+  if (sender.postalCode.length !== 8 || !sender.address || !sender.district || !sender.city || sender.state.length !== 2) {
+    return fail("Preencha o endereço completo do remetente (CEP, rua, bairro, cidade e UF).");
+  }
+  await saveLabelSender(sender);
+  redirect("/admin/integracoes?remetente=ok#melhor-envio");
 }

@@ -7,11 +7,14 @@ import { hasWhatsapp, whatsappUrl } from "@/lib/whatsapp";
 import type { Address, Cart } from "./useCart";
 import PixPayment, { useOrderStatus, type PixData } from "./PixPayment";
 import { orderSource } from "@/lib/traffic-source";
+import { cleanCpf, formatCpf, isValidCpf } from "@/lib/cpf";
 
 interface FormData {
   name: string;
   phone: string;
   email: string;
+  /** CPF, pedido só na entrega (o Melhor Envio exige para a etiqueta). */
+  cpf: string;
   cep: string;
   address: string;
   number: string;
@@ -25,7 +28,7 @@ interface FormData {
 function initialForm(cart: Cart): FormData {
   const a = cart.deliveryMode === "delivery" ? cart.address : null;
   return {
-    name: "", phone: "", email: "",
+    name: "", phone: "", email: "", cpf: "",
     cep: cart.cep ? formatCep(cart.cep) : "",
     address: a?.address || "", number: "", complement: a?.complement || "",
     district: a?.district || "", city: a?.city || "", state: a?.state || "",
@@ -44,7 +47,7 @@ interface Registered {
 
 const orderBody = (cart: Cart, data: FormData, paymentMethod: PaymentChoice) => JSON.stringify({
   paymentMethod,
-  customer: { name: data.name, phone: data.phone, email: data.email },
+  customer: { name: data.name, phone: data.phone, email: data.email, document: cart.deliveryMode === "delivery" ? cleanCpf(data.cpf) : undefined },
   items: cart.items.map(x => ({ id: x.id, size: x.size, color: x.color, qty: x.qty })),
   deliveryMode: cart.deliveryMode,
   address: { ...data, cep: cleanCep(data.cep) },
@@ -205,6 +208,10 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
       setNote("Preencha nome, WhatsApp e e-mail.");
       return;
     }
+    if (cart.deliveryMode === "delivery" && !isValidCpf(form.cpf)) {
+      setNote("Confira o CPF: ele é necessário para a etiqueta de envio.");
+      return;
+    }
     if (sending) return;
 
     if (method !== "whatsapp") {
@@ -291,6 +298,17 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
           <label>E-mail
             <input name="email" type="email" required autoComplete="email" placeholder="seuemail@email.com" value={form.email} onChange={set("email")} />
           </label>
+
+          {delivery && (
+            <label>CPF <small className="field-hint">para a etiqueta de envio</small>
+              <input
+                name="cpf" required inputMode="numeric" autoComplete="off" placeholder="000.000.000-00"
+                value={formatCpf(form.cpf)}
+                onChange={e => setForm(f => ({ ...f, cpf: cleanCpf(e.target.value) }))}
+              />
+              {form.cpf.length === 11 && !isValidCpf(form.cpf) && <small className="field-error">CPF inválido. Confira os números.</small>}
+            </label>
+          )}
 
           {delivery && (
             <>

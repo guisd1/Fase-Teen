@@ -9,6 +9,9 @@ import { METHOD_LABELS, paymentSummary } from "@/lib/payment-labels";
 import { SOURCE_LABELS } from "@/lib/traffic-source";
 import OrderStatusPanel from "@/components/admin/OrderStatusPanel";
 import DeleteButton from "@/components/admin/DeleteButton";
+import LabelPanel from "@/components/admin/LabelPanel";
+import { getLabelSender } from "@/db/settings";
+import { formatCpf } from "@/lib/cpf";
 import { deleteOrder, saveOrderNotes } from "../../../actions";
 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +24,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const payment = paymentSummary(order);
   const a = order.address;
   const s = order.shipping;
+  const sender = order.deliveryMode === "delivery" ? await getLabelSender() : null;
 
   return (
     <>
@@ -106,10 +110,22 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                   CEP {formatCep(a.cep)}
                 </p>
               )}
+              {order.customerDocument && <p className="admin-hint">CPF: {formatCpf(order.customerDocument)}</p>}
             </>
           )}
         </section>
       </div>
+
+      {order.deliveryMode === "delivery" && (
+        <LabelPanel
+          orderId={order.id}
+          label={order.label ?? null}
+          customerDocument={order.customerDocument ?? null}
+          chosenService={s ? [s.company, s.service].filter(Boolean).join(" ") : null}
+          freight={order.freight}
+          senderReady={Boolean(sender)}
+        />
+      )}
 
       <section className="admin-card">
         <h2>Controle interno</h2>
