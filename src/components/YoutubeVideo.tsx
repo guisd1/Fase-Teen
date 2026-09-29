@@ -58,6 +58,9 @@ export default function YoutubeVideo({ id, aspect, title, controls = true }: {
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const ratio = aspect && aspect > 0 ? aspect : 16 / 9;
+  // Capa em boa resolução: a vertical (oar2) nos vídeos verticais, a HD nos horizontais; hqdefault se faltar.
+  const posters = ratio < 1 ? ["oar2", "hqdefault"] : ["maxresdefault", "hqdefault"];
+  const [posterIndex, setPosterIndex] = useState(0);
 
   // Maior tamanho em que o vídeo cabe inteiro no quadro (como object-fit: contain); sobra o fundo da loja.
   useEffect(() => {
@@ -117,19 +120,30 @@ export default function YoutubeVideo({ id, aspect, title, controls = true }: {
     setMuted(!muted);
   };
 
-  // A capa (4:3, com o vídeo dentro) é posicionada para coincidir com o vídeo.
-  const poster = frame && (ratio < 4 / 3 ? { w: frame.h * 4 / 3, h: frame.h } : { w: frame.w, h: frame.w * 3 / 4 });
+  // A hqdefault é 4:3 com o vídeo dentro: é posicionada para coincidir com o vídeo. As outras já têm o formato dele.
+  const posterName = posters[posterIndex];
+  const poster = posterName !== "hqdefault" ? { w: "100%", h: "100%" }
+    : frame && (ratio < 4 / 3 ? { w: frame.h * 4 / 3, h: frame.h } : { w: frame.w, h: frame.w * 3 / 4 });
 
   return (
     <div className="yt-video" ref={box}>
       {/* Área do vídeo: a capa não passa dela (as bordas desfocadas da capa ficam de fora). */}
       <div className="yt-video-stage" style={frame ? { width: frame.w, height: frame.h } : undefined}>
         <div className="yt-video-frame" ref={holder} title={title} />
-        <img className={`yt-video-poster ${started ? "hidden" : ""}`} src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt=""
-          style={poster ? { width: poster.w, height: poster.h } : undefined} />
+        <img className={`yt-video-poster ${started ? "hidden" : ""}`} src={`https://i.ytimg.com/vi/${id}/${posterName}.jpg`} alt=""
+          style={poster ? { width: poster.w, height: poster.h } : undefined}
+          onError={() => setPosterIndex(i => Math.min(i + 1, posters.length - 1))}
+          // A maxresdefault que não existe volta como uma imagem cinza de 120 px.
+          onLoad={e => { if (e.currentTarget.naturalWidth <= 120) setPosterIndex(i => Math.min(i + 1, posters.length - 1)); }} />
       </div>
-      {/* Camada por cima do iframe: o YouTube não mostra título nem logo ao passar o mouse. */}
-      <div className="yt-video-shield" onClick={controls ? togglePlay : undefined} aria-hidden />
+      {/*
+        Antes de tocar, o toque vai direto para o vídeo do YouTube: celulares que
+        bloqueiam o vídeo automático (economia de bateria/dados) só deixam tocar
+        com um toque de verdade no vídeo. Depois, a camada por cima evita que o
+        YouTube mostre título e logo ao passar o mouse.
+      */}
+      {started && <div className="yt-video-shield" onClick={controls ? togglePlay : undefined} aria-hidden />}
+      {!started && <span className="yt-video-bigplay passive" aria-hidden><Icon name="play" /></span>}
       {controls && started && !playing && (
         <button type="button" className="yt-video-bigplay" onClick={togglePlay} aria-label="Continuar vídeo"><Icon name="play" /></button>
       )}
