@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/db/products";
 import { cleanCep, formatCep } from "@/lib/format";
 import type { ShippingOption } from "@/lib/shipping";
-import { couponDiscount, normalizeCode, type CouponRule } from "@/lib/coupon";
+import { couponDiscount, normalizeCode, type CouponRule } from "@/lib/coupon";
 import { isFreeShippingOption } from "@/lib/promotions";
 
 export interface CartItem {
@@ -125,7 +125,9 @@ export function useCart(storeId: string, products: Product[], freeShippingMin: n
   // Total pagando no Pix: produtos pelo preço do Pix; o cupom vale sobre esse valor (como no servidor).
   const pixSubtotal = items.reduce((s, x) => s + x.product.pixPrice * x.qty, 0);
   const pixDiscount = coupon && discount > 0 ? couponDiscount({ ...coupon, minSubtotal: null }, pixSubtotal) : 0;
-  const pixTotal = Math.round((pixSubtotal - pixDiscount + (freight ?? 0)) * 100) / 100;
+  // Frete no Pix: leva só a taxa do Pix embutida (menor que a do cartão).
+  const pixFreight = freight && selectedShipping?.pixPrice !== undefined ? Number(selectedShipping.pixPrice) : freight;
+  const pixTotal = Math.round((pixSubtotal - pixDiscount + (pixFreight ?? 0)) * 100) / 100;
 
   /** Estoque do tamanho escolhido; produtos sem tamanhos cadastrados não têm limite. */
   const stockFor = (line: CartItem) => {

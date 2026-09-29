@@ -119,6 +119,8 @@ export interface OrderShipping {
   deliveryTime: number | null;
   /** Valor cotado do frete (a loja paga quando o pedido tem frete grátis). */
   price?: number;
+  /** Quanto a transportadora cobra (sem a taxa do Mercado Pago embutida no frete). */
+  cost?: number;
   /** Id do serviço no Melhor Envio (PAC, SEDEX...), para comprar a etiqueta. */
   serviceId?: string;
 }

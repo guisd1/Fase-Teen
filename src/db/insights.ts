@@ -25,7 +25,8 @@ const feeOf = (order: Pick<OrderRow, "paymentMethod">, fees: PaymentFees) =>
  */
 export function orderProfit(order: OrderRow, costs: Map<number, number | null>, fees: PaymentFees) {
   const received = order.total * (1 - feeOf(order, fees) / 100);
-  const shippingPaid = order.deliveryMode === "pickup" ? 0 : (order.freight > 0 ? order.freight : order.shipping?.price ?? 0);
+  // O que a transportadora cobra (pedidos antigos não guardavam: usa o frete cobrado).
+  const shippingPaid = order.deliveryMode === "pickup" ? 0 : order.shipping?.cost ?? (order.freight > 0 ? order.freight : order.shipping?.price ?? 0);
   let cost = 0, missingCost = false;
   for (const i of order.items) {
     const c = costs.get(i.productId);
@@ -41,7 +42,7 @@ export function itemProfits(order: OrderRow, costs: Map<number, number | null>, 
   const productsCharged = Math.max(0, order.subtotal - order.discount - order.paymentDiscount);
   const ratio = order.subtotal > 0 ? productsCharged / order.subtotal : 0;
   const feeFactor = 1 - feeOf(order, fees) / 100;
-  const freeShippingCost = order.deliveryMode !== "pickup" && order.freight === 0 ? order.shipping?.price ?? 0 : 0;
+  const freeShippingCost = order.deliveryMode !== "pickup" && order.freight === 0 ? order.shipping?.cost ?? order.shipping?.price ?? 0 : 0;
   return order.items.map(i => {
     const value = i.price * i.qty;
     const share = order.subtotal > 0 ? value / order.subtotal : 0;

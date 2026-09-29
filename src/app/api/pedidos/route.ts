@@ -103,8 +103,9 @@ export async function POST(request: Request) {
         return reply(502, { error: `${message} Tente de novo em instantes.` });
       }
       if (!option) return reply(409, { error: "A opção de frete mudou. Calcule o frete de novo no carrinho.", shippingChanged: true });
-      freight = round(option.price);
-      shipping = { company: option.company, service: option.service, deliveryTime: option.deliveryTime, price: round(option.price), serviceId: option.id };
+      // Frete com a taxa do meio de pagamento embutida: a loja recebe o frete inteiro.
+      freight = round(paymentMethod === "pix" ? option.pixPrice : option.price);
+      shipping = { company: option.company, service: option.service, deliveryTime: option.deliveryTime, price: freight, cost: option.cost, serviceId: option.id };
     } else {
       const price = Number(s.price);
       freight = Number.isFinite(price) && price >= 0 && price < 10000 ? round(price) : 0;

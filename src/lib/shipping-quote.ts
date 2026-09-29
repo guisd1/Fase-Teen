@@ -1,4 +1,6 @@
 import { getShippingInfo } from "@/db/products";
+import { getPaymentFees } from "@/db/settings";
+import { withFee } from "@/lib/pricing";
 import { cleanCep } from "@/lib/format";
 import { ME_URL, getAccessToken, getUserAgent } from "@/lib/melhor-envio";
 import type { ShippingOption } from "@/lib/shipping";
@@ -131,9 +133,19 @@ async function fetchQuote(postalCode: unknown, items: { id: unknown; quantity: u
   return { data, payload, destination };
 }
 
+/**
+ * Frete para o cliente: o valor da transportadora com a taxa do Mercado Pago
+ * embutida (cartão em `price`, Pix em `pixPrice`), para a loja receber o frete
+ * inteiro. `cost` é o valor da transportadora, sem a taxa.
+ */
 export async function quoteShipping(postalCode: unknown, items: { id: unknown; quantity: unknown }[]) {
-  const { data, payload, destination } = await fetchQuote(postalCode, items);
-  const options = normalizeQuotes(data);
+  const [{ data, payload, destination }, fees] = await Promise.all([fetchQuote(postalCode, items), getPaymentFees()]);
+  const options = normalizeQuotes(data).map(o => ({
+    ...o,
+    price: withFee(o.price, fees.cardPercent),
+    pixPrice: withFee(o.price, fees.pixPercent),
+    cost: o.price
+  }));
   const unavailable = options.length ? [] : unavailableReasons(data);
   if (!options.length) console.warn("Frete sem opções:", JSON.stringify({ payload, unavailable }));
   return { options, unavailable, postalCode: destination };

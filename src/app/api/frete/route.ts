@@ -14,7 +14,9 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const items: unknown = body?.items;
   try {
-    return reply(200, await quoteShipping(body?.postalCode, Array.isArray(items) ? items : []));
+    const quote = await quoteShipping(body?.postalCode, Array.isArray(items) ? items : []);
+    // O cliente vê só o frete com a taxa; o valor da transportadora fica no servidor.
+    return reply(200, { ...quote, options: quote.options.map(({ cost: _cost, ...o }) => o) });
   } catch (error) {
     if (error instanceof QuoteError) return reply(error.status, { error: error.message });
     return reply(502, { error: error instanceof Error ? error.message : "Não foi possível calcular o frete." });
