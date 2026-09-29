@@ -59,14 +59,14 @@ export default function YoutubeVideo({ id, aspect, title, controls = true }: {
   const [muted, setMuted] = useState(true);
   const ratio = aspect && aspect > 0 ? aspect : 16 / 9;
 
-  // Tamanho do vídeo para cobrir o quadro inteiro (como object-fit: cover).
+  // Maior tamanho em que o vídeo cabe inteiro no quadro (como object-fit: contain); sobra o fundo da loja.
   useEffect(() => {
     const el = box.current;
     if (!el) return;
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       if (!width || !height) return;
-      setFrame(width / height > ratio ? { w: width, h: width / ratio } : { w: height * ratio, h: height });
+      setFrame(width / height > ratio ? { w: height * ratio, h: height } : { w: width, h: width / ratio });
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -122,10 +122,12 @@ export default function YoutubeVideo({ id, aspect, title, controls = true }: {
 
   return (
     <div className="yt-video" ref={box}>
-      <div className="yt-video-frame" ref={holder} title={title}
-        style={frame ? { width: frame.w, height: frame.h } : { width: "100%", height: "100%" }} />
-      <img className={`yt-video-poster ${started ? "hidden" : ""}`} src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt=""
-        style={poster ? { width: poster.w, height: poster.h } : undefined} />
+      {/* Área do vídeo: a capa não passa dela (as bordas desfocadas da capa ficam de fora). */}
+      <div className="yt-video-stage" style={frame ? { width: frame.w, height: frame.h } : undefined}>
+        <div className="yt-video-frame" ref={holder} title={title} />
+        <img className={`yt-video-poster ${started ? "hidden" : ""}`} src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt=""
+          style={poster ? { width: poster.w, height: poster.h } : undefined} />
+      </div>
       {/* Camada por cima do iframe: o YouTube não mostra título nem logo ao passar o mouse. */}
       <div className="yt-video-shield" onClick={controls ? togglePlay : undefined} aria-hidden />
       {controls && started && !playing && (
