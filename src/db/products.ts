@@ -4,6 +4,8 @@ import { getDb, hasDatabase } from "./client";
 import { products, type NewProductRow, type ProductImage, type ProductRow, type ProductSize, type SizeChart } from "./schema";
 import { getPaymentFees } from "./settings";
 import { cardPrice, pixPrice, type PaymentFees } from "@/lib/pricing";
+import { youtubeId } from "@/lib/youtube-id";
+import { youtubeAspects } from "@/lib/youtube-aspect";
 
 /** Dados do produto que vão para o navegador (sem peso/dimensões). */
 export interface Product {
@@ -24,6 +26,8 @@ export interface Product {
   colors: string[];
   images: ProductImage[];
   youtubeUrl: string | null;
+  /** Formato do vídeo (largura ÷ altura), para o player preencher o quadro. */
+  videoAspect: number | null;
   reference: string | null;
   featured: boolean;
   badge: string | null;
@@ -103,6 +107,7 @@ function toPublic(row: ProductRow, fees: PaymentFees): Product {
     colors: row.colors,
     images: row.images,
     youtubeUrl: row.youtubeUrl,
+    videoAspect: null,
     reference: row.reference,
     featured: row.featured,
     badge: row.badge,
@@ -121,7 +126,13 @@ export const getProducts = cache(async (): Promise<Product[]> => {
     getDb().select().from(products).where(visible).orderBy(asc(products.sortOrder), desc(products.id)),
     getPaymentFees()
   ]);
-  return rows.map(r => toPublic(r, fees));
+  const list = rows.map(r => toPublic(r, fees));
+  const aspects = await youtubeAspects(list.map(p => youtubeId(p.youtubeUrl)).filter((id): id is string => Boolean(id)));
+  for (const p of list) {
+    const id = youtubeId(p.youtubeUrl);
+    if (id) p.videoAspect = aspects.get(id) ?? null;
+  }
+  return list;
 });
 
 export async function getProduct(id: number): Promise<Product | null> {

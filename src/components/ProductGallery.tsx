@@ -5,6 +5,7 @@ import type { Product } from "@/db/products";
 import { youtubeId } from "@/lib/youtube-id";
 import { imagesForColor } from "@/lib/product-media";
 import { Icon } from "./Icons";
+import YoutubeVideo from "./YoutubeVideo";
 import { optimized } from "@/lib/image";
 
 type Slide = { type: "image"; src: string } | { type: "youtube"; id: string };
@@ -63,12 +64,7 @@ export default function ProductGallery({ product, color }: { product: Product; c
       <div className="gallery-frame">
         {!current && <div className="gallery-empty">Sem foto</div>}
         {current?.type === "youtube" && (
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${current.id}?rel=0&playsinline=1`}
-            title={`Vídeo: ${product.name}`}
-            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          <YoutubeVideo id={current.id} aspect={product.videoAspect} title={`Vídeo: ${product.name}`} />
         )}
         {current?.type === "image" && (
           <div className="gallery-photo">

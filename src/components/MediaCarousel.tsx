@@ -5,6 +5,7 @@ import type { Product } from "@/db/products";
 import { youtubeId } from "@/lib/youtube-id";
 import { imagesForColor } from "@/lib/product-media";
 import { Icon } from "./Icons";
+import YoutubeVideo from "./YoutubeVideo";
 import { optimized } from "@/lib/image";
 
 type Slide = { type: "image"; src: string } | { type: "youtube"; id: string };
@@ -22,7 +23,7 @@ export default function MediaCarousel({ product, color, className = "", playVide
   /** Cor escolhida: mostra as fotos dessa variação primeiro. */
   color?: string | null;
   className?: string;
-  /** true na página do produto (vídeo tocável); false nos cards (só a capa). */
+  /** true mostra os botões do vídeo (pausar, som); nos cards ele só toca, mudo. */
   playVideo?: boolean;
   children?: ReactNode;
 }) {
@@ -42,13 +43,9 @@ export default function MediaCarousel({ product, color, className = "", playVide
         {slides.map((s, i) => (
           <div className="media-slide" key={i}>
             {s.type === "image" && <img {...optimized(s.src, "(max-width: 760px) 50vw, (max-width: 1220px) 25vw, 300px")} alt={product.name} loading="lazy" />}
-            {s.type === "youtube" && (playVideo && i === index
-              ? <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${s.id}?rel=0&playsinline=1`}
-                  title={`Vídeo: ${product.name}`}
-                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+            {/* O vídeo só carrega quando a pessoa chega nele no carrossel. */}
+            {s.type === "youtube" && (i === index
+              ? <YoutubeVideo id={s.id} aspect={product.videoAspect} title={`Vídeo: ${product.name}`} controls={playVideo} />
               : <div className="video-cover">
                   <img src={`https://i.ytimg.com/vi/${s.id}/hqdefault.jpg`} alt={`Vídeo: ${product.name}`} loading="lazy" />
                   <span className="video-play" aria-hidden><Icon name="play" /></span>
