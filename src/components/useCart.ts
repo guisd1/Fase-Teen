@@ -114,7 +114,16 @@ export function useCart(storeId: string, products: Product[], freeShippingMin: n
       .filter((x): x is CartItem & { product: Product } => Boolean(x.product)),
     [cart, products]
   );
-  const count = cart.reduce((s, x) => s + x.qty, 0);
+  // Conta só o que aparece no carrinho (produto que saiu da loja não entra no número).
+  const count = items.reduce((s, x) => s + x.qty, 0);
+
+  // Produto apagado ou escondido no painel sai do carrinho salvo no navegador.
+  useEffect(() => {
+    if (!hydrated || !products.length) return;
+    if (cart.every(i => products.some(p => p.id === i.id))) return;
+    setCart(current => current.filter(i => products.some(p => p.id === i.id)));
+    resetShipping();
+  }, [hydrated, cart, products]);
   const subtotal = items.reduce((s, x) => s + x.product.price * x.qty, 0);
   // Frete grátis a partir do valor definido no painel (a opção de envio ainda é escolhida, mas sai por R$ 0).
   const freeShipping = deliveryMode === "delivery" && freeShippingMin !== null && subtotal >= freeShippingMin - 0.001;
