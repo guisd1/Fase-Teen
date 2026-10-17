@@ -164,6 +164,9 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
           >
             {outOfStock ? "Esgotado" : "Adicionar ao carrinho"}
           </button>
+          <button className="btn btn-light share-btn" type="button" onClick={share}>
+            {shared ? "Link copiado!" : "Compartilhar produto"}
+          </button>
           {/* Selos: só regras reais da loja (configuração da loja e painel → Promoções). */}
           <ul className="trust-list">
             {returnDays > 0 && (
@@ -176,9 +179,6 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
             {store.commerce.shippingNote && <li><Icon name="bag" /> <span>{store.commerce.shippingNote}</span></li>}
           </ul>
           <ProductShipping product={product} />
-          <button className="btn btn-light share-btn" type="button" onClick={share}>
-            {shared ? "Link copiado!" : "Compartilhar produto"}
-          </button>
         </div>
       </div>
       <RelatedProducts product={product} />

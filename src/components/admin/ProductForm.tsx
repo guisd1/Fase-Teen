@@ -183,7 +183,8 @@ export default function ProductForm({ id, initial, categories, youtubeConnected,
       <section className="admin-card">
         <h2>Informações</h2>
         <label>Nome do produto *
-          <input required {...field("name")} placeholder="Ex.: Vestido Floral" />
+          <input required {...field("name")} placeholder="Ex.: Vestido Floral de Algodão com Babado" />
+          <small className="admin-hint">Dica: peça + o principal benefício real (tecido, caimento, detalhe). Ex.: &quot;Moletom Cropped Rosa de Algodão Macio&quot;. Use só o que a peça realmente tem. Mudar o nome não quebra links antigos.</small>
         </label>
         <div className="admin-grid-2">
           <label>Código de referência (SKU)

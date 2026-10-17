@@ -1,7 +1,7 @@
 import { cache } from "react";
-import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { getDb, hasDatabase } from "./client";
-import { products, type NewProductRow, type ProductImage, type ProductRow, type ProductSize, type SizeChart } from "./schema";
+import { orders, products, productStats, type NewProductRow, type ProductImage, type ProductRow, type ProductSize, type SizeChart } from "./schema";
 import { getPaymentFees } from "./settings";
 import { cardPrice, pixPrice, type PaymentFees } from "@/lib/pricing";
 import { youtubeId } from "@/lib/youtube-id";
@@ -273,4 +273,28 @@ export async function adminApplyFlashSale(
       .set({ promoPercent: next.percent, promoStartsAt: new Date(next.startsAt), promoEndsAt: new Date(next.endsAt) })
       .where(inArray(products.id, next.productIds));
   }
+}
+
+/**
+  Planilha de títulos (Item 10 do plano): produtos ativos em ordem de mais vendidos
+  (peças em pedidos pagos), depois mais colocados no carrinho, com o que o cadastro diz sobre a peça.
+*/
+export async function adminTitleSheet() {
+  if (noDatabase()) return [];
+  const db = getDb();
+  const [rows, soldRows, statRows] = await Promise.all([
+    db.select({
+      id: products.id, name: products.name, reference: products.reference, category: products.category,
+      composition: products.composition, description: products.description
+    }).from(products).where(eq(products.active, true)),
+    db.select({ items: orders.items }).from(orders).where(eq(orders.stockApplied, true)),
+    db.select({ productId: productStats.productId, carts: sql<number>`sum(${productStats.carts})::int` })
+      .from(productStats).groupBy(productStats.productId)
+  ]);
+  const sold = new Map<number, number>();
+  for (const o of soldRows) for (const i of o.items) sold.set(i.productId, (sold.get(i.productId) ?? 0) + i.qty);
+  const carts = new Map(statRows.map(s => [s.productId, Number(s.carts) || 0]));
+  return rows
+    .map(r => ({ ...r, sold: sold.get(r.id) ?? 0, carts: carts.get(r.id) ?? 0 }))
+    .sort((a, b) => b.sold - a.sold || b.carts - a.carts || a.name.localeCompare(b.name, "pt-BR"));
 }

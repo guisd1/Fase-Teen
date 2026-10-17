@@ -19,6 +19,7 @@ export default async function ProductsPage() {
         <div className="admin-head-actions">
           <Link className="btn btn-light" href="/admin/produtos/ordem">Ordem da vitrine</Link>
           <Link className="btn btn-light" href="/admin/estoque">Editar estoque</Link>
+          <a className="btn btn-light" href="/admin/exportar/titulos" title="Produtos dos mais vendidos para os menos vendidos, com uma coluna para o título sugerido">Planilha de títulos</a>
           <Link className="btn btn-dark" href="/admin/produtos/novo">+ Novo produto</Link>
         </div>
       </div>

@@ -198,7 +198,9 @@ Exercício do vídeo: peça para alguém da equipe "vender" a peça falando e co
 
 **Critérios de aceite:**
 - [ ] Títulos revisados por humano antes de publicar.
-- [ ] Slugs/URLs existentes não quebram (redirecionamento se mudarem).
+- [x] Slugs/URLs existentes não quebram (redirecionamento se mudarem).
+
+> **Situação (2026-10-17):** a ferramenta está pronta, falta o conteúdo. Painel → Produtos → "Planilha de títulos" baixa os produtos ativos dos mais vendidos (peças em pedidos pagos) para os menos vendidos, depois por vezes no carrinho, com coluna "Título sugerido" e o que o cadastro diz da peça (composição, descrição). O cadastro do produto tem a dica de como escrever o título. O link do produto usa o número dele e redireciona para o nome novo, então trocar o título não quebra links. **Pendente:** hoje só existe 1 produto, de teste, e nenhuma venda. Quando o catálogo real entrar, gerar as sugestões só com benefícios que estejam no cadastro (nada inventado) e revisar antes de aplicar.
 
 ### [ ] Item 11 — Benefícios em tópicos antes do botão Comprar
 
