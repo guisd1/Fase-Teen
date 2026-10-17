@@ -7,7 +7,9 @@ import { mainImage } from "@/lib/product-media";
 import { couponLabel } from "@/lib/coupon";
 import { Icon } from "./Icons";
 import { optimized } from "@/lib/image";
-import { isFreeShippingOption } from "@/lib/promotions";
+import { flashLive, isFreeShippingOption } from "@/lib/promotions";
+import { useShop } from "./ShopShell";
+import { CartFlashNote } from "./Countdown";
 
 function CouponBox({ cart }: { cart: Cart }) {
   const [code, setCode] = useState("");
@@ -43,6 +45,8 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
   cepInputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const { items, deliveryMode, selectedShipping } = cart;
+  const { promotions: { flash }, now } = useShop();
+  const flashInCart = flash && now !== null && flashLive(flash, now) && items.some(x => flash.productIds.includes(x.id));
   const delivery = deliveryMode === "delivery";
 
   return (
@@ -82,6 +86,7 @@ export default function CartDrawer({ cart, open, onClose, onCheckout, cepInputRe
           </div>
         ) : (
           <div className="cart-footer">
+            {flashInCart && <CartFlashNote endsAt={flash.endsAt} percent={flash.percent} />}
             {cart.freeShippingMin !== null && (
               <div className={`free-shipping ${cart.freeShipping ? "done" : ""}`}>
                 <p>

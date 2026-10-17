@@ -65,10 +65,19 @@ export const getPromotions = cache(async (): Promise<Promotions> => {
   const v = row.value as Partial<Promotions>;
   const min = Number(v.freeShippingMin);
   const launch = v.launch && typeof v.launch.title === "string" && !Number.isNaN(Date.parse(v.launch.date)) ? v.launch : null;
+  const f = v.flash;
+  const flash = f && typeof f.text === "string" && !Number.isNaN(Date.parse(f.startsAt)) && !Number.isNaN(Date.parse(f.endsAt))
+    ? {
+      active: f.active === true, text: f.text, link: typeof f.link === "string" && f.link ? f.link : null,
+      percent: Number(f.percent) || 0, startsAt: f.startsAt, endsAt: f.endsAt,
+      productIds: Array.isArray(f.productIds) ? f.productIds.filter(Number.isInteger) : []
+    }
+    : null;
   return {
     freeShippingMin: v.freeShippingMin === null || !Number.isFinite(min) || min <= 0 ? null : min,
     welcomeCoupon: typeof v.welcomeCoupon === "string" && v.welcomeCoupon ? v.welcomeCoupon : null,
-    launch
+    launch,
+    flash
   };
 });
 

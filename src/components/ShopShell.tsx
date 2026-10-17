@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { Product } from "@/db/products";
@@ -13,11 +13,16 @@ import { useCart, type Cart } from "./useCart";
 import { Icon, WhatsappIcon } from "./Icons";
 import { startVisit } from "@/lib/traffic-source";
 import { trackVisit } from "@/lib/track";
-import type { Promotions } from "@/lib/promotions";
+import { flashLive, type Promotions } from "@/lib/promotions";
+import { liveProduct, nextPriceChange } from "@/lib/live-price";
+import { FlashBar } from "./Countdown";
 
 interface Shop {
   store: StoreConfig;
+  /** Produtos com o preço que vale agora (promoção com data começa e acaba na hora). */
   products: Product[];
+  /** Relógio usado nos preços: muda só quando algum preço ou a promoção relâmpago muda (null até carregar). */
+  now: number | null;
   cart: Cart;
   search: string;
   openCart: () => void;
@@ -37,8 +42,45 @@ export function useShop() {
   return shop;
 }
 
+/** Maior espera aceita pelo setTimeout (~24 dias). */
+const MAX_WAIT = 2 ** 31 - 1;
+
+/**
+  Aplica nos produtos o preço do instante atual e acorda sozinho no próximo começo ou fim
+  de promoção (dos produtos ou da relâmpago), para a troca acontecer sem recarregar a página.
+*/
+function useLivePrices(serverProducts: Product[], promotions: Promotions) {
+  const [now, setNow] = useState<number | null>(null);
+  const flash = promotions.flash;
+
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    tick();
+    // Celular com a aba em segundo plano atrasa os timers: confere de novo ao voltar.
+    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  useEffect(() => {
+    if (now === null) return;
+    const moments = [nextPriceChange(serverProducts, now)];
+    if (flash?.active) moments.push(...[flash.startsAt, flash.endsAt].map(Date.parse).filter(t => t > now));
+    const next = Math.min(...moments.filter((t): t is number => t !== null));
+    if (!Number.isFinite(next)) return;
+    const timer = setTimeout(() => setNow(Date.now()), Math.min(MAX_WAIT, next - now + 50));
+    return () => clearTimeout(timer);
+  }, [now, serverProducts, flash]);
+
+  const products = useMemo(
+    () => (now === null ? serverProducts : serverProducts.map(p => liveProduct(p, now))),
+    [now, serverProducts]
+  );
+  return { products, now };
+}
+
 /** Cabeçalho, rodapé, carrinho e checkout, compartilhados por todas as páginas da loja. */
-export default function ShopShell({ store, products, onlinePayments, promotions, children }: {
+export default function ShopShell({ store, products: serverProducts, onlinePayments, promotions, children }: {
   store: StoreConfig;
   products: Product[];
   /** Mercado Pago configurado: o checkout oferece Pix e cartão. */
@@ -48,6 +90,7 @@ export default function ShopShell({ store, products, onlinePayments, promotions,
   children: ReactNode;
 }) {
   const t = store.texts;
+  const { products, now } = useLivePrices(serverProducts, promotions);
   const cart = useCart(store.id, products, promotions.freeShippingMin);
   const router = useRouter();
   const pathname = usePathname();
@@ -104,8 +147,10 @@ export default function ShopShell({ store, products, onlinePayments, promotions,
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <ShopContext.Provider value={{ store, products, cart, search, openCart: () => setCartOpen(true), promotions, onlinePayments, favorites, toggleFavorite }}>
-      <div className="topbar">{t.topbar}</div>
+    <ShopContext.Provider value={{ store, products, now, cart, search, openCart: () => setCartOpen(true), promotions, onlinePayments, favorites, toggleFavorite }}>
+      {now !== null && promotions.flash && flashLive(promotions.flash, now)
+        ? <FlashBar flash={promotions.flash} />
+        : <div className="topbar">{t.topbar}</div>}
 
       <header className="header">
         <div className="header-inner">

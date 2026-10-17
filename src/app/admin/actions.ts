@@ -7,16 +7,16 @@ import { rateLimited } from "@/lib/redis";
 import { del } from "@vercel/blob";
 import { checkCredentials, endSession, requireAdmin, startSession } from "@/lib/auth";
 import { disconnectYoutube } from "@/lib/youtube";
-import { adminCreateProduct, adminDeleteProduct, adminDuplicateProduct, adminGetProduct, adminListProducts, adminSetProductOrder, adminSetStock, adminUpdateProduct, allProductImageUrls } from "@/db/products";
+import { adminApplyFlashSale, adminCreateProduct, adminDeleteProduct, adminDuplicateProduct, adminGetProduct, adminListProducts, adminSetProductOrder, adminSetStock, adminUpdateProduct, allProductImageUrls } from "@/db/products";
 import { adminDeleteOrder, adminSetOrderStatus, adminUpdateOrder } from "@/db/orders";
 import { adminDeleteReview, adminSetReviewApproved, reviewImagesOf } from "@/db/reviews";
 import { adminCreateCoupon, adminDeleteCoupon, adminSetCouponActive } from "@/db/coupons";
 import { normalizeCode } from "@/lib/coupon";
-import { getHomeImages, saveHomeImages, saveLabelSender, saveOrderEmailSettings, savePaymentFees, savePromotions, type HomeImages } from "@/db/settings";
+import { getHomeImages, getPromotions, saveHomeImages, saveLabelSender, saveOrderEmailSettings, savePaymentFees, savePromotions, type HomeImages } from "@/db/settings";
 import { sendTestEmail } from "@/lib/order-email";
 import { buyLabel, cancelLabel, labelOptions, printLabel, refreshLabel } from "@/lib/labels";
 import { deleteAbandonedCart, deleteWaitlist, markCartContacted, markWaitlistNotified } from "@/db/recovery";
-import type { Promotions } from "@/lib/promotions";
+import type { FlashSale, Promotions } from "@/lib/promotions";
 import { parseFee, priceFromMarkup, type MarkupType } from "@/lib/pricing";
 import type { NewProductRow, ProductImage, ProductSize, SizeChart } from "@/db/schema";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
@@ -463,9 +463,59 @@ export async function savePromotionsAction(form: FormData) {
     if (date.getTime() <= Date.now()) return fail("A data do lançamento já passou. Escolha uma data e hora no futuro para a contagem regressiva aparecer.");
     launch = { title, date: date.toISOString() };
   }
-  await savePromotions({ freeShippingMin, welcomeCoupon, launch });
+  const current = await getPromotions();
+  await savePromotions({ ...current, freeShippingMin, welcomeCoupon, launch });
   refreshSite();
   redirect("/admin/promocoes?ok=1");
+}
+
+/** Campo datetime-local (horário de Brasília) → ISO, ou null se vazio/inválido. */
+const fromBrLocal = (v: FormDataEntryValue | null) =>
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(String(v ?? "")) ? new Date(`${v}:00-03:00`).toISOString() : null;
+
+export async function saveFlashSaleAction(form: FormData) {
+  await requireAdmin();
+  const fail = (msg: string) => redirect(`/admin/promocoes?erro=${encodeURIComponent(msg)}#relampago`);
+  const active = form.get("flashOn") === "on";
+  const text = String(form.get("flashText") ?? "").trim().replace(/\s+/g, " ").slice(0, 90);
+  const link = String(form.get("flashLink") ?? "").trim();
+  const startsAt = fromBrLocal(form.get("flashStart"));
+  const endsAt = fromBrLocal(form.get("flashEnd"));
+  let percent: number | null;
+  try {
+    percent = toNumber(String(form.get("flashPercent") ?? ""), "Desconto");
+  } catch (error) {
+    return fail((error as Error).message);
+  }
+
+  // Produtos marcados + todos os produtos das categorias marcadas.
+  const categories = new Set(form.getAll("flashCategory").map(String));
+  const picked = new Set(form.getAll("flashProduct").map(Number).filter(Number.isInteger));
+  for (const p of await adminListProducts()) {
+    if (p.active && p.category && categories.has(p.category)) picked.add(p.id);
+  }
+  const productIds = [...picked];
+
+  const empty = !text && !link && !startsAt && !endsAt && percent === null && !productIds.length;
+  let flash: FlashSale | null = null;
+  if (!empty) {
+    if (!text) return fail("Escreva o texto da barra da promoção relâmpago.");
+    if (link && !link.startsWith("/") && !link.startsWith("https://")) return fail("O link precisa começar com / (página da loja) ou https://.");
+    if (!percent || percent < 1 || percent > 90) return fail("O desconto da promoção relâmpago precisa ser de 1% a 90%.");
+    if (!startsAt || !endsAt) return fail("Preencha o início e o fim da promoção relâmpago.");
+    if (Date.parse(endsAt) <= Date.parse(startsAt)) return fail("O fim da promoção precisa ser depois do início.");
+    if (active && Date.parse(endsAt) <= Date.now()) return fail("O fim da promoção já passou. Escolha um horário no futuro.");
+    if (active && !productIds.length) return fail("Marque pelo menos um produto ou uma categoria para a promoção relâmpago.");
+    flash = { active, text, link: link || null, percent, startsAt, endsAt, productIds };
+  }
+
+  const current = await getPromotions();
+  const before = current.flash?.active ? current.flash : null;
+  await adminApplyFlashSale(before, flash?.active ? flash : null);
+  await savePromotions({ ...current, flash });
+  refreshSite();
+  revalidatePath("/admin/produtos");
+  redirect("/admin/promocoes?ok=1#relampago");
 }
 
 // ---- Etiquetas do Melhor Envio ----

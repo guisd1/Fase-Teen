@@ -313,3 +313,8 @@ ol.summary-list li::before { counter-increment: top; content: counter(top) "."; 
 .admin-side-foot .notify-actions button:hover { background: rgba(255,255,255,.18); }
 .admin-side-foot .notify-actions button:last-child { background: transparent; border-color: rgba(255,255,255,.2); color: #d9c9d4; }
 .admin-side-foot .notify-actions button:disabled { opacity: .8; cursor: default; }
+
+/* Promoção relâmpago: listas de categorias e produtos para marcar */
+.admin-picks { border: 1px solid var(--line, #ebe5e8); border-radius: 14px; padding: 10px 14px 12px; display: grid; gap: 6px; max-height: 320px; overflow: auto; }
+.admin-picks legend { padding: 0 6px; font-weight: 700; font-size: 13px; }
+.admin-picks legend small, .admin-picks .admin-check small { font-weight: 400; color: var(--muted, #6c656a); }

@@ -727,6 +727,17 @@ img { max-width: 100%; display: block; }
   .badge.badge-promo { font-size: 13px; padding: 6px 10px; }
 }
 
+/* Promoção relâmpago: barra do topo e aviso no carrinho */
+.topbar.topbar-flash { display: flex; align-items: center; justify-content: center; gap: 4px 12px; flex-wrap: wrap; background: #ffd2ad; color: #8a3a08; font-size: 12px; letter-spacing: .04em; padding: 8px 16px; }
+a.topbar-flash:hover { text-decoration: underline; }
+.flash-clock { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.flash-clock strong { padding: 2px 8px; border-radius: 99px; background: #fff4ea; font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.cart-flash { display: flex; justify-content: space-between; align-items: center; gap: 4px 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 9px 12px; border-radius: 14px; background: #ffd2ad; color: #8a3a08; font-size: 12px; font-weight: 600; }
+.cart-flash strong { font-weight: 900; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .topbar.topbar-flash { font-size: 11px; padding: 7px 12px; }
+}
+
 /* Avise-me quando chegar */
 .notify-link { display: block; margin: -8px 0 16px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--primary-dark); text-decoration: underline; font-family: inherit; text-align: left; }
 .notify-form { display: grid; gap: 8px; margin: -4px 0 18px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--primary-soft); }

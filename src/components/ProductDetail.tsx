@@ -18,13 +18,15 @@ import { landedFromOutside, track } from "@/lib/track";
 import { detectSource } from "@/lib/traffic-source";
 import { optimized } from "@/lib/image";
 
-export default function ProductDetail({ product, reviewSummary, children }: {
+export default function ProductDetail({ product: initial, reviewSummary, children }: {
   product: Product;
   reviewSummary: ReviewSummary;
   /** Seções abaixo do produto (avaliações). */
   children?: ReactNode;
 }) {
-  const { store, cart, openCart, promotions, onlinePayments } = useShop();
+  const { store, products, cart, openCart, promotions, onlinePayments } = useShop();
+  // Mesmo produto, com o preço que vale agora (a promoção pode ter começado ou acabado com a página aberta).
+  const product = products.find(p => p.id === initial.id) ?? initial;
   const firstAvailable = product.sizes.find(s => s.stock > 0)?.size ?? "";
   const [size, setSize] = useState(firstAvailable);
   const [color, setColor] = useState(product.colors[0] ?? "");

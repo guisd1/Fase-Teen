@@ -20,6 +20,8 @@ export interface Product {
   oldPrice: number | null;
   /** Promoção com data ativa agora: % de desconto e quando termina. */
   promo: { percent: number; endsAt: string | null } | null;
+  /** Promoção com data que ainda não acabou (valendo ou por começar), com os preços de dentro e de fora dela. */
+  schedule: PromoSchedule | null;
   sizes: ProductSize[];
   /** Tabela de medidas (null = sem tabela). */
   sizeChart: SizeChart | null;
@@ -33,6 +35,20 @@ export interface Product {
   badge: string | null;
   description: string;
   composition: string | null;
+}
+
+interface PromoPrices {
+  price: number;
+  pixPrice: number;
+  oldPrice: number | null;
+}
+
+export interface PromoSchedule {
+  percent: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  sale: PromoPrices;
+  regular: PromoPrices;
 }
 
 export interface ProductShipping {
@@ -88,11 +104,30 @@ export function effectiveNet(row: Pick<ProductRow, "price" | "promoPercent" | "p
   return promo ? Math.round(net * (1 - promo.percent / 100) * 100) / 100 : net;
 }
 
+/** Preços com e sem a promoção com data, enquanto ela não acabou. */
+function promoSchedule(row: ProductRow, fees: PaymentFees, now = new Date()): PromoSchedule | null {
+  const percent = row.promoPercent;
+  if (!percent || percent <= 0 || percent >= 100 || row.price === null) return null;
+  if (row.promoEndsAt && now > row.promoEndsAt) return null;
+  const sale = Math.round(row.price * (1 - percent / 100) * 100) / 100;
+  // Na promoção, o preço "de" é o preço normal (ou o preço antigo cadastrado, se for maior).
+  const regular = Math.max(row.price, row.oldPrice ?? 0);
+  return {
+    percent,
+    startsAt: row.promoStartsAt?.toISOString() ?? null,
+    endsAt: row.promoEndsAt?.toISOString() ?? null,
+    sale: { price: cardPrice(sale, fees), pixPrice: pixPrice(sale, fees), oldPrice: cardPrice(regular, fees) },
+    regular: {
+      price: cardPrice(row.price, fees), pixPrice: pixPrice(row.price, fees),
+      oldPrice: row.oldPrice === null ? null : cardPrice(row.oldPrice, fees)
+    }
+  };
+}
+
 function toPublic(row: ProductRow, fees: PaymentFees): Product {
   const promo = activePromo(row);
+  const schedule = promoSchedule(row, fees);
   const net = effectiveNet(row);
-  // Na promoção, o preço "de" é o preço normal (ou o preço antigo cadastrado, se for maior).
-  const regular = Math.max(row.price ?? 0, row.oldPrice ?? 0);
   return {
     id: row.id,
     slug: productSlug(row),
@@ -100,8 +135,9 @@ function toPublic(row: ProductRow, fees: PaymentFees): Product {
     category: row.category ?? "",
     price: cardPrice(net, fees),
     pixPrice: pixPrice(net, fees),
-    oldPrice: promo ? cardPrice(regular, fees) : row.oldPrice === null ? null : cardPrice(row.oldPrice, fees),
+    oldPrice: schedule ? (promo ? schedule.sale : schedule.regular).oldPrice : row.oldPrice === null ? null : cardPrice(row.oldPrice, fees),
     promo,
+    schedule,
     sizes: row.sizes,
     sizeChart: row.sizeChart,
     colors: row.colors,
@@ -212,4 +248,27 @@ export async function adminSetProductOrder(ids: number[]) {
 export async function adminSetStock(changes: { id: number; sizes: ProductSize[] }[]) {
   const db = getDb();
   await Promise.all(changes.map(c => db.update(products).set({ sizes: c.sizes }).where(eq(products.id, c.id))));
+}
+
+/**
+  Promoção relâmpago (painel → Promoções): grava o desconto e as datas nos produtos participantes,
+  usando a mesma promoção com data do cadastro do produto (o checkout já cobra o preço certo).
+  Antes, tira a promoção anterior dos produtos que ainda estão com ela (os que ganharam outra
+  promoção pelo cadastro depois disso ficam como estão).
+*/
+export async function adminApplyFlashSale(
+  previous: { productIds: number[]; endsAt: string } | null,
+  next: { productIds: number[]; percent: number; startsAt: string; endsAt: string } | null
+) {
+  const db = getDb();
+  if (previous?.productIds.length) {
+    await db.update(products)
+      .set({ promoPercent: null, promoStartsAt: null, promoEndsAt: null })
+      .where(and(inArray(products.id, previous.productIds), eq(products.promoEndsAt, new Date(previous.endsAt))));
+  }
+  if (next?.productIds.length) {
+    await db.update(products)
+      .set({ promoPercent: next.percent, promoStartsAt: new Date(next.startsAt), promoEndsAt: new Date(next.endsAt) })
+      .where(inArray(products.id, next.productIds));
+  }
 }

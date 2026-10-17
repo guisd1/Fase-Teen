@@ -6,9 +6,28 @@ export interface Promotions {
   welcomeCoupon: string | null;
   /** Próximo lançamento: contagem regressiva na página inicial. */
   launch: { title: string; date: string } | null;
+  /** Promoção relâmpago: barra com cronômetro no topo e desconto nos produtos participantes. */
+  flash: FlashSale | null;
 }
 
-export const DEFAULT_PROMOTIONS: Promotions = { freeShippingMin: 299, welcomeCoupon: "BEMVINDA10", launch: null };
+export interface FlashSale {
+  /** Desligada no painel: a configuração fica guardada, mas nada aparece e o desconto não vale. */
+  active: boolean;
+  /** Texto da barra, ex.: "Só hoje: 20% OFF em moletons". */
+  text: string;
+  /** Para onde a barra leva ao tocar (null = não é clicável). */
+  link: string | null;
+  percent: number;
+  startsAt: string;
+  endsAt: string;
+  productIds: number[];
+}
+
+export const DEFAULT_PROMOTIONS: Promotions = { freeShippingMin: 299, welcomeCoupon: "BEMVINDA10", launch: null, flash: null };
+
+/** A promoção relâmpago está valendo neste instante? */
+export const flashLive = (flash: FlashSale | null, now: number) =>
+  Boolean(flash?.active && now >= Date.parse(flash.startsAt) && now < Date.parse(flash.endsAt));
 
 /** Frete grátis vale só para o PAC dos Correios; as outras opções são cobradas normalmente. */
 export const isFreeShippingOption = (option: { company?: string | null; service?: string | null } | null | undefined) =>
