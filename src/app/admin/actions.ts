@@ -463,8 +463,13 @@ export async function savePromotionsAction(form: FormData) {
     if (date.getTime() <= Date.now()) return fail("A data do lançamento já passou. Escolha uma data e hora no futuro para a contagem regressiva aparecer.");
     launch = { title, date: date.toISOString() };
   }
+  let lowStockLimit: number | null = null;
+  if (form.get("lowStockOn") === "on") {
+    lowStockLimit = Number(String(form.get("lowStockLimit") ?? "").trim());
+    if (!Number.isInteger(lowStockLimit) || lowStockLimit < 1 || lowStockLimit > 50) return fail("O limite do estoque baixo precisa ser um número inteiro de 1 a 50.");
+  }
   const current = await getPromotions();
-  await savePromotions({ ...current, freeShippingMin, welcomeCoupon, launch });
+  await savePromotions({ ...current, freeShippingMin, welcomeCoupon, launch, lowStockLimit });
   refreshSite();
   redirect("/admin/promocoes?ok=1");
 }

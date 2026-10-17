@@ -82,10 +82,12 @@ async function startOnlinePayment(cart: Cart, data: FormData, method: "pix" | "c
 }
 
 /** Registra o pedido no painel. Devolve null se não deu para gravar. */
-async function registerOrder(cart: Cart, data: FormData): Promise<Registered | null> {
+async function registerOrder(cart: Cart, data: FormData): Promise<Registered | { stockError: string } | null> {
   try {
     const r = await fetch("/api/pedidos", { method: "POST", headers: { "Content-Type": "application/json" }, body: orderBody(cart, data, "whatsapp") });
     const json = await r.json().catch(() => ({}));
+    // Tamanho esgotou desde que a página abriu: não manda o pedido.
+    if (r.status === 409 && json.stockChanged) return { stockError: String(json.error) };
     if (!r.ok || typeof json.code !== "string") return null;
     return { code: json.code, discount: Number(json.discount) || 0, couponCode: json.couponCode ?? null, couponError: json.couponError ?? null };
   } catch {
@@ -253,7 +255,13 @@ export default function CheckoutModal({ store, cart, onlinePayments, onClose, on
     */
     setSending(true);
     setNote("Registrando o pedido...");
-    const order = await registerOrder(cart, form);
+    const registered = await registerOrder(cart, form);
+    if (registered && "stockError" in registered) {
+      setSending(false);
+      setNote(registered.stockError);
+      return;
+    }
+    const order = registered;
     setRegistered({ key: orderKey, order, url: whatsappUrl(store, orderMessage(store, cart, form, order)) });
     setSending(false);
     setNote(order?.couponError ? `Cupom não aplicado: ${order.couponError}` : "");

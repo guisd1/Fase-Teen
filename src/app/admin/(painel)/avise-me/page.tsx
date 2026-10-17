@@ -52,6 +52,7 @@ export default async function WaitlistPage() {
           <h1>Avise-me quando chegar</h1>
           <p>Clientes que pediram aviso de um tamanho esgotado. Quando você repõe o estoque, eles aparecem em &quot;Pronto para avisar&quot;.</p>
         </div>
+        <a className="btn btn-light" href="/admin/exportar/avise-me">Baixar planilha (Excel)</a>
       </div>
       <div className="admin-report-totals">
         <div><small>Pronto para avisar</small><strong>{ready.length}</strong></div>

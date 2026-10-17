@@ -42,6 +42,9 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
     }
   }, [product.id]);
   const outOfStock = soldOut(product);
+  // Estoque baixo do tamanho escolhido (painel → Promoções); null = não mostra.
+  const sizeStock = product.sizes.find(s => s.size === size)?.stock ?? 0;
+  const lowStock = promotions.lowStockLimit !== null && sizeStock > 0 && sizeStock <= promotions.lowStockLimit ? sizeStock : null;
   const installments = store.commerce.installments;
 
   const share = async () => {
@@ -102,6 +105,12 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
                   >{s.size}</button>
                 ))}
               </div>
+              {lowStock !== null && (
+                <div className="low-stock" role="status">
+                  <p>{lowStock === 1 ? <>Última peça no tamanho <strong>{size}</strong></> : <>Últimas <strong>{lowStock}</strong> no tamanho <strong>{size}</strong></>}</p>
+                  <span className="low-stock-bar"><span style={{ width: `${Math.max(8, (lowStock / (promotions.lowStockLimit ?? lowStock)) * 100)}%` }} /></span>
+                </div>
+              )}
             </div>
           )}
           <NotifyMe product={product} />

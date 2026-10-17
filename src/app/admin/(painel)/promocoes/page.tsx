@@ -22,7 +22,7 @@ export default async function PromotionsPage({ searchParams }: { searchParams: P
       <div className="admin-head">
         <div>
           <h1>Promoções</h1>
-          <p>Frete grátis, cupom de boas-vindas da newsletter, contagem regressiva do próximo lançamento e promoção relâmpago. Promoção de um produto específico fica no cadastro do produto.</p>
+          <p>Frete grátis, cupom de boas-vindas da newsletter, contagem regressiva do próximo lançamento, aviso de estoque baixo e promoção relâmpago. Promoção de um produto específico fica no cadastro do produto.</p>
         </div>
       </div>
       {query.ok && <p className="admin-ok">Promoções salvas! O site já está atualizado.</p>}
@@ -68,6 +68,18 @@ export default async function PromotionsPage({ searchParams }: { searchParams: P
             <p className="admin-alert">A data deste lançamento já passou, então a contagem não aparece mais no site. Escolha uma nova data ou apague os dois campos.</p>
           )}
           <p className="admin-hint">Mostra uma contagem regressiva na página inicial com o convite para entrar na lista VIP (newsletter). Some sozinha quando a data chega. Deixe vazio para não mostrar.</p>
+        </section>
+
+        <section className="admin-card">
+          <h2>Estoque baixo</h2>
+          <label className="admin-check">
+            <input type="checkbox" name="lowStockOn" defaultChecked={promo.lowStockLimit !== null} />
+            Mostrar &quot;Últimas peças&quot; na página do produto
+          </label>
+          <label>Avisar quando o tamanho tiver até (peças)
+            <input name="lowStockLimit" type="number" min={1} max={50} step={1} defaultValue={promo.lowStockLimit ?? 5} />
+          </label>
+          <p className="admin-hint">Ao escolher um tamanho com poucas peças, a cliente vê, por exemplo, &quot;Últimas 2 no tamanho M&quot;. O número vem do estoque cadastrado em cada tamanho.</p>
         </section>
 
         <div className="admin-save-bar">

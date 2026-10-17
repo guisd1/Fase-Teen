@@ -89,3 +89,15 @@ export async function markWaitlistNotified(id: number) {
 export async function deleteWaitlist(id: number) {
   await getDb().delete(waitlist).where(eq(waitlist.id, id));
 }
+
+/** Todos os pedidos de "avise-me" (avisados ou não), para a planilha. */
+export async function adminWaitlistExport() {
+  if (!hasDatabase()) return [];
+  const rows = await getDb().select({
+    name: waitlist.name, phone: waitlist.phone, size: waitlist.size, createdAt: waitlist.createdAt, notifiedAt: waitlist.notifiedAt,
+    productName: products.name, productReference: products.reference, sizes: products.sizes
+  }).from(waitlist)
+    .innerJoin(products, eq(products.id, waitlist.productId))
+    .orderBy(desc(waitlist.createdAt));
+  return rows.map(r => ({ ...r, stock: r.sizes.find(s => s.size === r.size)?.stock ?? r.sizes.reduce((n, s) => n + s.stock, 0) }));
+}

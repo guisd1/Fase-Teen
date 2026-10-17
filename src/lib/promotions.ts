@@ -6,6 +6,8 @@ export interface Promotions {
   welcomeCoupon: string | null;
   /** Próximo lançamento: contagem regressiva na página inicial. */
   launch: { title: string; date: string } | null;
+  /** "Últimas X no tamanho M" na página do produto quando o estoque do tamanho é até este número (null = desligado). */
+  lowStockLimit: number | null;
   /** Promoção relâmpago: barra com cronômetro no topo e desconto nos produtos participantes. */
   flash: FlashSale | null;
 }
@@ -23,7 +25,7 @@ export interface FlashSale {
   productIds: number[];
 }
 
-export const DEFAULT_PROMOTIONS: Promotions = { freeShippingMin: 299, welcomeCoupon: "BEMVINDA10", launch: null, flash: null };
+export const DEFAULT_PROMOTIONS: Promotions = { freeShippingMin: 299, welcomeCoupon: "BEMVINDA10", launch: null, lowStockLimit: 5, flash: null };
 
 /** A promoção relâmpago está valendo neste instante? */
 export const flashLive = (flash: FlashSale | null, now: number) =>

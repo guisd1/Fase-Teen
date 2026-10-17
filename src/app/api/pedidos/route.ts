@@ -17,6 +17,7 @@ import { markCartRecovered } from "@/db/recovery";
 import { notifySale } from "@/lib/order-email";
 import { notifyOrderPush } from "@/lib/push";
 import { adminGetOrder } from "@/db/orders";
+import { stockProblem } from "@/lib/stock-check";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,10 @@ export async function POST(request: Request) {
     });
     pixPrices.push(product.pixPrice);
   }
+
+  // Estoque conferido agora (a página pode estar desatualizada): não aceita mais peças do que tem no tamanho.
+  const outOfStock = stockProblem(items, catalog);
+  if (outOfStock) return reply(409, { error: outOfStock, stockChanged: true });
 
   const pickup = body?.deliveryMode === "pickup";
   let address: OrderAddress | null = null;

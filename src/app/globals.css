@@ -727,6 +727,12 @@ img { max-width: 100%; display: block; }
   .badge.badge-promo { font-size: 13px; padding: 6px 10px; }
 }
 
+/* Estoque baixo do tamanho escolhido */
+.low-stock { display: grid; gap: 5px; margin-top: 10px; max-width: 280px; color: #8a3a08; font-size: 13px; font-weight: 600; }
+.low-stock strong { font-weight: 900; }
+.low-stock .low-stock-bar { display: block; margin: 0; height: 5px; border-radius: 99px; background: #ffe6d1; overflow: hidden; }
+.low-stock .low-stock-bar span { display: block; margin: 0; height: 100%; border-radius: inherit; background: #f08a3c; transition: width .25s ease; }
+
 /* Promoção relâmpago: barra do topo e aviso no carrinho */
 .topbar.topbar-flash { display: flex; align-items: center; justify-content: center; gap: 4px 12px; flex-wrap: wrap; background: #ffd2ad; color: #8a3a08; font-size: 12px; letter-spacing: .04em; padding: 8px 16px; }
 a.topbar-flash:hover { text-decoration: underline; }

@@ -64,6 +64,8 @@ export interface ProductShipping {
   heightCm: number | null;
   widthCm: number | null;
   lengthCm: number | null;
+  /** Estoque por tamanho (vazio = produto sem tamanhos, sem limite). */
+  sizes: ProductSize[];
 }
 
 export function slugify(text: string) {
@@ -185,7 +187,7 @@ export async function getShippingInfo(ids: number[]): Promise<ProductShipping[]>
   return rows.map(r => ({
     id: r.id, name: r.name, reference: r.reference, price: effectiveNet(r),
     cardPrice: cardPrice(effectiveNet(r), fees), pixPrice: pixPrice(effectiveNet(r), fees),
-    weightKg: r.weightKg, heightCm: r.heightCm, widthCm: r.widthCm, lengthCm: r.lengthCm
+    weightKg: r.weightKg, heightCm: r.heightCm, widthCm: r.widthCm, lengthCm: r.lengthCm, sizes: r.sizes
   }));
 }
 

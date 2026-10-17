@@ -77,6 +77,9 @@ export const getPromotions = cache(async (): Promise<Promotions> => {
     freeShippingMin: v.freeShippingMin === null || !Number.isFinite(min) || min <= 0 ? null : min,
     welcomeCoupon: typeof v.welcomeCoupon === "string" && v.welcomeCoupon ? v.welcomeCoupon : null,
     launch,
+    // Nunca salvo ainda: liga com o padrão (5).
+    lowStockLimit: v.lowStockLimit === undefined ? DEFAULT_PROMOTIONS.lowStockLimit
+      : Number.isInteger(v.lowStockLimit) && Number(v.lowStockLimit) > 0 ? Number(v.lowStockLimit) : null,
     flash
   };
 });

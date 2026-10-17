@@ -1,6 +1,7 @@
 import { isAdmin } from "@/lib/auth";
 import { adminListOrders } from "@/db/orders";
 import { adminCustomers } from "@/db/insights";
+import { adminWaitlistExport } from "@/db/recovery";
 import { STATUS_LABELS, isOrderStatus } from "@/lib/order-status";
 import { METHOD_LABELS } from "@/lib/payment-labels";
 import { SOURCE_LABELS } from "@/lib/traffic-source";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
   Planilhas para abrir no Excel / Google Planilhas:
     /admin/exportar/pedidos   todos os pedidos
     /admin/exportar/clientes  clientes agrupados pelo telefone
+    /admin/exportar/avise-me  pedidos de "avise-me quando chegar"
   Separador ";" e vírgula nos decimais (padrão do Excel em português).
 */
 
@@ -54,6 +56,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ tipo: stri
       ["Nome", "Telefone", "E-mail", "Pedidos confirmados", "Total gasto (R$)", "Todos os pedidos", "Último pedido", "Veio de"],
       ...customers.map(c => [c.name, c.phone, c.email, c.orders, num(c.spent), c.allOrders, dateTime(c.lastOrder),
         c.firstSource ? SOURCE_LABELS[c.firstSource] ?? c.firstSource : ""])
+    ];
+  } else if (tipo === "avise-me") {
+    const list = await adminWaitlistExport();
+    rows = [
+      ["Cliente", "WhatsApp", "Produto", "Tamanho", "Estoque agora", "Pediu em", "Avisada em"],
+      ...list.map(w => [w.name, w.phone, withRef(w.productName, w.productReference), w.size, w.stock,
+        dateTime(w.createdAt), w.notifiedAt ? dateTime(w.notifiedAt) : ""])
     ];
   } else {
     return new Response("Planilha não encontrada.", { status: 404 });

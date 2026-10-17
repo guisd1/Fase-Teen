@@ -86,7 +86,7 @@ Ideia do vídeo: o "gatilho Booking" — cronômetro e "só restam X" geram a se
 
 > **Como ficou (2026-10-17):** painel → Promoções → "Promoção relâmpago" (ligada/desligada, texto, link, desconto, início, fim, produtos ou categorias). Ao salvar, o desconto e as datas vão para a "Promoção com data" de cada produto marcado, e o checkout cobra o preço certo no servidor. A barra do topo, o cronômetro da página do produto e o aviso no carrinho contam até o fim salvo no banco. No navegador, o preço troca sozinho no início e no fim, mesmo com a página aberta ou em cache.
 
-### [ ] Item 2 — Aviso de estoque baixo por tamanho
+### [x] Item 2 — Aviso de estoque baixo por tamanho
 
 **Requisitos:**
 - Ao selecionar um tamanho com estoque `<= LIMITE` (padrão 5, configurável), exibir: `Últimas 2 no tamanho M`.
@@ -94,9 +94,11 @@ Ideia do vídeo: o "gatilho Booking" — cronômetro e "só restam X" geram a se
 - Tamanho esgotado: botão `Avise-me quando chegar` que captura e-mail/WhatsApp (com consentimento) vinculado à variante.
 
 **Critérios de aceite:**
-- [ ] Quantidade lida do estoque real da variante.
-- [ ] Atualiza ao trocar de tamanho sem recarregar a página.
-- [ ] Inscrições de "avise-me" ficam salvas e exportáveis.
+- [x] Quantidade lida do estoque real da variante.
+- [x] Atualiza ao trocar de tamanho sem recarregar a página.
+- [x] Inscrições de "avise-me" ficam salvas e exportáveis.
+
+> **Como ficou (2026-10-17):** painel → Promoções → "Estoque baixo" (liga/desliga e limite, padrão 5). Na página do produto, abaixo dos tamanhos: "Últimas 2 no tamanho M" (ou "Última peça") com uma barrinha, trocando junto com o tamanho. O "Avise-me" (nome + WhatsApp) já existia; a aba Avise-me ganhou "Baixar planilha (Excel)".
 
 ### [ ] Item 3 — Indicador de vendas recentes reais
 
@@ -337,7 +339,7 @@ Itens majoritariamente de processo. O que for código está indicado.
 
 ### Fase 1 — Ganhos rápidos (semanas 1–2)
 - [x] 1 Contagem regressiva
-- [ ] 2 Estoque baixo
+- [x] 2 Estoque baixo
 - [ ] 12 Bloco anti-medo
 - [ ] 10 Títulos com benefício (20 mais vendidos)
 - [ ] 11 Tópicos antes do Comprar
