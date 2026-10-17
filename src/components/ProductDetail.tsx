@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { Product } from "@/db/products";
 import type { ReviewSummary } from "@/db/reviews";
@@ -13,6 +13,8 @@ import { Icon } from "./Icons";
 import RelatedProducts from "./RelatedProducts";
 import NotifyMe from "./NotifyMe";
 import PromoCountdown from "./PromoCountdown";
+import ProductShipping from "./ProductShipping";
+import SizeChartModal from "./SizeChartModal";
 import FavoriteButton from "./FavoriteButton";
 import { landedFromOutside, track } from "@/lib/track";
 import { detectSource } from "@/lib/traffic-source";
@@ -24,7 +26,7 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
   /** Seções abaixo do produto (avaliações). */
   children?: ReactNode;
 }) {
-  const { store, products, cart, openCart, promotions, onlinePayments } = useShop();
+  const { store, products, cart, openCart, promotions, onlinePayments, setWhatsappText } = useShop();
   // Mesmo produto, com o preço que vale agora (a promoção pode ter começado ou acabado com a página aberta).
   const product = products.find(p => p.id === initial.id) ?? initial;
   const firstAvailable = product.sizes.find(s => s.stock > 0)?.size ?? "";
@@ -46,6 +48,15 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
   const sizeStock = product.sizes.find(s => s.size === size)?.stock ?? 0;
   const lowStock = promotions.lowStockLimit !== null && sizeStock > 0 && sizeStock <= promotions.lowStockLimit ? sizeStock : null;
   const installments = store.commerce.installments;
+  const returnDays = store.commerce.returnDays ?? 0;
+
+  // Botão do WhatsApp com a peça (e o tamanho escolhido) já na mensagem.
+  useEffect(() => {
+    const ref = product.reference ? ` (Ref. ${product.reference})` : "";
+    setWhatsappText(`Oi! Tenho uma dúvida sobre o ${product.name}${ref}${size ? `, tamanho ${size}` : ""}: ${store.siteUrl}/produto/${product.slug}`);
+    return () => setWhatsappText(null);
+  }, [product.name, product.reference, product.slug, size, store.siteUrl, setWhatsappText]);
+  const closeChart = useCallback(() => setChartOpen(false), []);
 
   const share = async () => {
     const url = window.location.href;
@@ -108,7 +119,6 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
               {lowStock !== null && (
                 <div className="low-stock" role="status">
                   <p>{lowStock === 1 ? <>Última peça no tamanho <strong>{size}</strong></> : <>Últimas <strong>{lowStock}</strong> no tamanho <strong>{size}</strong></>}</p>
-                  <span className="low-stock-bar"><span style={{ width: `${Math.max(8, (lowStock / (promotions.lowStockLimit ?? lowStock)) * 100)}%` }} /></span>
                 </div>
               )}
             </div>
@@ -116,26 +126,17 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
           <NotifyMe product={product} />
           {chart && (
             <div className="size-chart">
-              <button type="button" className="text-link" aria-expanded={chartOpen} onClick={() => setChartOpen(o => !o)}>
-                {chartOpen ? "Esconder tabela de medidas" : "Ver tabela de medidas"}
+              <button type="button" className="text-link" aria-haspopup="dialog" onClick={() => setChartOpen(true)}>
+                <Icon name="ruler" /> Ver tabela de medidas
               </button>
               {chartOpen && (
-                <div className="size-chart-box">
-                  <div className="size-chart-scroll">
-                    <table>
-                      <thead><tr><th>Tamanho</th>{chart.columns.map(c => <th key={c}>{c}</th>)}</tr></thead>
-                      <tbody>
-                        {chart.rows.map(r => (
-                          <tr key={r.size} className={r.size === size ? "active" : ""}>
-                            <td>{r.size}</td>{r.values.map((v, i) => <td key={i}>{v || "–"}</td>)}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {chart.note && <p>{chart.note}</p>}
-                  <p>{store.commerce.sizeChartNote ?? "Confira as medidas antes de comprar."}</p>
-                </div>
+                <SizeChartModal
+                  chart={chart}
+                  size={size}
+                  productName={product.name}
+                  note={store.commerce.sizeChartNote ?? "Confira as medidas antes de comprar."}
+                  onClose={closeChart}
+                />
               )}
             </div>
           )}
@@ -163,15 +164,21 @@ export default function ProductDetail({ product: initial, reviewSummary, childre
           >
             {outOfStock ? "Esgotado" : "Adicionar ao carrinho"}
           </button>
+          {/* Selos: só regras reais da loja (configuração da loja e painel → Promoções). */}
+          <ul className="trust-list">
+            {returnDays > 0 && (
+              <li><Icon name="swap" /> <span>Troca de tamanho em até {returnDays} dias após receber. <Link href="/institucional/trocas">Ver política de troca</Link></span></li>
+            )}
+            {promotions.freeShippingMin !== null && <li><Icon name="truck" /> <span>Frete grátis pelo PAC nas compras a partir de {money(promotions.freeShippingMin)}</span></li>}
+            {onlinePayments && (
+              <li><Icon name="lock" /> <span>Compra 100% segura pelo Mercado Pago: Pix ou cartão{installments > 1 ? ` em até ${installments}x` : ""}. <Link href="/institucional/perguntas">Formas de pagamento</Link></span></li>
+            )}
+            {store.commerce.shippingNote && <li><Icon name="bag" /> <span>{store.commerce.shippingNote}</span></li>}
+          </ul>
+          <ProductShipping product={product} />
           <button className="btn btn-light share-btn" type="button" onClick={share}>
             {shared ? "Link copiado!" : "Compartilhar produto"}
           </button>
-          <ul className="trust-list">
-            {onlinePayments && <li><Icon name="lock" /> Pagamento seguro pelo Mercado Pago: Pix ou cartão{installments > 1 ? ` em até ${installments}x` : ""}</li>}
-            {promotions.freeShippingMin !== null && <li><Icon name="truck" /> Frete grátis nas compras a partir de {money(promotions.freeShippingMin)}</li>}
-            {store.commerce.shippingNote && <li><Icon name="bag" /> {store.commerce.shippingNote}</li>}
-            {chart && <li><Icon name="ruler" /> Tabela de medidas em cada peça</li>}
-          </ul>
         </div>
       </div>
       <RelatedProducts product={product} />

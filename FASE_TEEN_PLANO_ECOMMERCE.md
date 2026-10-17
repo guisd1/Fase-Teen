@@ -98,7 +98,7 @@ Ideia do vídeo: o "gatilho Booking" — cronômetro e "só restam X" geram a se
 - [x] Atualiza ao trocar de tamanho sem recarregar a página.
 - [x] Inscrições de "avise-me" ficam salvas e exportáveis.
 
-> **Como ficou (2026-10-17):** painel → Promoções → "Estoque baixo" (liga/desliga e limite, padrão 5). Na página do produto, abaixo dos tamanhos: "Últimas 2 no tamanho M" (ou "Última peça") com uma barrinha, trocando junto com o tamanho. O "Avise-me" (nome + WhatsApp) já existia; a aba Avise-me ganhou "Baixar planilha (Excel)".
+> **Como ficou (2026-10-17):** painel → Promoções → "Estoque baixo" (liga/desliga e limite, padrão 5). Na página do produto, abaixo dos tamanhos: "Últimas 2 no tamanho M" (ou "Última peça"), trocando junto com o tamanho (sem barrinha, por escolha da loja). O "Avise-me" (nome + WhatsApp) já existia; a aba Avise-me ganhou "Baixar planilha (Excel)".
 
 ### [ ] Item 3 — Indicador de vendas recentes reais
 
@@ -211,7 +211,7 @@ Exercício do vídeo: peça para alguém da equipe "vender" a peça falando e co
 - [ ] Editável pelo admin sem código.
 - [ ] Não empurra o botão Comprar para fora da primeira tela no mobile (testar 375x667).
 
-### [ ] Item 12 — Bloco anti-medo
+### [x] Item 12 — Bloco anti-medo
 
 **Requisitos:**
 - Selos abaixo do botão Comprar (configuráveis): `Troca fácil em 30 dias`, `Frete grátis acima de R$ X`, `Compra 100% segura`, `Envio em 24h`.
@@ -221,8 +221,10 @@ Exercício do vídeo: peça para alguém da equipe "vender" a peça falando e co
 - Links visíveis para política de troca e formas de pagamento (foco em pais/responsáveis).
 
 **Critérios de aceite:**
-- [ ] Os textos dos selos refletem políticas reais da loja.
+- [x] Os textos dos selos refletem políticas reais da loja.
 - [ ] Botão de WhatsApp não cobre o botão Comprar no mobile.
+
+> **Como ficou (2026-10-17):** selos com as regras reais (troca de tamanho em 7 dias com link para a política, frete grátis pelo PAC a partir do valor do painel, compra segura pelo Mercado Pago com link para formas de pagamento, prazo de postagem). Frete e prazo de 1 peça por CEP na página do produto (não mexe no frete do carrinho). Tabela de medidas em janela, que sobe de baixo no celular, com o tamanho escolhido destacado. WhatsApp com o nome, a referência, o tamanho e o link da peça. **Não feito, por escolha:** "qual é o meu tamanho?" por altura/peso, porque as tabelas têm medidas da peça, não faixas de altura/peso (seria recomendação inventada). **Pendente:** o botão flutuante do WhatsApp fica fixo no canto e pode passar por cima da ponta do botão Comprar durante a rolagem no celular; conferir na tela.
 
 ### [ ] Item 13 — Landing page do produto campeão
 
@@ -340,7 +342,7 @@ Itens majoritariamente de processo. O que for código está indicado.
 ### Fase 1 — Ganhos rápidos (semanas 1–2)
 - [x] 1 Contagem regressiva
 - [x] 2 Estoque baixo
-- [ ] 12 Bloco anti-medo
+- [x] 12 Bloco anti-medo
 - [ ] 10 Títulos com benefício (20 mais vendidos)
 - [ ] 11 Tópicos antes do Comprar
 - [ ] 15 Barra de frete grátis e selos

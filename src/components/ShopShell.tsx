@@ -32,6 +32,8 @@ interface Shop {
   /** Favoritos (coração), guardados neste navegador. */
   favorites: number[];
   toggleFavorite: (id: number) => void;
+  /** Mensagem do botão do WhatsApp (a página do produto troca pela dúvida sobre a peça; null = saudação padrão). */
+  setWhatsappText: (text: string | null) => void;
 }
 
 const ShopContext = createContext<Shop | null>(null);
@@ -100,6 +102,7 @@ export default function ShopShell({ store, products: serverProducts, onlinePayme
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [whatsappText, setWhatsappText] = useState<string | null>(null);
 
   // Favoritos sem login: ficam no navegador da cliente.
   const favKey = `${store.id}:favoritos`;
@@ -147,7 +150,7 @@ export default function ShopShell({ store, products: serverProducts, onlinePayme
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <ShopContext.Provider value={{ store, products, now, cart, search, openCart: () => setCartOpen(true), promotions, onlinePayments, favorites, toggleFavorite }}>
+    <ShopContext.Provider value={{ store, products, now, cart, search, openCart: () => setCartOpen(true), promotions, onlinePayments, favorites, toggleFavorite, setWhatsappText }}>
       {now !== null && promotions.flash && flashLive(promotions.flash, now)
         ? <FlashBar flash={promotions.flash} />
         : <div className="topbar">{t.topbar}</div>}
@@ -186,7 +189,7 @@ export default function ShopShell({ store, products: serverProducts, onlinePayme
 
       <Footer store={store} />
 
-      <a className="floating-whatsapp" href={whatsappUrl(store, t.whatsappGreeting)} target="_blank" rel="noopener" aria-label="Falar no WhatsApp"><WhatsappIcon /></a>
+      <a className="floating-whatsapp" href={whatsappUrl(store, whatsappText ?? t.whatsappGreeting)} target="_blank" rel="noopener" aria-label="Falar no WhatsApp"><WhatsappIcon /></a>
 
       <CartDrawer
         cart={cart}

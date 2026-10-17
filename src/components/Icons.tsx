@@ -19,7 +19,8 @@ const paths: Record<string, ReactNode> = {
   pause: <path d="M7.5 5.5h3v13h-3zM13.5 5.5h3v13h-3z" fill="currentColor" stroke="none" />,
   soundOn: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></>,
   soundOff: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" /><path d="m15.5 9.5 5 5M20.5 9.5l-5 5" /></>,
-  ruler: <><rect x="2.5" y="8" width="19" height="8" rx="1.5" /><path d="M6.5 8v3M10 8v4M13.5 8v3M17 8v4" /></>
+  ruler: <><rect x="2.5" y="8" width="19" height="8" rx="1.5" /><path d="M6.5 8v3M10 8v4M13.5 8v3M17 8v4" /></>,
+  swap: <><path d="M4 8.5h14l-3.5-3.5" /><path d="M20 15.5H6l3.5 3.5" /></>
 };
 
 export type IconName = keyof typeof paths;
