@@ -26,12 +26,14 @@ export function PixPrice({ product }: { product: Product }) {
 
 export default function ProductCard({ product, installments }: { product: Product; installments: number }) {
   const href = `/produto/${product.slug}`;
-  const badge = soldOut(product) ? "ESGOTADO" : product.promo ? `-${Math.round(product.promo.percent)}%` : product.badge;
+  const out = soldOut(product);
+  const badge = out ? "ESGOTADO" : product.promo ? `-${Math.round(product.promo.percent)}%` : product.badge;
+  const promoBadge = !out && Boolean(product.promo);
   const clicked = () => track("click", product.id);
   return (
     <article className="product-card">
       <MediaCarousel product={product}>
-        {badge && <span className="badge">{badge}</span>}
+        {badge && <span className={`badge ${promoBadge ? "badge-promo" : ""}`}>{badge}</span>}
         <FavoriteButton productId={product.id} />
         <Link className="quick-view" href={href} onClick={clicked}>Ver produto</Link>
       </MediaCarousel>

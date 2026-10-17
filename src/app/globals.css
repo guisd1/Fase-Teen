@@ -714,6 +714,19 @@ img { max-width: 100%; display: block; }
 .institutional .faq p { margin: 0 0 16px; }
 .promo-note { display: inline-block; margin: 8px 0 2px; padding: 5px 10px; border-radius: 99px; background: #fff1e6; color: #a2470f; font-size: 12px; font-weight: 700; }
 
+/* Promoção com data: selo do card e contagem na página do produto */
+.badge.badge-promo { background: var(--primary-dark); color: white; font-size: 15px; padding: 7px 12px; letter-spacing: .02em; }
+.promo-countdown { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 10px 0 4px; padding: 7px 8px 7px 14px; border-radius: 14px; background: #ffd2ad; color: #8a3a08; }
+.promo-countdown p { font-size: 13px; font-weight: 700; }
+.promo-countdown p strong { font-size: 14px; font-weight: 900; }
+.promo-clock { display: flex; gap: 4px; }
+.promo-clock div { min-width: 40px; padding: 4px 3px; border-radius: 9px; background: #fff4ea; text-align: center; line-height: 1.1; }
+.promo-clock strong { display: block; font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.promo-clock small { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+@media (max-width: 760px) {
+  .badge.badge-promo { font-size: 13px; padding: 6px 10px; }
+}
+
 /* Avise-me quando chegar */
 .notify-link { display: block; margin: -8px 0 16px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--primary-dark); text-decoration: underline; font-family: inherit; text-align: left; }
 .notify-form { display: grid; gap: 8px; margin: -4px 0 18px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--primary-soft); }
